@@ -114,7 +114,7 @@ Iskara has lists `[]`, dictionaries `[:]`, and sets `{}`.
 
 Elements of a list and dictionary can be accessed using the `at:` message.
 
-For convenience, collections support the following messages:
+For convenience, collections support the following messages in addition to the messages native to the target language:
 
 |===
 |Message | Description
@@ -143,6 +143,10 @@ For dictionaries, a block with two arguments will get a key and a value; a block
 
 |contains: <element>
 |True if the element is contained in the collection, false otherwise.
+
+| sum
+| (For `Number` collections only) +
+Returns the sum of its elements
 |===
 
 ===== Range literals

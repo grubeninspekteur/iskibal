@@ -4,13 +4,23 @@ This document describes how Iskara rule sources can be embedded in AsciiDoc.
 It focusses on the externalization of rule metadata such as imports, facts, outputs, globals and decision tables so they can be maintained using standard AsciiDoc structures.
 
 See the <<Iskara_Language_Reference.adoc#,Iskara Language Reference>> for the syntax of the rule language itself.
-The example <<../Border_Crossing.rule.adoc#>> demonstrates these concepts in practice.
 
 == Organizing rule sources
 
 AsciiDoc documents may contain multiple rule fragments.
-Listing blocks annotated with the `source,iskara` attribute become rule sections.
+Listing blocks annotated with the `rule` role become rule sections.
 Rules can be freely mixed with other sections and then collected by a pre-processor before compilation.
+
+The rule header can be specified in the source block, but for nicer formatting, there is also the `<rule ID>: <description>` shorthand in captions:
+
+.RULE-001: Insufficient balance
+[source,iskara,.rule]
+----
+when:
+    (Balance - Order.items.price sum) < 0
+then:
+    error: "Insufficient balance for purchase"
+----
 
 Data required by the rules can be defined using structural blocks that are independent of the rule listings.
 This allows data to be re-used, included from other files and even generated.
@@ -55,19 +65,20 @@ The columns are *Output name*, *Type*, *Initial value* and an optional *Descript
 | rejectionReasons | String[] | [] | List of reasons the border crossing was not allowed.
 |===
 
-== Globals and locals
+== Globals
 
-Additional global state can be declared using tables with the role `locals`.
-The column order matches outputs, but the values are not returned to the caller.
+Additional global state can be declared using tables with the role `globals`.
+The column order matches that of the facts table.
 
 == Data tables
 
 AsciiDoc tables can hold external data referenced by rules.
-Tables may be given an anchor so that other parts of the document can refer to them via cross references.
+The table's ID is given by the AsciiDoc block ID.
 
-[#vehicle-weight-limits]
+[#vehicle-weight-limits,.data-table]
 |===
 | Type  | Maximum Weight
+
 | Car   | 1.5t
 | Lorry | 5t
 |===
@@ -83,17 +94,18 @@ Aliases referenced in the header using `#alias` may be defined after the table i
 
 The decision table from the language reference can be represented as follows:
 
-[cols="1,1,1,1,1",options="header",headerrows=2,role="decision-table",id="BEST_OFFERS"]
+[#BEST_OFFERS,.decision-table]
 .Show best offers
 |===
-| ID | WHEN | WHEN | THEN | THEN
-| | #`has birthday` | Customer.age | Discount add: "birthday" withPercent: | #offerCar
+| ID 2+| WHEN                      2+| THEN
+
+| h| #`has birthday` h| Customer.age h| Discount add: "birthday" withPercent: h| #offerCar
 | BIRTHDAY_DISCOUNT | * | | 15 |
 | BD_CAR_OFFER | * | >= 18 | | "blue"
 |===
 
-[.aliases]
-`has birthday`::
+[.aliases,for="BEST_OFFERS"]
+has birthday::
 +
 [source,iskara]
 ----
@@ -106,6 +118,8 @@ offerCar::
 let color := param
 messages add: $"Did you know you can get a birthday paint in ${color} for your car?"
 ----
+
+Identifiers do not need to be quoted in the definition list.
 
 == Includes and modularization
 
