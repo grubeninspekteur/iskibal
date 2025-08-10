@@ -13,6 +13,8 @@ public sealed interface Expression permits
         Expression.Literal,
         Expression.MessageSend,
         Expression.Binary,
+        Expression.Assignment,
+        Expression.Navigation,
         Expression.Block {
 
     /** Reference to a named value. */
@@ -71,6 +73,17 @@ public sealed interface Expression permits
             LESS_THAN, LESS_EQUALS
         }
     }
+
+    /**
+     * Assigns the result of an expression to a target.
+     */
+    record Assignment(Expression target, Expression value) implements Expression { }
+
+    /**
+     * Navigates through named members of a receiver.
+     * The names are applied in order.
+     */
+    record Navigation(Expression receiver, List<String> names) implements Expression { }
 
     /**
      * Block of statements evaluated in order.
