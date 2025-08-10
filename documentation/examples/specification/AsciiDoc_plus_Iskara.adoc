@@ -4,7 +4,6 @@ This document describes how Iskara rule sources can be embedded in AsciiDoc.
 It focusses on the externalization of rule metadata such as imports, facts, outputs, globals and decision tables so they can be maintained using standard AsciiDoc structures.
 
 See the <<Iskara_Language_Reference.adoc#,Iskara Language Reference>> for the syntax of the rule language itself.
-The example <<../Border_Crossing.rule.adoc#>> demonstrates these concepts in practice.
 
 == Organizing rule sources
 
@@ -33,6 +32,7 @@ Multiple import blocks are merged by the parser, allowing imports to be grouped 
 Facts provide the named objects that are available to all rules.
 They can be declared either as a definition list or as a three column table with the role `facts`.
 The columns are *Fact name*, *Type* and an optional *Description*.
+The actual column names are ignored, only the positions matter.
 
 [cols="1,1,3",.facts]
 |===
@@ -55,16 +55,17 @@ The columns are *Output name*, *Type*, *Initial value* and an optional *Descript
 | rejectionReasons | String[] | [] | List of reasons the border crossing was not allowed.
 |===
 
-== Globals and locals
+== Globals
 
-Additional global state can be declared using tables with the role `locals`.
+Additional global state can be declared using tables with the role `globals`.
 The column order matches outputs, but the values are not returned to the caller.
 
 == Data tables
 
 AsciiDoc tables can hold external data referenced by rules.
-Tables may be given an anchor so that rule templates can refer to them via cross references.
+Tables may be given an ID so that rule templates can refer to them via cross references.
 
+.Vehicle weight limits
 [#vehicle-weight-limits]
 |===
 | Type  | Maximum Weight
