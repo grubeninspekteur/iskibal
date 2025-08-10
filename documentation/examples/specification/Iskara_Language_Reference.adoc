@@ -1,7 +1,7 @@
 = Iskara Language Reference
 
 This document describes the Iskara rule language as a standalone format.
-For embedding Iskara in AsciiDoc and therefore externalizing blocks, see the related document.
+For embedding Iskara in AsciiDoc and therefore externalizing blocks, see <<AsciiDoc_plus_Iskara.adoc#,AsciiDoc plus Iskara>>.
 
 The main audience of this document are application developers and rule compiler designers.
 The document assumes familiarities with programming concepts.
