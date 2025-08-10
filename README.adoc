@@ -1,0 +1,67 @@
+= Iskibal
+
+Iskibal is a Java business rules compiler.
+It transforms business rules written in one language (for example AsciiDoc with embedded _Iskara_) into a rule model, which can then be transformed into an interpretable rule format of an existing rule engine like Drools.
+
+Iskibal is _not_ a rule engine.
+It does not define how rules are interpreted.
+
+Iskibal has three parts:
+
+. _Rule source parser:_ Parses a _rule source_ like AsciiDoc with embedded rule language into a _rule model_.
+. _Rule model:_ A representation of a rule in a Java tree of objects.
+. _Rule compiler:_ Transforms a _rule model_ into the target language (native Java, Drools, Rulebook...).
+
+All parts can be freely exchanged by implementations, as long as they adhere to the Iskibal API.
+Implementations are loaded using the service loader mechanism.
+
+== Development goals
+
+* Rules written as code blocks inside AsciiDoc documents in a readable and customizable language
+** Customizable: It should be possible to translate keywords and replace entire sentences, similar to how the Gherkin language in Cucumber is built. Maybe we can simply use Gherkin itself and extend it a bit by adding custom parsed expressions?
+** It should be possible to refence AsciiDoc tables as decision tables
+* Rules are compiled to native, easily debuggable Java source code
+** Debugging is one of the major pain points of Drools.
+** Direct reference to classes allows us to check usages
+** If dynamically interpreted rules are required, an alternative runtime compilation mode could be added, but that probably becomes less important in modern cloud deployments
+* Rule evaluation should be cached. If a semantically equivalent condition is evaluated, it is reused for the current run
+** This may need reordering, e.g., `car.numberOfWheels = 4 and car.color = Color.BLACK` is equivalent to `car.color = Color.BLACK and car.numberOfWheels = 4`
+
+== Why?
+
+* Spreadsheet (Excel) and DMN rule bases are nice for the business side to read, but hard to work with as a developer, and basically impossible to solve merge conflicts in, leading to errors.
+* Rule languages like DRL are easy to merge, but difficult for the business side to read. It is possible to add a DSL with Drools, but it's a complicated mess to do so. Plus, DRL has no forma for embedded decision tables.
+* Most IDEs have plugins that display the document in realtime, meaning we can see the tables rendered live.
+
+* We get documentation for free, and encourage users to write explanations, reasonings etc. for rules. We can even link Jira tickets for example.
+** It is also possible to embed Java code files for things we externalize, so we can show how more complicated rules are evaluated. They could be hidden using https://docs.asciidoctor.org/asciidoc/latest/blocks/collapsible/[Collapsible Blocks].
+
+== Caveats
+* Asciidoc tables are not easily read if they have too may columns, that's why spreadsheet decision tables are so popular. However, I'd argue that if you have more than 7 columns, the brain can't read the rules comfortably anyways.
+** Encourage to use references in tables (placeholders to the actual condition) so they are short and readable. Or use AsciiDoc document attributes to expand the full condition on rendering.
+
+== Ideas how it could work / design
+
+CAUTION: TODO
+
+* A rule base is an AsciiDoc document. It can be comprised of multiple files by including them.
+** Only files ending in `rule.adoc` will be checked for rule interpretation (check if possible with Asciidoctor).
+* We use https://docs.asciidoctor.org/asciidoc/latest/attributes/role/[roles] to give blocks special meanings, for example for mapping fact types to Java types via imports, or decision tables.
+* We use source code blocks with a supported rule language to define the actual rule, for example the _Iskira_ language that (optionally) comes with Iskibal.
+* Attribute substitutions can be used to reuse conditions transparently so they become part of the code block. (Or should we use description lists? See example below.)
+* Anything without a role is not interpreted, so you are free to document your rules however you like.
+* The rules are parsed into a model which a parser can then use to produce artifacts like: Java code, bytecode, DRL, rule engine calls like https://github.com/deliveredtechnologies/rulebook[Rulebook].
+** Input format (e.g. Asciidoc) -> parsed rule model -> rule compiler
+** Even though Rulebook is no longer maintained, I would like to start with this target format because it would allow me to have a simple working rule engine I can experiment with as the output format.
+* Eventually we could build our own rule engine.
+
+TODO: How to define decision table references in a language independent way? Generating one rule per line would be overkill, wouldn't it? And some decision tables could be folded into constants. Maybe the rule compiler should decide and not the parser.
+
+
+== Name origin
+
+Iskibal as a Babylonian king is a reference to the JDK project https://openjdk.org/projects/babylon/[Project Babylon], which aims to bring code models and code reflection to the Java language.
+
+== How to build
+
+You need Maven 4 to build the code.

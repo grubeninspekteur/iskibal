@@ -1,0 +1,15 @@
+= AsciiDoc+Iskara
+
+AsciiDoc+Iskara is an extended format of Iskara that allows embedding Iskara source and native AsciiDoc tables in a single document.
+This has the following advantages:
+
+* Rules and tables can be documented with rich formatting, like highlighting
+* Decision tables can use colspan to not repeat conditional columns
+//TODO other advantages?
+
+Rules written in AsciiDoc+Iskara are always first compiled to Iskara.
+Thus, the chain becomes:
+
+*Iskara+AsciiDoc prepropcessor* -> _<Iskara document>_ -> *Iskara parser* -> _<Iskibal rule model>_ -> *Rule compiler* -> <Rule format> -> *Rule engine*
+
+// TODO write full documentation

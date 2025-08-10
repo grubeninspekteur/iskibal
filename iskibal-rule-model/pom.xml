@@ -1,0 +1,14 @@
+<project xmlns="http://maven.apache.org/POM/4.1.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.1.0 http://maven.apache.org/xsd/maven-4.1.0.xsd">
+
+  <parent>
+    <groupId>work.spell.iskibal</groupId>
+    <artifactId>iskibal-parent</artifactId>
+  </parent>
+
+  <artifactId>iskibal-rule-model</artifactId>
+  <name>Iskibal Rule Model</name>
+  <description>Represents a model of the rules obtained from parsing a rule source.</description>
+
+</project>

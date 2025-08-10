@@ -1,0 +1,712 @@
+= Iskara Language Reference
+
+This document describes the Iskara rule language as a standalone format.
+For embedding Iskara in AsciiDoc and therefore externalizing blocks, see the related document.
+
+The main audience of this document are application developers and rule compiler designers.
+The document assumes familiarities with programming concepts.
+
+// TODO we probably need a way to construct new objects
+
+== Rule Engine Semantics
+
+Iskara is not a rule engine.
+Nevertheless, since Iskara also shaped the Iskibal rule model design, we need to enforce some properties that need to be rule compiler has to maintain.
+We describe these in the form of "A rule engine _must_..." or "A rule compiler _must_...", though these statements are interchangeable; in the end, the rule compiler decides how to best map the rule model semantics to code of the target rule engine.
+
+There are also "soft" requirements that follow RFC nomenclature (_should_, _may_).
+
+== Syntax
+
+Iskara rules are organized into one or more files, consisting of rules.
+Rules are separated into sections started by keywords (when, then, ...).
+A section keyword closes the previous section implicitly.
+In case you need to use identifiers that share the name with a section keyword, you can write it in backticks:
+
+[source,iskara]
+----
+then
+  `inputs` add: "Hello World"
+----
+
+Each line in a section is a statement.
+
+`//` can be used for single-line comments, `/* ... */` for multi-line.
+Comments are ignored by the parser.
+
+_Expressions_ produce a value and can be the argument of messages.
+
+=== Identifiers
+
+Unquoted identifiers must be valid Java identifiers according to the Java Language Specification (JLS), with the following restriction:
+
+====
+Identifiers may not start with a symbol, including underscores.
+====
+
+This restriction allows rule compilers to safely use symbols to declare internal variables.
+
+Identifiers that contain spaces or other symbols not permitted by the JLS can be declared and referenced using backtick quoting.
+
+=== Data Types
+
+Iskara supports a handful of data types.
+It is up to the rule compiler how these are represented in the target language.
+Each datatype has a literal representation.
+
+==== Numbers
+
+Numbers can be integers or decimal numbers.
+They support standard operators and conditionals.
+
+NOTE: The rule model represents numbers as the `java.lang.BigDecimal` type.
+This ensures divisions like `2/3` do not produce surprising results, and calculations are correct for monetary amounts (no issues with floating point arithmetics).
+The rule engine _should_ allow setting the precision and round mode for divisions and multiplications, so there is no error when operating on infinite decimals.
+
+CAUTION: Numbers are parsed using the locale active during rule source parsing.
+So, `10.50` would be the decimal 10.50 in a locale like English, but would have to be written as `10,50` in a German locale.
+This behavior makes it easier for business people to understand the rules.
+The locale can be set for the parser.
+
+==== Strings
+
+Strings are enclosed by `""` or `''`.
+If you need to use a string literal inside a string, escape it with a backslash.
+
+Template strings, marked by `$`, can reference variables from the context: `$"The car's weight of ${weight} kg is above the allowed maximum weight ${maximumWeight} kg."`
+
+The template placeholders can contain any expression.
+If the string is not preceded by `$`, any template placeholders are treated as literals.
+
+==== Booleans
+
+Iskara supports the boolean literals `true` and `false`.
+
+Booleans support the messages `and: <expression>`, `or: <expression>`, `ifTrue: <block>`, `ifFalse: <block>`, as well as the operators `=` (equal) and `~=` (not equal).
+
+Since `and` is just a message like any other, it does not bind stronger.
+This means `green and: red and: blue` is invalid, since booleans don't have an `and:and:` message; `green` would be the receiver.
+You can use parenthesis to make it clear who receives the second `and:` message.
+
+Since rules often have to evaluate multiple conditions that need to be true, we also support the `,` operator which has the lowest precedence and thus always groups everything before it as a left hand side.
+Thus, `green, red, blue` is equivalent to `(green and: red) and: blue`.
+
+One helpful feature of using `,` is that it does not terminate a statement, allowing to continue on the following line.
+Thus it is possible to write the conditions in a conditional on multiple lines:
+
+[source,iskara]
+----
+when
+  vehicle.type = CAR,
+  vehicle.weight > 1500
+----
+
+// TODO: is that really a good idea or should we have standard &&?
+NOTE: We decided to use `,` instead of `&&` because programmers are used to `&&` having the highest precedence, which would conflict with message parsing.
+
+==== null
+
+Absent values are denoted by `null`.
+
+==== Collections
+
+Iskara has lists `[]`, dictionaries `[:]`, and sets `{}`.
+
+Elements of a list and dictionary can be accessed using the `at:` message.
+
+For convenience, collections support the following messages:
+
+|===
+|Message | Description
+
+|size
+|The number of items inside the collection.
+
+|exists, notEmpty
+|True if collection contains at least one element, false otherwise
+
+|doesNotExist, empty
+|True if collection contains no elements, false otherwise
+
+|where: <block>
+|Filters a collection by providing each element to a block and evaluating the returned boolean.
+Only elements for which the block returns true are kept.
+This creates a new collection; the original one keeps its elements.
+For dictionaries, a block with two arguments will get a key and a value; a block with one just the value.
+
+| all: <block>
+|Returns true if all elements in the collection satisfy the block properties.
+For dictionaries, a block with two arguments will get a key and a value; a block with one just the value.
+
+|each: <block>
+|Execute an operation on each item without returning anything
+
+|contains: <element>
+|True if the element is contained in the collection, false otherwise.
+|===
+
+===== Range literals
+
+Set literals support range literals for integers.
+For example, `{1..10}` is a set of the numbers 1 to 10, inclusively.
+Sets can contain multiple range literals as well as individual elements: `{1..10, 12, 15, 19..21}`.
+
+NOTE: Rule compilers are advised to optimize range contain queries by not expanding a range to an actual list of all elements eagerly.
+
+==== Type coercion
+
+Whether types are coerced (converted to match the type of the other side of an expression) is up to the rule compiler.
+
+=== Blocks
+
+Blocks are parametrized expressions and work just like in Smalltalk:
+// TODO we can't expect people to know Smalltalk, explain it in more detail
+
+[source,iskara]
+----
+items each: [:item | item discard]
+----
+
+==== Shorthand block syntax
+
+If the block has exactly one parameter and you want to send a message to it, you can use the shorthand block syntax by omitting the parameter:
+
+[source,iskara]
+----
+items each: [| discard]
+----
+
+=== Messages
+
+Iskara syntax is inspired by Smalltalk.
+Therefore, there are no functions, only messages you send to objects.
+For example, `deckOfCards draw` sends the `draw` message to the `deckOfCards` object.
+
+To provide parameters in a message, use a colon after each parameter name:
+
+`deckOfCards find: 5 cardsOfType: MAGICIAN`.
+
+The parameter order is significant.
+
+A special case are `default messages`.
+These are anonymous messages sent directly to the object:
+
+[source,iskara]
+----
+halt // halts execution of the program
+log: "Something happened"
+----
+
+Chaining messages would normally call a message on the result of each previous message.
+To explicitly state you want to invoke the default message of an object instead of calling a message identified by the identifier after it, use an exclamation mark:
+
+[source,iskara]
+----
+randomString! startsWith: "A"
+----
+
+NOTE: Note to rule compiler implementors: Since your target language is probably not Smalltalk, you should translate messages with multiple parameters as a single method name by concatenating the parts and applying the method naming rules of your target language.
+For the example above, that would be `findCardsOfType(5, MAGICIAN)`. +
+If your target language does not have first class functions (for example, Java doesn't), you could require the default message of an object to be represented by an interface implementation.
+In Java, this could mean accepting `Consumer`, `Function`, and `Producer` implementations as valid targets of a default message.
+
+=== Local variables
+
+Local variables can be defined by using the `let` keyword.
+They are visible in the entire scope of the rule, meaning a variable defined in the `when` section is visible in the `then` section.
+
+[source,iskara]
+----
+when
+  let underage := person.age < 18
+then
+  Person.underage := underage
+----
+
+A local variable assignment is also an expression for that statement returning the value assigned to it, which is why the above when section is valid.
+
+=== Global variables
+
+Global variables are referenced by using `@` in front of their name:
+
+[source,iskara]
+----
+@clock now
+----
+
+=== Assignments
+
+Assignments are denoted by `:=`.
+In conditional sections, assignments are only allowed for local variables.
+This encourages a clear separation of conditions and side effects (consequences), especially since many rule engines first evaluate all conditions before executing any consequence.
+
+=== Navigational syntax
+
+On top of sending messages, Iskara supports *navigation* operations:
+
+[source,iskara]
+----
+when
+  let passportIsValid := passport.valid = true
+----
+
+When a navigational operation is the left hand side of an assignment, it becomes a "set op" in the rule model, otherwise it becomes a "get op".
+It is up to the rule compiler how to translate these to the target language, using the knowledge about the types present.
+For example, a Java representation could try Java Bean or record accessors:
+
+[source,java]
+----
+var passportIsValid = passport.isValid() == true;
+----
+
+Navigational operations bind stronger than any other operator or message calling.
+
+==== Navigation on collections
+
+Navigational operations can also be used on collections, but only for retrieval.
+This translates to applying the get op to each element in the collection and returns a new collection containing the result.
+
+For example:
+
+[source,iskara]
+----
+when
+  car.passengers.passport.valid all: [:isValid | isValid = true]
+
+then
+  car.passengers.passport each: [:passport | passport.stamped := true]
+----
+
+A naive Java representation of above code, without stream operations and evaluation caching, could look like this:
+
+[source,java]
+----
+// section: condition
+var _passports = car.stream().flatMap(_c -> _c.getPassengers().stream()).toList();
+var _valids = _passports.stream().map(_v -> _v.isValid()).toList();
+
+// section: consequence
+var _passengers = car.getPassengers().stream().toList();
+var _passports = _passengers.stream().map(p -> p.getPassport()).toList();
+_passports.forEach(p -> p.setStamped(true));
+----
+
+NOTE: Navigational operations on collections _always_ produce a list, regardless of the source collection type, since we cannot know how to map keys for dictionaries or whether duplicates are possible for sets.
+
+CAUTION: Do not confuse navigational operations with direct method calls that languages like Java have, especially with methods you would expect on collections.
+For example, `passengers.size` does not return the size of the passengers collection, but instead send the `size` message to each passenger object and collect the result.
+Use `passengers size` instead.
+
+==== Null safe navigation
+
+All navigational operations _must_ be null-guarded by the rule compiler / rule engine.
+For example, given the expression `passport.address.street`, if `address` is null, the expression is terminated early and resolved to `null`.
+
+=== Tables
+
+For <<data_tables>> and <<decision_tables>>, tables are specified using https://www.markdownguide.org/extended-syntax/#tables[Markdown Tables]:
+
+[source,markdown]
+----
+| Age |
+----
+
+== Components of an Iskara Rule Unit
+
+=== Rule module header
+
+Iskara rules are organized into one more *rule modules*, also known as rule bases or units in rule engines.
+A rule module is the set of rules that are executed during a *rule run*.
+A run only operates on a single rule module, and data is not shared between executions of different rule modules.
+The rules, facts, and globals during a rule run are also called the *observable universe* of a rule run.
+
+Files sharing the same module should be combined by the rule source parser.
+
+A rule module is defined by the `module` keyword, followed by an identifier or a string.
+Using a string allows to use a more business-friendly name for the rule module.
+
+[source,iskara]
+----
+module "Black Friday Discounts"
+// ...
+----
+
+A rule module header contains optional preamble sections, as well as one or more rules.
+
+Preamble sections are always enclosed by curly braces.
+Preamble sections can only occur once.
+These preamble sections exist: <<imports>>, <<facts>>, <<outputs>>, and <<globals>>.
+
+[[imports]]
+==== Imports (`imports`)
+
+Imports declare type aliases for facts, globals, and outputs preamble sections.
+This keeps the remainder of the rule module free of technical identifiers.
+
+[source,iskara]
+----
+imports {
+  Car := org.acme.Car
+  Passenger := org.acme.PersonImpl
+}
+
+facts {
+  CarArrivingAtBorder: Car
+}
+----
+
+[[facts]]
+==== Facts (`facts`)
+
+This is the working memory and populated before a rule run.
+Facts can only be read, never written to.
+However, it is possible to modify facts using navigational operations and messages; this should only happen in the outcome of a rule.
+
+Each fact needs a type specified for it.
+You can use `[]` for "list of", `{}` for "set of", and `[<key type>:<value type>]` for "dictionary of".
+
+[source,iskara]
+----
+facts {
+  PurchasedItem: Item[]
+  AllItemTypes: ItemType{}
+  DiscountsByItemType: [ItemType:Number]
+}
+----
+
+NOTE: It is good practice to declare all facts, outputs, and globals with an upper case letter at the beginning to distinguish them from locally declared variables.
+
+[[outputs]]
+==== Outputs (`outputs`)
+
+This is the output of a rule run.
+Outputs can be written to (in consequences and alternatives).
+Types are declared just like for facts.
+
+[source,iskara]
+----
+outputs {
+  PlanePassedInspection: Boolean
+}
+----
+
+[[globals]]
+==== Globals (`globals`)
+
+Globals are objects provided by the rule engine that are persistent across rule runs.
+They _should_ be singletons and thread-safe, since they may be accessed by parallel rule executions.
+
+Globals cannot be written to.
+They are referenced by the symbol `@` in front of their identifier in rules.
+
+[source,iskara]
+----
+globals {
+  Clock: java.time.Clock
+}
+
+rule R-001
+when
+  let expiryDate := passport.expiry
+  @Clock instant isBefore: expiryDate
+then
+  Errors add: $"Passport expired on ${expiryDate}."
+end
+----
+
+[[rules]]
+=== Rules
+
+Rules are enclosed by the `rule` keyword and ended by `end`.
+The `rule` keyword must be followed by a valid identifier, the *rule ID*, and optionally a human readable description as s string.
+
+CAUTION: The rule ID must be unique across the entire rule module, including rules created in decision tables.
+
+[source,iskara]
+----
+rule WIG1 "Wiggly dolls are exempt from discounts"
+----
+
+Rules must contain two sections: <<conditionals>> and <<consequences>>.
+They can optionally contain local <<data_tables>> and <<alternatives>>.
+
+[[conditionals]]
+==== Conditionals (`when`)
+
+As the name suggests, this checks whether the rule matches.
+If the rule matches, its consequences are executed; whether this happens immediately or only after all rules have been processed is up to the rule engine.
+
+The last statement of a conditional must be an expression that evaluates to a boolean.
+It will be the evaluation result of the conditional, or in other words, the rule's matching condition.
+
+[source,iskara]
+----
+rule WIG1 "Wiggly dolls are exempt from discounts"
+when
+  let itemType = item.type
+  itemType = WigglyDoll
+----
+
+Rule compilers must disallow statements that evaluate to a boolean if they are neither the last statement in a conditional, nor a local variable assignment.
+This is to prevent errors like these:
+
+.Invalid at rule compilation time
+[source,iskara]
+----
+rule APPLE "Apples are discounted on black friday"
+when
+  Item.type = Apple
+  Today isBlackFriday
+----
+
+This would fire the rule if today is black friday, regardless of whether the item is an apple.
+Clearly this isn't what the author had in mind.
+What they actually wanted is to concatenate the conditions using `,`:
+
+[source,iskara]
+----
+rule APPLE "Apples are discounted on black friday"
+when
+  Item.type = Apple,
+  Today isBlackFriday
+----
+
+NOTE: Since Iskara cannot know the return type of an expression (except in this simple example where we use the equality operator), the rule source parser cannot enforce this error.
+Only the rule compiler for a statically compiled language can now the actual return type of an expression and raise an error.
+
+[[consequences]]
+==== Consequences (`then`)
+
+Consequences are the actions that are performed when a rule matches.
+Only consequences allow assignments to outputs.
+
+[source,iskara]
+----
+rule WIG1 "Wiggly dolls are exempt from discounts"
+when
+  Item.type = WigglyDoll
+then
+  Discount = 0
+end
+----
+
+[[alternatives]]
+===== Alternatives (`else`)
+
+Sometimes you need to take action if a rule does not match.
+Instead of specifying a second rule with the inverse condition, you can use an `else` section after a `then`.
+
+[source,iskara]
+----
+rule UNDER "Person is underage"
+when
+  Person.age < 18
+then
+  Class := "underage"
+else
+  Class := "adult"
+end
+----
+
+Note that by definition, a rule with an alternative section _always_ fires; after all, its condition is either true or false.
+
+NOTE: Rule compilers that do not support alternatives natively should create a second, synthetic rule with an inverted conditional and name it "NOT_<RuleID>".
+
+[[data_tables]]
+=== Data Tables
+
+Consider the following example:
+A vehicle may not exceed a certain weight limit, but the limits depend on the vehicle type, whether it's a bicycle, car, or truck.
+A rule for that could be implemented using a dictionary:
+
+[source,iskara]
+----
+rule VEHICLE_OVERWEIGHT "Vehicle is over weight limit"
+when
+  let weightByType := ["bicycle": 10, "car": 1000, "truck": 3000]
+  let maxWeight := weightByType[Vehicle.type]
+  Vehicle.weight > maxWeight
+then
+  errors add: $"Your vehicle exceeds the maximum weight of ${maxWeight}."
+end
+----
+
+However, that is abusing the conditional section for constants.
+Also, you may want to reuse the data table in multiple rules.
+You can instead define a data table in the module preamble:
+
+[source,iskara]
+----
+data table WeightLimits {
+ | Vehicle type | Weight limit |
+ | ------------ | ------------ |
+ | "bicycle"    | 10           |
+ | "car"        | 1000         |
+ | "truck"      | 3000         |
+}
+----
+
+Data tables with two columns can be used like a dictionary, with the first column becoming its key.
+The header is ignored in that case.
+
+Thus, the rule could be rewritten as:
+
+.Rule using global data table
+[source,iskara]
+----
+rule VEHICLE_OVERWEIGHT "Vehicle is over weight limit"
+when
+  let maxWeight := WeightLimits[Vehicle.type]
+  Vehicle.weight > maxWeight
+then
+  errors add: $"Your vehicle exceeds the maximum weight of ${maxWeight}."
+end
+----
+
+Data tables can only use literals and globals as values.
+Expressions or facts are not supported.
+
+Data tables with more than two columns become a list of dictionaries with each column header as the key.
+
+[[multi_column_data_table]]
+.Multi-column data table
+[source,iskara]
+----
+data table People {
+ | Given Name   | Family Name  | Date of birth     |
+ | ------------ | ------------ | ----------------  |
+ | "Emma"       | "Perkins"    | "1987-07-04"      |
+ | "Paul"       | "Matthews"   | "1987-03-02"      |
+}
+
+rule HAPPY_BIRTHDAY
+when:
+  People where: [p |
+    Customer.givenName = p["Given Name"],
+    Customer.familyName = p["Family Name"],
+    Customer.dateOfBirth = p["Date of birth"]
+    ] exists
+then:
+  Discounts add: "Birthday disocunt" withPercent: 15
+----
+
+==== Local data tables
+
+Data tables can be defined locally to a rule by placing them beneath a rule header, before the conditionals section.
+They behave like global data tables, but can only be referenced within the rule's scope.
+
+[[template_rules]]
+=== Template rules
+
+The example <<multi_column_data_table>> is difficult to read.
+That's where template rules shine: They create a rule execution per data table entry and allow to reference the entries directly.
+
+Template rules only work on local data tables and only allow a single, anonymous data table.
+They automatically provide the column value as variables.
+
+.Template rule
+[source,iskara]
+----
+template rule HAPPY_BIRTHDAY
+data table {
+ | Given Name   | Family Name  | Date of birth     |
+ | ------------ | ------------ | ----------------  |
+ | "Emma"       | "Perkins"    | "1987-07-04"      |
+ | "Paul"       | "Matthews"   | "1987-03-02"      |
+}
+when:
+  Customer.givenName = `Given Name`,
+  Customer.familyName = `Family Name`,
+  Customer.dateOfBirth = `Date of birth`
+then:
+  Discounts add: "Birthday disocunt" withPercent: 15
+----
+
+It is up to the rule compiler or engine how to implement a template rule, but each entry of a template rule data table _must_ lead to a separate rule firing.
+
+[[decision_tables]]
+=== Decision Tables
+
+Often you want to reuse conditionals in a clear and concise way.
+// TODO Iskara does not (yet) have a way of declaring conditionals in the rule module preamble, but it would be useful.
+This is where decision tables shine.
+They define multiple rules in a structured way.
+Here's an example:
+
+[[decision_table_example]]
+.Decision table example
+[source,iskara]
+----
+decision table BEST_OFFERS "Show best offers" {
+| ID                | WHEN            | WHEN         | THEN                                  | THEN      |
+|                   | #`has birthday` | Customer.age | Discount add: "birthday" withPercent: | #offerCar |
+| ----------------- | ------------    | ------------ | ------------------------------------- | --------- |
+| BIRTHDAY_DISCOUNT | *               |              | 15                                    |           |
+| BD_CAR_OFFER      | *               | >= 18        |                                       | "blue"    |
+} where `has birthday` := {
+    Customer.dateOfBirth = Today
+  },
+  offerCar := {
+    let color := param
+    messages add: $"Did you know you can get a birthday paint in ${color} for your car?"
+  }
+}
+----
+
+A decision table consists of the following parts:
+
+. A top header row with a single ID column, one or more WHEN columns, one or more THEN columns
+. One conditional/consequence rows specifying the condition (partial), consequence (partial), or respective aliases
+. One or more rule rows.
+
+The top column identifies the rule ID column and separates conditions from consequences.
+For each condition or consequence, `WHEN` and `THEN` need to be repeated.
+
+NOTE: AsciiDoc+Iskara allows using colspans to more succinctly separate conditions from consequences, and activate multiple WHEN/THEN columns at once.
+
+In the second header row we specify the conditional or consequence expressions.
+They are combined with the cell for each rule.
+So in <<decision_table_example>>, the "BD_CAR_OFFER" rule has a condition `Customer.age >= 18`.
+
+Since expressions can get very long or need multiple rows, it is best to _alias_ them and put them at the end of the table.
+This also makes it easier for business to read the rules as sentences.
+Aliases are defined in the `where` section of a decision table, and referenced in the header column using `#`.
+
+Following the header rows, each rule row represents a separate rule.
+Only columns with non-empty cells are used for a rule.
+At least one WHEN and at least one THEN column must be enabled per rule.
+Multiple WHEN columns read as conjunction, whereas multiple THEN columns are simply concatenated in the consequences section of the generated rule.
+
+Rule cells can contain arbitrary expressions.
+
+Aliased conditionals/consequences are not concatenated with the cell, instead they receive a special `param` local variable holding the cell content as its first value.
+
+The above decision table is equivalent to these rules:
+
+.Transpiled decision table
+[source,iskara]
+----
+rule BIRTHDAY_DISCOUNT
+when:
+  Customer.dateOfBirth = today
+then:
+  Discount add: 15
+end
+
+rule BD_CAR_OFFER
+when:
+  Customer.dateOfBirth = today,
+  Customer.age >= 18
+then:
+  param0 := "blue"
+  messages add: $"Did you know you can get a birthday paint in ${param0} for your car?"
+end
+----
+
+NOTE: The Iskibal rule model has a function to transform a decision table to individual rules transparently, so rule compilers that do not want to treat decision tables differently can get the transpiled rules.
+
+=== Match mode
+
+<<template_rules>> and <<decision_tables>> can lead to multiple entries of a table matching, each match executing a consequence.
+This is not always what you want.
+For example, what if a customer should only get one discount?
