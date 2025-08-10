@@ -1,15 +1,114 @@
-= AsciiDoc+Iskara
+= AsciiDoc plus Iskara
 
-AsciiDoc+Iskara is an extended format of Iskara that allows embedding Iskara source and native AsciiDoc tables in a single document.
-This has the following advantages:
+This document describes how Iskara rule sources can be embedded in AsciiDoc.
+It focusses on the externalization of rule metadata such as imports, facts, outputs, globals and decision tables so they can be maintained using standard AsciiDoc structures.
 
-* Rules and tables can be documented with rich formatting, like highlighting
-* Decision tables can use colspan to not repeat conditional columns
-//TODO other advantages?
+See the <<Iskara_Language_Reference.adoc#,Iskara Language Reference>> for the syntax of the rule language itself.
+The example <<../Border_Crossing.rule.adoc#>> demonstrates these concepts in practice.
 
-Rules written in AsciiDoc+Iskara are always first compiled to Iskara.
-Thus, the chain becomes:
+== Organizing rule sources
 
-*Iskara+AsciiDoc prepropcessor* -> _<Iskara document>_ -> *Iskara parser* -> _<Iskibal rule model>_ -> *Rule compiler* -> <Rule format> -> *Rule engine*
+AsciiDoc documents may contain multiple rule fragments.
+Listing blocks annotated with the `source,iskara` attribute become rule sections.
+Rules can be freely mixed with other sections and then collected by a pre-processor before compilation.
 
-// TODO write full documentation
+Data required by the rules can be defined using structural blocks that are independent of the rule listings.
+This allows data to be re-used, included from other files and even generated.
+
+== Imports
+
+Imports map identifiers used inside the rules to classes of the target language.
+They are written as a definition list with the role `imports`:
+
+[.imports]
+====
+Vehicle:: org.acme.Vehicle
+Passenger:: org.acme.PersonImpl
+====
+
+Multiple import blocks are merged by the parser, allowing imports to be grouped and reused in different documents.
+
+== Facts
+
+Facts provide the named objects that are available to all rules.
+They can be declared either as a definition list or as a three column table with the role `facts`.
+The columns are *Fact name*, *Type* and an optional *Description*.
+
+[cols="1,1,3",.facts]
+|===
+| Fact name | Type | Description
+
+| vehicleCrossingTheBorder | Vehicle | The vehicle that arrived at the border checkpoint.
+| prompt | Prompt | Allows to ask the user for input.
+|===
+
+== Outputs
+
+Outputs are similar to facts but are produced by the rule execution.
+They are written as a four column table with the role `outputs`.
+The columns are *Output name*, *Type*, *Initial value* and an optional *Description*.
+
+[cols="1,1,1,3",.outputs]
+|===
+| Output name | Type | Initial value | Description
+
+| rejectionReasons | String[] | [] | List of reasons the border crossing was not allowed.
+|===
+
+== Globals and locals
+
+Additional global state can be declared using tables with the role `locals`.
+The column order matches outputs, but the values are not returned to the caller.
+
+== Data tables
+
+AsciiDoc tables can hold external data referenced by rules.
+Tables may be given an anchor so that other parts of the document can refer to them via cross references.
+
+[#vehicle-weight-limits]
+|===
+| Type  | Maximum Weight
+| Car   | 1.5t
+| Lorry | 5t
+|===
+
+== Decision tables
+
+Decision tables can be modeled with regular AsciiDoc tables carrying the `decision-table` role.
+The table caption becomes the human readable title, while the table ID is used as the rule identifier.
+The first two header rows define the structure and expressions for each condition or consequence column.
+Subsequent rows describe individual rules; only cells with content participate in a rule.
+
+Aliases referenced in the header using \#alias may be defined after the table in a definition list with the role `aliases`.
+
+The decision table from the language reference can be represented as follows:
+
+[cols="1,1,1,1,1",options="header",headerrows=2,role="decision-table",id="BEST_OFFERS"]
+.Show best offers
+|===
+| ID | 2+| WHEN | 2+| THEN
+h| |h|[background-color="#e6ffe6"]#\#has birthday#|h|[background-color="#ffffe0"]#Customer.age#|h|[background-color="#e0ffff"]#Discount add: "birthday" withPercent:#|h|[background-color="#ffe6e6"]#\#offerCar#
+| BIRTHDAY_DISCOUNT |[background-color="#e6ffe6"]#*#| |[background-color="#e0ffff"]#15#|
+| BD_CAR_OFFER |[background-color="#e6ffe6"]#*#|[background-color="#ffffe0"]#>= 18#||[background-color="#ffe6e6"]#"blue"#
+|===
+
+[.aliases]
+has birthday::
++
+[source,iskara]
+----
+Customer.dateOfBirth = Today
+----
+offerCar::
++
+[source,iskara]
+----
+let color := param
+messages add: $"Did you know you can get a birthday paint in ${color} for your car?"
+----
+
+== Includes and modularization
+
+Because all of these structures are plain AsciiDoc, they can be stored in separate files and brought together with the standard `include::` directive.
+This enables the creation of shared libraries of tables, globals and decision tables that can be combined to form larger rule bases.
+
