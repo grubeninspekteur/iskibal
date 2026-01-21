@@ -162,21 +162,25 @@ letStatement
 
 expressionStatement
     : expression
+    | commaExpr
     ;
 
 // ============================================================================
-// Expressions (precedence from lowest to highest)
+// Expressions (precedence from highest to lowest)
 // ============================================================================
 
 expression
-    : expression COMMA nl expression                              # commaExpr
-    | <assoc=right> target=navigationExpr ASSIGN value=expression # assignmentExpr
-    | expression comparisonOp expression                          # comparisonExpr
-    | expression additiveOp expression                            # additiveExpr
-    | expression multiplicativeOp expression                      # multiplicativeExpr
-    | MINUS expression                                            # unaryMinusExpr
+    : navigationExpr                                              # navigation
     | messageSendExpr                                             # messageSend
-    | navigationExpr                                              # navigation
+    | MINUS expression                                            # unaryMinusExpr
+    | expression multiplicativeOp expression                      # multiplicativeExpr
+    | expression additiveOp expression                            # additiveExpr
+    | expression comparisonOp expression                          # comparisonExpr
+    | <assoc=right> target=navigationExpr ASSIGN value=expression # assignmentExpr
+    ;
+
+commaExpr
+    : expression COMMA nl expression
     ;
 
 comparisonOp

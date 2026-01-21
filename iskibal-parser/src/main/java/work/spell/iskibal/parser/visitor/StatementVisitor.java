@@ -38,12 +38,12 @@ public class StatementVisitor extends IskaraParserBaseVisitor<Statement> {
 
     @Override
     public Statement visitExpressionStatement(IskaraParser.ExpressionStatementContext ctx) {
-        Expression expression = expressionVisitor.visit(ctx.expression());
-
-        // Check for assignment expression pattern: target := value
-        // The grammar parses := as ASSIGN in let statements, but in expression statements
-        // we need to detect assignment expressions manually
-
+        Expression expression;
+        if (ctx.expression() != null) {
+            expression = expressionVisitor.visit(ctx.expression());
+        } else {
+            expression = expressionVisitor.visit(ctx.commaExpr());
+        }
         return new Statement.ExpressionStatement(expression);
     }
 }

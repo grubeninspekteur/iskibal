@@ -5,10 +5,15 @@ import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import work.spell.iskibal.model.*;
+import work.spell.iskibal.model.Expression.Binary;
+import work.spell.iskibal.model.Expression.Binary.Operator;
 import work.spell.iskibal.model.Expression.Identifier;
 import work.spell.iskibal.model.Expression.Literal.NumberLiteral;
+import work.spell.iskibal.model.Expression.Literal.StringLiteral;
 import work.spell.iskibal.model.Expression.MessageSend;
 import work.spell.iskibal.model.Expression.MessageSend.MessagePart;
+import work.spell.iskibal.model.Expression.Navigation;
+import work.spell.iskibal.model.Rule.SimpleRule;
 import work.spell.iskibal.model.Statement.ExpressionStatement;
 import work.spell.iskibal.parser.api.ParseResult;
 import work.spell.iskibal.parser.api.SourceType;
@@ -183,9 +188,9 @@ class FullParseTest {
             RuleModule module = parseSuccessfully(input);
 
             assertThat(module.rules()).hasSize(1);
-            assertThat(module.rules().get(0)).isInstanceOf(Rule.SimpleRule.class);
+            assertThat(module.rules().get(0)).isInstanceOf(SimpleRule.class);
 
-            Rule.SimpleRule rule = (Rule.SimpleRule) module.rules().get(0);
+            SimpleRule rule = (SimpleRule) module.rules().get(0);
             assertThat(rule.id()).isEqualTo("WIG1");
             assertThat(rule.description()).isEqualTo("Wiggly dolls are exempt");
 
@@ -204,6 +209,41 @@ class FullParseTest {
             assertThat(assignment.target()).isEqualTo(new Identifier("Discount"));
             assertThat(assignment.value()).isEqualTo(new Expression.Literal.NumberLiteral(BigDecimal.ZERO));
         }
+
+        @Test
+        void parsesConcatenatedAndInWhen() {
+            String input = """
+                rule COMMA
+                when
+                    Car.maker = 'ACME',
+                    Car.color = 'blue'
+                then
+                    Success := true
+                end
+                """;
+
+            RuleModule module = parseSuccessfully(input);
+
+            assertThat(module.rules())
+                .singleElement()
+                .asInstanceOf(InstanceOfAssertFactories.type(SimpleRule.class))
+                .extracting(SimpleRule::when)
+                .isEqualTo(List.of(new ExpressionStatement(new MessageSend(
+                    new Expression.Binary(
+                        new Navigation(new Identifier("Car"), List.of("maker")
+                        ),
+                        Operator.EQUALS,
+                        new StringLiteral("ACME")
+                        ),
+                    List.of(new MessagePart("and",
+                        new Binary(
+                            new Navigation(new Identifier("Car"), List.of("color")),
+                            Operator.EQUALS,
+                            new StringLiteral("blue")
+                        )
+                        ))
+                ))));
+        }
     }
 
     @Nested
@@ -221,7 +261,7 @@ class FullParseTest {
                 """;
 
             RuleModule module = parseSuccessfully(input);
-            Rule.SimpleRule rule = (Rule.SimpleRule) module.rules().get(0);
+            SimpleRule rule = (SimpleRule) module.rules().get(0);
 
             assertThat(rule.when()).hasSize(2);
             assertThat(rule.when().get(0)).isInstanceOf(Statement.LetStatement.class);
@@ -246,7 +286,7 @@ class FullParseTest {
                 """;
 
             RuleModule module = parseSuccessfully(input);
-            Rule.SimpleRule rule = (Rule.SimpleRule) module.rules().get(0);
+            SimpleRule rule = (SimpleRule) module.rules().get(0);
 
             Statement.ExpressionStatement stmt = (Statement.ExpressionStatement) rule.when().get(0);
             Expression.Binary binary = (Expression.Binary) stmt.expression();
@@ -274,7 +314,7 @@ class FullParseTest {
                 """;
 
             RuleModule module = parseSuccessfully(input);
-            Rule.SimpleRule rule = (Rule.SimpleRule) module.rules().get(0);
+            SimpleRule rule = (SimpleRule) module.rules().get(0);
 
             Statement.ExpressionStatement stmt = (Statement.ExpressionStatement) rule.then().get(0);
             MessageSend msg = (MessageSend) stmt.expression();
@@ -298,7 +338,7 @@ class FullParseTest {
                 """;
 
             RuleModule module = parseSuccessfully(input);
-            Rule.SimpleRule rule = (Rule.SimpleRule) module.rules().get(0);
+            SimpleRule rule = (SimpleRule) module.rules().get(0);
 
             assertThat(rule.then()).singleElement()
                 .asInstanceOf(InstanceOfAssertFactories.type(ExpressionStatement.class))
@@ -326,7 +366,7 @@ class FullParseTest {
                 """;
 
             RuleModule module = parseSuccessfully(input);
-            Rule.SimpleRule rule = (Rule.SimpleRule) module.rules().get(0);
+            SimpleRule rule = (SimpleRule) module.rules().get(0);
 
             Statement.ExpressionStatement stmt = (Statement.ExpressionStatement) rule.when().get(0);
             MessageSend msg = (MessageSend) stmt.expression();
@@ -366,7 +406,7 @@ class FullParseTest {
                 """;
 
             RuleModule module = parseSuccessfully(input);
-            Rule.SimpleRule rule = (Rule.SimpleRule) module.rules().get(0);
+            SimpleRule rule = (SimpleRule) module.rules().get(0);
 
             Statement.ExpressionStatement stmt = (Statement.ExpressionStatement) rule.when().get(0);
             Expression.Binary binary = (Expression.Binary) stmt.expression();
@@ -391,7 +431,7 @@ class FullParseTest {
                 """;
 
             RuleModule module = parseSuccessfully(input);
-            Rule.SimpleRule rule = (Rule.SimpleRule) module.rules().get(0);
+            SimpleRule rule = (SimpleRule) module.rules().get(0);
 
             Statement.ExpressionStatement stmt = (Statement.ExpressionStatement) rule.when().get(0);
             Expression.Binary binary = (Expression.Binary) stmt.expression();
@@ -411,7 +451,7 @@ class FullParseTest {
                 """;
 
             RuleModule module = parseSuccessfully(input);
-            Rule.SimpleRule rule = (Rule.SimpleRule) module.rules().get(0);
+            SimpleRule rule = (SimpleRule) module.rules().get(0);
 
             Statement.ExpressionStatement stmt = (Statement.ExpressionStatement) rule.when().get(0);
             Expression.Binary binary = (Expression.Binary) stmt.expression();
@@ -552,7 +592,7 @@ class FullParseTest {
                 """;
 
             RuleModule module = parseSuccessfully(input);
-            Rule.SimpleRule rule = (Rule.SimpleRule) module.rules().get(0);
+            SimpleRule rule = (SimpleRule) module.rules().get(0);
 
             Statement.ExpressionStatement stmt = (Statement.ExpressionStatement) rule.when().get(0);
             Expression.Binary binary = (Expression.Binary) stmt.expression();
