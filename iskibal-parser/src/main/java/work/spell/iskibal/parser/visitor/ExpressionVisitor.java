@@ -47,8 +47,8 @@ public class ExpressionVisitor extends IskaraParserBaseVisitor<Expression> {
 
     @Override
     public Expression visitAssignmentExpr(IskaraParser.AssignmentExprContext ctx) {
-        Expression target = visit(ctx.expression(0));
-        Expression value = visit(ctx.expression(1));
+        Expression target = visit(ctx.target);
+        Expression value = visit(ctx.value);
         return new Assignment(target, value);
     }
 
@@ -99,13 +99,7 @@ public class ExpressionVisitor extends IskaraParserBaseVisitor<Expression> {
     @Override
     public Expression visitMessageSendExpr(IskaraParser.MessageSendExprContext ctx) {
         Expression receiver = visit(ctx.navigationExpr());
-
-        // Process message parts in order, each one wraps the previous result
-        for (var part : ctx.messagePart()) {
-            receiver = processMessagePart(receiver, part);
-        }
-
-        return receiver;
+        return processMessagePart(receiver, ctx.messagePart());
     }
 
     private Expression processMessagePart(Expression receiver, IskaraParser.MessagePartContext part) {
@@ -122,7 +116,7 @@ public class ExpressionVisitor extends IskaraParserBaseVisitor<Expression> {
     private Expression visitKeywordMessagePart(Expression receiver, IskaraParser.KeywordMessagePartContext ctx) {
         List<MessageSend.MessagePart> parts = new ArrayList<>();
         var identifiers = ctx.IDENTIFIER();
-        var expressions = ctx.expression();
+        var expressions = ctx.navigationExpr();
         for (int i = 0; i < identifiers.size(); i++) {
             String name = identifiers.get(i).getText();
             Expression arg = visit(expressions.get(i));

@@ -169,13 +169,14 @@ expressionStatement
 // ============================================================================
 
 expression
-    : expression COMMA nl expression                           # commaExpr
-    | <assoc=right> expression ASSIGN expression               # assignmentExpr
-    | expression comparisonOp expression                       # comparisonExpr
-    | expression additiveOp expression                         # additiveExpr
-    | expression multiplicativeOp expression                   # multiplicativeExpr
-    | MINUS expression                                         # unaryMinusExpr
-    | messageSendExpr                                          # messageSend
+    : expression COMMA nl expression                              # commaExpr
+    | <assoc=right> target=navigationExpr ASSIGN value=expression # assignmentExpr
+    | expression comparisonOp expression                          # comparisonExpr
+    | expression additiveOp expression                            # additiveExpr
+    | expression multiplicativeOp expression                      # multiplicativeExpr
+    | MINUS expression                                            # unaryMinusExpr
+    | messageSendExpr                                             # messageSend
+    | navigationExpr                                              # navigation
     ;
 
 comparisonOp
@@ -193,13 +194,13 @@ multiplicativeOp
 // Smalltalk-style message sending
 // Non-left-recursive version for better ANTLR compatibility
 messageSendExpr
-    : navigationExpr messagePart*
+    : navigationExpr messagePart
     ;
 
 messagePart
-    : IDENTIFIER COLON expression (IDENTIFIER COLON expression)*  # keywordMessagePart
-    | IDENTIFIER                                                   # unaryMessagePart
-    | BANG                                                         # defaultMessagePart
+    : IDENTIFIER COLON navigationExpr (IDENTIFIER COLON navigationExpr)*  # keywordMessagePart
+    | IDENTIFIER                                                          # unaryMessagePart
+    | BANG                                                                # defaultMessagePart
     ;
 
 // Navigation with dot
