@@ -6,10 +6,9 @@ import work.spell.iskibal.parser.api.ParseOptions;
 import work.spell.iskibal.parser.api.ParseResult;
 import work.spell.iskibal.parser.internal.IskaraParserImpl;
 
-import java.math.BigDecimal;
 import java.util.Locale;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Integration tests for the full parsing pipeline.
@@ -22,14 +21,14 @@ class FullParseTest {
     void parsesEmptyModule() {
         ParseResult<RuleModule> result = parser.parse("");
 
-        assertTrue(result.isSuccess());
+        assertThat(result.isSuccess()).isTrue();
         RuleModule module = result.getValue().orElseThrow();
-        assertTrue(module.imports().isEmpty());
-        assertTrue(module.facts().isEmpty());
-        assertTrue(module.globals().isEmpty());
-        assertTrue(module.outputs().isEmpty());
-        assertTrue(module.dataTables().isEmpty());
-        assertTrue(module.rules().isEmpty());
+        assertThat(module.imports()).isEmpty();
+        assertThat(module.facts()).isEmpty();
+        assertThat(module.globals()).isEmpty();
+        assertThat(module.outputs()).isEmpty();
+        assertThat(module.dataTables()).isEmpty();
+        assertThat(module.rules()).isEmpty();
     }
 
     @Test
@@ -43,17 +42,17 @@ class FullParseTest {
 
         ParseResult<RuleModule> result = parser.parse(input);
 
-        assertTrue(result.isSuccess());
+        assertThat(result.isSuccess()).isTrue();
         RuleModule module = result.getValue().orElseThrow();
-        assertEquals(2, module.imports().size());
+        assertThat(module.imports()).hasSize(2);
 
         Import carImport = module.imports().get(0);
-        assertEquals("Car", carImport.alias());
-        assertEquals("org.acme.Car", carImport.type());
+        assertThat(carImport.alias()).isEqualTo("Car");
+        assertThat(carImport.type()).isEqualTo("org.acme.Car");
 
         Import passengerImport = module.imports().get(1);
-        assertEquals("Passenger", passengerImport.alias());
-        assertEquals("org.acme.PersonImpl", passengerImport.type());
+        assertThat(passengerImport.alias()).isEqualTo("Passenger");
+        assertThat(passengerImport.type()).isEqualTo("org.acme.PersonImpl");
     }
 
     @Test
@@ -67,18 +66,18 @@ class FullParseTest {
 
         ParseResult<RuleModule> result = parser.parse(input);
 
-        assertTrue(result.isSuccess());
+        assertThat(result.isSuccess()).isTrue();
         RuleModule module = result.getValue().orElseThrow();
-        assertEquals(2, module.facts().size());
+        assertThat(module.facts()).hasSize(2);
 
         Fact itemFact = module.facts().get(0);
-        assertEquals("Item", itemFact.name());
-        assertEquals("Item[]", itemFact.type());
+        assertThat(itemFact.name()).isEqualTo("Item");
+        assertThat(itemFact.type()).isEqualTo("Item[]");
 
         Fact customerFact = module.facts().get(1);
-        assertEquals("Customer", customerFact.name());
-        assertEquals("Customer", customerFact.type());
-        assertEquals("The current customer", customerFact.description());
+        assertThat(customerFact.name()).isEqualTo("Customer");
+        assertThat(customerFact.type()).isEqualTo("Customer");
+        assertThat(customerFact.description()).isEqualTo("The current customer");
     }
 
     @Test
@@ -91,13 +90,13 @@ class FullParseTest {
 
         ParseResult<RuleModule> result = parser.parse(input);
 
-        assertTrue(result.isSuccess());
+        assertThat(result.isSuccess()).isTrue();
         RuleModule module = result.getValue().orElseThrow();
-        assertEquals(1, module.globals().size());
+        assertThat(module.globals()).hasSize(1);
 
         Global clock = module.globals().get(0);
-        assertEquals("Clock", clock.name());
-        assertEquals("java.time.Clock", clock.type());
+        assertThat(clock.name()).isEqualTo("Clock");
+        assertThat(clock.type()).isEqualTo("java.time.Clock");
     }
 
     @Test
@@ -111,18 +110,18 @@ class FullParseTest {
 
         ParseResult<RuleModule> result = parser.parse(input);
 
-        assertTrue(result.isSuccess());
+        assertThat(result.isSuccess()).isTrue();
         RuleModule module = result.getValue().orElseThrow();
-        assertEquals(2, module.outputs().size());
+        assertThat(module.outputs()).hasSize(2);
 
         Output errors = module.outputs().get(0);
-        assertEquals("Errors", errors.name());
-        assertEquals("String[]", errors.type());
-        assertNotNull(errors.initialValue());
+        assertThat(errors.name()).isEqualTo("Errors");
+        assertThat(errors.type()).isEqualTo("String[]");
+        assertThat(errors.initialValue()).isNotNull();
 
         Output valid = module.outputs().get(1);
-        assertEquals("Valid", valid.name());
-        assertEquals("Boolean", valid.type());
+        assertThat(valid.name()).isEqualTo("Valid");
+        assertThat(valid.type()).isEqualTo("Boolean");
     }
 
     @Test
@@ -138,18 +137,18 @@ class FullParseTest {
 
         ParseResult<RuleModule> result = parser.parse(input);
 
-        assertTrue(result.isSuccess());
+        assertThat(result.isSuccess()).isTrue();
         RuleModule module = result.getValue().orElseThrow();
-        assertEquals(1, module.rules().size());
+        assertThat(module.rules()).hasSize(1);
 
         Rule rule = module.rules().get(0);
-        assertInstanceOf(Rule.SimpleRule.class, rule);
+        assertThat(rule).isInstanceOf(Rule.SimpleRule.class);
 
         Rule.SimpleRule simpleRule = (Rule.SimpleRule) rule;
-        assertEquals("WIG1", simpleRule.id());
-        assertEquals("Wiggly dolls are exempt", simpleRule.description());
-        assertFalse(simpleRule.when().isEmpty());
-        assertFalse(simpleRule.then().isEmpty());
+        assertThat(simpleRule.id()).isEqualTo("WIG1");
+        assertThat(simpleRule.description()).isEqualTo("Wiggly dolls are exempt");
+        assertThat(simpleRule.when()).isNotEmpty();
+        assertThat(simpleRule.then()).isNotEmpty();
     }
 
     @Test
@@ -166,15 +165,15 @@ class FullParseTest {
 
         ParseResult<RuleModule> result = parser.parse(input);
 
-        assertTrue(result.isSuccess());
+        assertThat(result.isSuccess()).isTrue();
         RuleModule module = result.getValue().orElseThrow();
         Rule.SimpleRule rule = (Rule.SimpleRule) module.rules().get(0);
 
-        assertEquals(2, rule.when().size());
-        assertInstanceOf(Statement.LetStatement.class, rule.when().get(0));
+        assertThat(rule.when()).hasSize(2);
+        assertThat(rule.when().get(0)).isInstanceOf(Statement.LetStatement.class);
 
         Statement.LetStatement letStmt = (Statement.LetStatement) rule.when().get(0);
-        assertEquals("underage", letStmt.name());
+        assertThat(letStmt.name()).isEqualTo("underage");
     }
 
     @Test
@@ -190,20 +189,20 @@ class FullParseTest {
 
         ParseResult<RuleModule> result = parser.parse(input);
 
-        assertTrue(result.isSuccess());
+        assertThat(result.isSuccess()).isTrue();
         RuleModule module = result.getValue().orElseThrow();
         Rule.SimpleRule rule = (Rule.SimpleRule) module.rules().get(0);
 
         Statement.ExpressionStatement stmt = (Statement.ExpressionStatement) rule.when().get(0);
-        assertInstanceOf(Expression.Binary.class, stmt.expression());
+        assertThat(stmt.expression()).isInstanceOf(Expression.Binary.class);
 
         Expression.Binary binary = (Expression.Binary) stmt.expression();
-        assertInstanceOf(Expression.Navigation.class, binary.left());
+        assertThat(binary.left()).isInstanceOf(Expression.Navigation.class);
 
         Expression.Navigation nav = (Expression.Navigation) binary.left();
-        assertEquals(2, nav.names().size());
-        assertEquals("address", nav.names().get(0));
-        assertEquals("city", nav.names().get(1));
+        assertThat(nav.names()).hasSize(2);
+        assertThat(nav.names().get(0)).isEqualTo("address");
+        assertThat(nav.names().get(1)).isEqualTo("city");
     }
 
     @Test
@@ -219,16 +218,16 @@ class FullParseTest {
 
         ParseResult<RuleModule> result = parser.parse(input);
 
-        assertTrue(result.isSuccess());
+        assertThat(result.isSuccess()).isTrue();
         RuleModule module = result.getValue().orElseThrow();
         Rule.SimpleRule rule = (Rule.SimpleRule) module.rules().get(0);
 
         Statement.ExpressionStatement stmt = (Statement.ExpressionStatement) rule.then().get(0);
-        assertInstanceOf(Expression.MessageSend.class, stmt.expression());
+        assertThat(stmt.expression()).isInstanceOf(Expression.MessageSend.class);
 
         Expression.MessageSend msg = (Expression.MessageSend) stmt.expression();
-        assertEquals(1, msg.parts().size());
-        assertEquals("add", msg.parts().get(0).name());
+        assertThat(msg.parts()).hasSize(1);
+        assertThat(msg.parts().get(0).name()).isEqualTo("add");
     }
 
     @Test
@@ -250,15 +249,15 @@ class FullParseTest {
 
         ParseResult<RuleModule> result = parser.parse(input);
 
-        assertTrue(result.isSuccess());
+        assertThat(result.isSuccess()).isTrue();
         RuleModule module = result.getValue().orElseThrow();
 
         Rule rule = module.rules().get(0);
-        assertInstanceOf(Rule.TemplateRule.class, rule);
+        assertThat(rule).isInstanceOf(Rule.TemplateRule.class);
 
         Rule.TemplateRule templateRule = (Rule.TemplateRule) rule;
-        assertEquals("BIRTHDAY", templateRule.id());
-        assertNotNull(templateRule.dataTable());
+        assertThat(templateRule.id()).isEqualTo("BIRTHDAY");
+        assertThat(templateRule.dataTable()).isNotNull();
     }
 
     @Test
@@ -279,7 +278,7 @@ class FullParseTest {
 
         ParseResult<RuleModule> result = parser.parse(input);
 
-        assertTrue(result.isSuccess());
+        assertThat(result.isSuccess()).isTrue();
     }
 
     @Test
@@ -297,7 +296,7 @@ class FullParseTest {
 
         ParseResult<RuleModule> result = parser.parse(input);
 
-        assertTrue(result.isSuccess());
+        assertThat(result.isSuccess()).isTrue();
     }
 
     @Test
@@ -313,8 +312,8 @@ class FullParseTest {
 
         ParseResult<RuleModule> result = parser.parse(input);
 
-        assertFalse(result.isSuccess());
-        assertFalse(result.getDiagnostics().isEmpty());
+        assertThat(result.isSuccess()).isFalse();
+        assertThat(result.getDiagnostics()).isNotEmpty();
     }
 
     @Test
@@ -331,7 +330,7 @@ class FullParseTest {
         ParseOptions options = ParseOptions.defaults().withLocale(Locale.US);
         ParseResult<RuleModule> result = parser.parse(input, options);
 
-        assertTrue(result.isSuccess());
+        assertThat(result.isSuccess()).isTrue();
     }
 
     @Test
@@ -347,7 +346,7 @@ class FullParseTest {
 
         ParseResult<RuleModule> result = parser.parse(input);
 
-        assertTrue(result.isSuccess());
+        assertThat(result.isSuccess()).isTrue();
     }
 
     @Test
@@ -363,7 +362,7 @@ class FullParseTest {
 
         ParseResult<RuleModule> result = parser.parse(input);
 
-        assertTrue(result.isSuccess());
+        assertThat(result.isSuccess()).isTrue();
     }
 
     @Test
@@ -379,11 +378,9 @@ class FullParseTest {
             """;
 
         ParseResult<RuleModule> result1 = parser.parse(input1);
-        if (!result1.isSuccess()) {
-            System.err.println("Test 1 errors:");
-            result1.getDiagnostics().forEach(d -> System.err.println("  " + d));
-        }
-        assertTrue(result1.isSuccess(), "Simple keyword message failed: " + result1.getDiagnostics());
+        assertThat(result1.isSuccess())
+                .as("Simple keyword message failed: %s", result1.getDiagnostics())
+                .isTrue();
 
         // Second test: keyword message with block
         // Note: 'where' is a keyword, so we use 'filter' instead
@@ -397,11 +394,8 @@ class FullParseTest {
             """;
 
         ParseResult<RuleModule> result2 = parser.parse(input2);
-
-        if (!result2.isSuccess()) {
-            System.err.println("Test 2 errors:");
-            result2.getDiagnostics().forEach(d -> System.err.println("  " + d));
-        }
-        assertTrue(result2.isSuccess(), "Block expression failed: " + result2.getDiagnostics());
+        assertThat(result2.isSuccess())
+                .as("Block expression failed: %s", result2.getDiagnostics())
+                .isTrue();
     }
 }

@@ -8,7 +8,7 @@ import work.spell.iskibal.parser.IskaraLexer;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Tests for the Iskara lexer.
@@ -20,117 +20,117 @@ class LexerTest {
         String input = "module imports facts globals outputs rule template decision table data when then else end where let";
         List<Token> tokens = tokenize(input);
 
-        assertEquals(IskaraLexer.MODULE, tokens.get(0).getType());
-        assertEquals(IskaraLexer.IMPORTS, tokens.get(1).getType());
-        assertEquals(IskaraLexer.FACTS, tokens.get(2).getType());
-        assertEquals(IskaraLexer.GLOBALS, tokens.get(3).getType());
-        assertEquals(IskaraLexer.OUTPUTS, tokens.get(4).getType());
-        assertEquals(IskaraLexer.RULE, tokens.get(5).getType());
-        assertEquals(IskaraLexer.TEMPLATE, tokens.get(6).getType());
-        assertEquals(IskaraLexer.DECISION, tokens.get(7).getType());
-        assertEquals(IskaraLexer.TABLE, tokens.get(8).getType());
-        assertEquals(IskaraLexer.DATA, tokens.get(9).getType());
-        assertEquals(IskaraLexer.WHEN, tokens.get(10).getType());
-        assertEquals(IskaraLexer.THEN, tokens.get(11).getType());
-        assertEquals(IskaraLexer.ELSE, tokens.get(12).getType());
-        assertEquals(IskaraLexer.END, tokens.get(13).getType());
-        assertEquals(IskaraLexer.WHERE, tokens.get(14).getType());
-        assertEquals(IskaraLexer.LET, tokens.get(15).getType());
+        assertThat(tokens.get(0).getType()).isEqualTo(IskaraLexer.MODULE);
+        assertThat(tokens.get(1).getType()).isEqualTo(IskaraLexer.IMPORTS);
+        assertThat(tokens.get(2).getType()).isEqualTo(IskaraLexer.FACTS);
+        assertThat(tokens.get(3).getType()).isEqualTo(IskaraLexer.GLOBALS);
+        assertThat(tokens.get(4).getType()).isEqualTo(IskaraLexer.OUTPUTS);
+        assertThat(tokens.get(5).getType()).isEqualTo(IskaraLexer.RULE);
+        assertThat(tokens.get(6).getType()).isEqualTo(IskaraLexer.TEMPLATE);
+        assertThat(tokens.get(7).getType()).isEqualTo(IskaraLexer.DECISION);
+        assertThat(tokens.get(8).getType()).isEqualTo(IskaraLexer.TABLE);
+        assertThat(tokens.get(9).getType()).isEqualTo(IskaraLexer.DATA);
+        assertThat(tokens.get(10).getType()).isEqualTo(IskaraLexer.WHEN);
+        assertThat(tokens.get(11).getType()).isEqualTo(IskaraLexer.THEN);
+        assertThat(tokens.get(12).getType()).isEqualTo(IskaraLexer.ELSE);
+        assertThat(tokens.get(13).getType()).isEqualTo(IskaraLexer.END);
+        assertThat(tokens.get(14).getType()).isEqualTo(IskaraLexer.WHERE);
+        assertThat(tokens.get(15).getType()).isEqualTo(IskaraLexer.LET);
     }
 
     @Test
     void tokenizesBooleanLiterals() {
         List<Token> tokens = tokenize("true false");
 
-        assertEquals(IskaraLexer.TRUE, tokens.get(0).getType());
-        assertEquals(IskaraLexer.FALSE, tokens.get(1).getType());
+        assertThat(tokens.get(0).getType()).isEqualTo(IskaraLexer.TRUE);
+        assertThat(tokens.get(1).getType()).isEqualTo(IskaraLexer.FALSE);
     }
 
     @Test
     void tokenizesNullLiteral() {
         List<Token> tokens = tokenize("null");
 
-        assertEquals(IskaraLexer.NULL, tokens.get(0).getType());
+        assertThat(tokens.get(0).getType()).isEqualTo(IskaraLexer.NULL);
     }
 
     @Test
     void tokenizesOperators() {
         List<Token> tokens = tokenize(":= = ~= >= <= > < + - * / , . .. ! : @");
 
-        assertEquals(IskaraLexer.ASSIGN, tokens.get(0).getType());
-        assertEquals(IskaraLexer.EQUALS, tokens.get(1).getType());
-        assertEquals(IskaraLexer.NOT_EQUALS, tokens.get(2).getType());
-        assertEquals(IskaraLexer.GREATER_EQ, tokens.get(3).getType());
-        assertEquals(IskaraLexer.LESS_EQ, tokens.get(4).getType());
-        assertEquals(IskaraLexer.GREATER, tokens.get(5).getType());
-        assertEquals(IskaraLexer.LESS, tokens.get(6).getType());
-        assertEquals(IskaraLexer.PLUS, tokens.get(7).getType());
-        assertEquals(IskaraLexer.MINUS, tokens.get(8).getType());
-        assertEquals(IskaraLexer.STAR, tokens.get(9).getType());
-        assertEquals(IskaraLexer.SLASH, tokens.get(10).getType());
-        assertEquals(IskaraLexer.COMMA, tokens.get(11).getType());
-        assertEquals(IskaraLexer.DOT, tokens.get(12).getType());
-        assertEquals(IskaraLexer.DOTDOT, tokens.get(13).getType());
-        assertEquals(IskaraLexer.BANG, tokens.get(14).getType());
-        assertEquals(IskaraLexer.COLON, tokens.get(15).getType());
-        assertEquals(IskaraLexer.AT, tokens.get(16).getType());
+        assertThat(tokens.get(0).getType()).isEqualTo(IskaraLexer.ASSIGN);
+        assertThat(tokens.get(1).getType()).isEqualTo(IskaraLexer.EQUALS);
+        assertThat(tokens.get(2).getType()).isEqualTo(IskaraLexer.NOT_EQUALS);
+        assertThat(tokens.get(3).getType()).isEqualTo(IskaraLexer.GREATER_EQ);
+        assertThat(tokens.get(4).getType()).isEqualTo(IskaraLexer.LESS_EQ);
+        assertThat(tokens.get(5).getType()).isEqualTo(IskaraLexer.GREATER);
+        assertThat(tokens.get(6).getType()).isEqualTo(IskaraLexer.LESS);
+        assertThat(tokens.get(7).getType()).isEqualTo(IskaraLexer.PLUS);
+        assertThat(tokens.get(8).getType()).isEqualTo(IskaraLexer.MINUS);
+        assertThat(tokens.get(9).getType()).isEqualTo(IskaraLexer.STAR);
+        assertThat(tokens.get(10).getType()).isEqualTo(IskaraLexer.SLASH);
+        assertThat(tokens.get(11).getType()).isEqualTo(IskaraLexer.COMMA);
+        assertThat(tokens.get(12).getType()).isEqualTo(IskaraLexer.DOT);
+        assertThat(tokens.get(13).getType()).isEqualTo(IskaraLexer.DOTDOT);
+        assertThat(tokens.get(14).getType()).isEqualTo(IskaraLexer.BANG);
+        assertThat(tokens.get(15).getType()).isEqualTo(IskaraLexer.COLON);
+        assertThat(tokens.get(16).getType()).isEqualTo(IskaraLexer.AT);
     }
 
     @Test
     void tokenizesDelimiters() {
         List<Token> tokens = tokenize("{ } [ ] ( ) |");
 
-        assertEquals(IskaraLexer.LBRACE, tokens.get(0).getType());
-        assertEquals(IskaraLexer.RBRACE, tokens.get(1).getType());
-        assertEquals(IskaraLexer.LBRACK, tokens.get(2).getType());
-        assertEquals(IskaraLexer.RBRACK, tokens.get(3).getType());
-        assertEquals(IskaraLexer.LPAREN, tokens.get(4).getType());
-        assertEquals(IskaraLexer.RPAREN, tokens.get(5).getType());
-        assertEquals(IskaraLexer.PIPE, tokens.get(6).getType());
+        assertThat(tokens.get(0).getType()).isEqualTo(IskaraLexer.LBRACE);
+        assertThat(tokens.get(1).getType()).isEqualTo(IskaraLexer.RBRACE);
+        assertThat(tokens.get(2).getType()).isEqualTo(IskaraLexer.LBRACK);
+        assertThat(tokens.get(3).getType()).isEqualTo(IskaraLexer.RBRACK);
+        assertThat(tokens.get(4).getType()).isEqualTo(IskaraLexer.LPAREN);
+        assertThat(tokens.get(5).getType()).isEqualTo(IskaraLexer.RPAREN);
+        assertThat(tokens.get(6).getType()).isEqualTo(IskaraLexer.PIPE);
     }
 
     @Test
     void tokenizesStrings() {
         List<Token> tokens = tokenize("\"hello world\" 'single quotes'");
 
-        assertEquals(IskaraLexer.STRING, tokens.get(0).getType());
-        assertEquals("\"hello world\"", tokens.get(0).getText());
-        assertEquals(IskaraLexer.STRING, tokens.get(1).getType());
-        assertEquals("'single quotes'", tokens.get(1).getText());
+        assertThat(tokens.get(0).getType()).isEqualTo(IskaraLexer.STRING);
+        assertThat(tokens.get(0).getText()).isEqualTo("\"hello world\"");
+        assertThat(tokens.get(1).getType()).isEqualTo(IskaraLexer.STRING);
+        assertThat(tokens.get(1).getText()).isEqualTo("'single quotes'");
     }
 
     @Test
     void tokenizesNumbers() {
         List<Token> tokens = tokenize("42 3.14 0 100.50");
 
-        assertEquals(IskaraLexer.NUMBER, tokens.get(0).getType());
-        assertEquals("42", tokens.get(0).getText());
-        assertEquals(IskaraLexer.NUMBER, tokens.get(1).getType());
-        assertEquals("3.14", tokens.get(1).getText());
-        assertEquals(IskaraLexer.NUMBER, tokens.get(2).getType());
-        assertEquals(IskaraLexer.NUMBER, tokens.get(3).getType());
+        assertThat(tokens.get(0).getType()).isEqualTo(IskaraLexer.NUMBER);
+        assertThat(tokens.get(0).getText()).isEqualTo("42");
+        assertThat(tokens.get(1).getType()).isEqualTo(IskaraLexer.NUMBER);
+        assertThat(tokens.get(1).getText()).isEqualTo("3.14");
+        assertThat(tokens.get(2).getType()).isEqualTo(IskaraLexer.NUMBER);
+        assertThat(tokens.get(3).getType()).isEqualTo(IskaraLexer.NUMBER);
     }
 
     @Test
     void tokenizesIdentifiers() {
         List<Token> tokens = tokenize("foo bar123 CamelCase");
 
-        assertEquals(IskaraLexer.IDENTIFIER, tokens.get(0).getType());
-        assertEquals("foo", tokens.get(0).getText());
-        assertEquals(IskaraLexer.IDENTIFIER, tokens.get(1).getType());
-        assertEquals("bar123", tokens.get(1).getText());
-        assertEquals(IskaraLexer.IDENTIFIER, tokens.get(2).getType());
-        assertEquals("CamelCase", tokens.get(2).getText());
+        assertThat(tokens.get(0).getType()).isEqualTo(IskaraLexer.IDENTIFIER);
+        assertThat(tokens.get(0).getText()).isEqualTo("foo");
+        assertThat(tokens.get(1).getType()).isEqualTo(IskaraLexer.IDENTIFIER);
+        assertThat(tokens.get(1).getText()).isEqualTo("bar123");
+        assertThat(tokens.get(2).getType()).isEqualTo(IskaraLexer.IDENTIFIER);
+        assertThat(tokens.get(2).getText()).isEqualTo("CamelCase");
     }
 
     @Test
     void tokenizesQuotedIdentifiers() {
         List<Token> tokens = tokenize("`has spaces` `Given Name`");
 
-        assertEquals(IskaraLexer.QUOTED_ID, tokens.get(0).getType());
-        assertEquals("`has spaces`", tokens.get(0).getText());
-        assertEquals(IskaraLexer.QUOTED_ID, tokens.get(1).getType());
-        assertEquals("`Given Name`", tokens.get(1).getText());
+        assertThat(tokens.get(0).getType()).isEqualTo(IskaraLexer.QUOTED_ID);
+        assertThat(tokens.get(0).getText()).isEqualTo("`has spaces`");
+        assertThat(tokens.get(1).getType()).isEqualTo(IskaraLexer.QUOTED_ID);
+        assertThat(tokens.get(1).getText()).isEqualTo("`Given Name`");
     }
 
     @Test
@@ -138,19 +138,19 @@ class LexerTest {
         List<Token> tokens = tokenize("foo // this is a comment\nbar");
 
         // 3 tokens: foo, NEWLINE, bar (NEWLINE is now visible for statement separation)
-        assertEquals(3, tokens.size());
-        assertEquals("foo", tokens.get(0).getText());
-        assertEquals(IskaraLexer.NEWLINE, tokens.get(1).getType());
-        assertEquals("bar", tokens.get(2).getText());
+        assertThat(tokens).hasSize(3);
+        assertThat(tokens.get(0).getText()).isEqualTo("foo");
+        assertThat(tokens.get(1).getType()).isEqualTo(IskaraLexer.NEWLINE);
+        assertThat(tokens.get(2).getText()).isEqualTo("bar");
     }
 
     @Test
     void skipsBlockComments() {
         List<Token> tokens = tokenize("foo /* multi\nline\ncomment */ bar");
 
-        assertEquals(2, tokens.size());
-        assertEquals("foo", tokens.get(0).getText());
-        assertEquals("bar", tokens.get(1).getText());
+        assertThat(tokens).hasSize(2);
+        assertThat(tokens.get(0).getText()).isEqualTo("foo");
+        assertThat(tokens.get(1).getText()).isEqualTo("bar");
     }
 
     @Test
@@ -162,7 +162,7 @@ class LexerTest {
             tokens.add(token);
         }
 
-        assertEquals(IskaraLexer.TEMPLATE_STRING_START, tokens.get(0).getType());
+        assertThat(tokens.get(0).getType()).isEqualTo(IskaraLexer.TEMPLATE_STRING_START);
     }
 
     private List<Token> tokenize(String input) {

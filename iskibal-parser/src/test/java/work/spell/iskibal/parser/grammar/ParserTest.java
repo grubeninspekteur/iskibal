@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import work.spell.iskibal.parser.IskaraLexer;
 import work.spell.iskibal.parser.IskaraParser;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Tests for the Iskara parser grammar.
@@ -18,10 +18,10 @@ class ParserTest {
         IskaraParser parser = createParser("");
         IskaraParser.RuleModuleContext ctx = parser.ruleModule();
 
-        assertEquals(0, parser.getNumberOfSyntaxErrors());
-        assertNull(ctx.moduleHeader());
-        assertTrue(ctx.preamble().isEmpty());
-        assertTrue(ctx.ruleDefinition().isEmpty());
+        assertThat(parser.getNumberOfSyntaxErrors()).isZero();
+        assertThat(ctx.moduleHeader()).isNull();
+        assertThat(ctx.preamble()).isEmpty();
+        assertThat(ctx.ruleDefinition()).isEmpty();
     }
 
     @Test
@@ -29,9 +29,9 @@ class ParserTest {
         IskaraParser parser = createParser("module MyRules");
         IskaraParser.RuleModuleContext ctx = parser.ruleModule();
 
-        assertEquals(0, parser.getNumberOfSyntaxErrors());
-        assertNotNull(ctx.moduleHeader());
-        assertEquals("MyRules", ctx.moduleHeader().IDENTIFIER().getText());
+        assertThat(parser.getNumberOfSyntaxErrors()).isZero();
+        assertThat(ctx.moduleHeader()).isNotNull();
+        assertThat(ctx.moduleHeader().IDENTIFIER().getText()).isEqualTo("MyRules");
     }
 
     @Test
@@ -39,9 +39,9 @@ class ParserTest {
         IskaraParser parser = createParser("module \"Black Friday Discounts\"");
         IskaraParser.RuleModuleContext ctx = parser.ruleModule();
 
-        assertEquals(0, parser.getNumberOfSyntaxErrors());
-        assertNotNull(ctx.moduleHeader());
-        assertEquals("\"Black Friday Discounts\"", ctx.moduleHeader().STRING().getText());
+        assertThat(parser.getNumberOfSyntaxErrors()).isZero();
+        assertThat(ctx.moduleHeader()).isNotNull();
+        assertThat(ctx.moduleHeader().STRING().getText()).isEqualTo("\"Black Friday Discounts\"");
     }
 
     @Test
@@ -55,10 +55,10 @@ class ParserTest {
         IskaraParser parser = createParser(input);
         IskaraParser.RuleModuleContext ctx = parser.ruleModule();
 
-        assertEquals(0, parser.getNumberOfSyntaxErrors());
-        assertEquals(1, ctx.preamble().size());
-        assertNotNull(ctx.preamble(0).importSection());
-        assertEquals(2, ctx.preamble(0).importSection().importDecl().size());
+        assertThat(parser.getNumberOfSyntaxErrors()).isZero();
+        assertThat(ctx.preamble()).hasSize(1);
+        assertThat(ctx.preamble(0).importSection()).isNotNull();
+        assertThat(ctx.preamble(0).importSection().importDecl()).hasSize(2);
     }
 
     @Test
@@ -72,10 +72,10 @@ class ParserTest {
         IskaraParser parser = createParser(input);
         IskaraParser.RuleModuleContext ctx = parser.ruleModule();
 
-        assertEquals(0, parser.getNumberOfSyntaxErrors());
-        assertEquals(1, ctx.preamble().size());
-        assertNotNull(ctx.preamble(0).factSection());
-        assertEquals(2, ctx.preamble(0).factSection().factDecl().size());
+        assertThat(parser.getNumberOfSyntaxErrors()).isZero();
+        assertThat(ctx.preamble()).hasSize(1);
+        assertThat(ctx.preamble(0).factSection()).isNotNull();
+        assertThat(ctx.preamble(0).factSection().factDecl()).hasSize(2);
     }
 
     @Test
@@ -88,8 +88,8 @@ class ParserTest {
         IskaraParser parser = createParser(input);
         IskaraParser.RuleModuleContext ctx = parser.ruleModule();
 
-        assertEquals(0, parser.getNumberOfSyntaxErrors());
-        assertNotNull(ctx.preamble(0).globalSection());
+        assertThat(parser.getNumberOfSyntaxErrors()).isZero();
+        assertThat(ctx.preamble(0).globalSection()).isNotNull();
     }
 
     @Test
@@ -103,9 +103,9 @@ class ParserTest {
         IskaraParser parser = createParser(input);
         IskaraParser.RuleModuleContext ctx = parser.ruleModule();
 
-        assertEquals(0, parser.getNumberOfSyntaxErrors());
-        assertNotNull(ctx.preamble(0).outputSection());
-        assertEquals(2, ctx.preamble(0).outputSection().outputDecl().size());
+        assertThat(parser.getNumberOfSyntaxErrors()).isZero();
+        assertThat(ctx.preamble(0).outputSection()).isNotNull();
+        assertThat(ctx.preamble(0).outputSection().outputDecl()).hasSize(2);
     }
 
     @Test
@@ -121,13 +121,13 @@ class ParserTest {
         IskaraParser parser = createParser(input);
         IskaraParser.RuleModuleContext ctx = parser.ruleModule();
 
-        assertEquals(0, parser.getNumberOfSyntaxErrors());
-        assertEquals(1, ctx.ruleDefinition().size());
-        assertNotNull(ctx.ruleDefinition(0).simpleRule());
+        assertThat(parser.getNumberOfSyntaxErrors()).isZero();
+        assertThat(ctx.ruleDefinition()).hasSize(1);
+        assertThat(ctx.ruleDefinition(0).simpleRule()).isNotNull();
 
         var rule = ctx.ruleDefinition(0).simpleRule();
-        assertEquals("WIG1", rule.identifier().getText());
-        assertEquals("\"Wiggly dolls are exempt\"", rule.STRING().getText());
+        assertThat(rule.identifier().getText()).isEqualTo("WIG1");
+        assertThat(rule.STRING().getText()).isEqualTo("\"Wiggly dolls are exempt\"");
     }
 
     @Test
@@ -145,9 +145,9 @@ class ParserTest {
         IskaraParser parser = createParser(input);
         IskaraParser.RuleModuleContext ctx = parser.ruleModule();
 
-        assertEquals(0, parser.getNumberOfSyntaxErrors());
+        assertThat(parser.getNumberOfSyntaxErrors()).isZero();
         var rule = ctx.ruleDefinition(0).simpleRule();
-        assertNotNull(rule.elseSection());
+        assertThat(rule.elseSection()).isNotNull();
     }
 
     @Test
@@ -168,8 +168,8 @@ class ParserTest {
         IskaraParser parser = createParser(input);
         IskaraParser.RuleModuleContext ctx = parser.ruleModule();
 
-        assertEquals(0, parser.getNumberOfSyntaxErrors());
-        assertNotNull(ctx.ruleDefinition(0).templateRule());
+        assertThat(parser.getNumberOfSyntaxErrors()).isZero();
+        assertThat(ctx.ruleDefinition(0).templateRule()).isNotNull();
     }
 
     @Test
@@ -185,8 +185,8 @@ class ParserTest {
         IskaraParser parser = createParser(input);
         IskaraParser.RuleModuleContext ctx = parser.ruleModule();
 
-        assertEquals(0, parser.getNumberOfSyntaxErrors());
-        assertNotNull(ctx.preamble(0).dataTableDef());
+        assertThat(parser.getNumberOfSyntaxErrors()).isZero();
+        assertThat(ctx.preamble(0).dataTableDef()).isNotNull();
     }
 
     @Test
@@ -258,14 +258,15 @@ class ParserTest {
         IskaraParser parser = createParser(input);
         IskaraParser.RuleModuleContext ctx = parser.ruleModule();
 
-        assertEquals(0, parser.getNumberOfSyntaxErrors());
+        assertThat(parser.getNumberOfSyntaxErrors()).isZero();
     }
 
     private void assertExpressionParses(String expr) {
         IskaraParser parser = createParser(expr);
         parser.expression();
-        assertEquals(0, parser.getNumberOfSyntaxErrors(),
-                "Expression should parse without errors: " + expr);
+        assertThat(parser.getNumberOfSyntaxErrors())
+                .as("Expression should parse without errors: %s", expr)
+                .isZero();
     }
 
     private IskaraParser createParser(String input) {
