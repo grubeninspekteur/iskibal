@@ -476,7 +476,7 @@ when
 ----
 
 NOTE: Since Iskara cannot know the return type of an expression (except in this simple example where we use the equality operator), the rule source parser cannot enforce this error.
-Only the rule compiler for a statically compiled language can now the actual return type of an expression and raise an error.
+Only the rule compiler for a statically compiled language can know the actual return type of an expression and raise an error.
 
 [[consequences]]
 ==== Consequences (`then`)
@@ -490,7 +490,7 @@ rule WIG1 "Wiggly dolls are exempt from discounts"
 when
   Item.type = WigglyDoll
 then
-  Discount = 0
+  Discount := 0
 end
 ----
 
@@ -626,7 +626,7 @@ then:
   Discounts add: "Birthday disocunt" withPercent: 15
 ----
 
-It is up to the rule compiler or engine how to implement a template rule, but each entry of a template rule data table _must_ lead to a separate rule firing.
+It is up to the rule compiler or engine how to implement a template rule, but each entry of a template rule data table _must_ lead to a distinct rule being fired, with its own unique rule ID.
 
 [[decision_tables]]
 === Decision Tables

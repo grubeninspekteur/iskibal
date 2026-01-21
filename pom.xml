@@ -16,6 +16,7 @@
 
   <subprojects>
     <subproject>iskibal-rule-model</subproject>
+    <subproject>iskibal-parser</subproject>
   </subprojects>
 
   <build>

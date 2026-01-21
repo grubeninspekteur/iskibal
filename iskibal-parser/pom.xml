@@ -1,0 +1,58 @@
+<project xmlns="http://maven.apache.org/POM/4.1.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.1.0 http://maven.apache.org/xsd/maven-4.1.0.xsd">
+
+  <parent>
+    <groupId>work.spell.iskibal</groupId>
+    <artifactId>iskibal-parent</artifactId>
+  </parent>
+
+  <artifactId>iskibal-parser</artifactId>
+  <name>Iskibal Parser</name>
+  <description>Parser for the Iskara rule language using ANTLR4.</description>
+
+  <properties>
+    <antlr4.version>4.13.2</antlr4.version>
+    <junit.version>5.11.0</junit.version>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>work.spell.iskibal</groupId>
+      <artifactId>iskibal-rule-model</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.antlr</groupId>
+      <artifactId>antlr4-runtime</artifactId>
+      <version>${antlr4.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.antlr</groupId>
+        <artifactId>antlr4-maven-plugin</artifactId>
+        <version>${antlr4.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>antlr4</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <visitor>true</visitor>
+          <listener>false</listener>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>
