@@ -44,7 +44,6 @@ Supporting types: `Fact`, `Global`, `Output`, `Import`, `DataTable` - all sealed
 
 ### Key Design Decisions
 
-- **Pure Java**: The rule-model module has zero external dependencies
 - **BigDecimal for Numbers**: Uses `java.math.BigDecimal` for precision in numeric expressions
 - **Smalltalk-style Messaging**: `MessageSend` expression supports keyword-based method calls
 - **Java Module System**: Uses JPMS with explicit exports (`module iskibal.rule.model`)
