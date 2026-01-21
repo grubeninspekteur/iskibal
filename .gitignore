@@ -88,3 +88,8 @@ nb-configuration.xml
 ## Miscellaneous
 ##############################
 *.log
+
+##############################
+## Agents
+##############################
+.claude/settings.local.json
