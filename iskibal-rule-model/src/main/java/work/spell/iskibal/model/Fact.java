@@ -5,18 +5,18 @@ package work.spell.iskibal.model;
  */
 public sealed interface Fact permits Fact.Definition {
 
-    /** name of the fact */
-    String name();
+	/** name of the fact */
+	String name();
 
-    /** fully qualified type of the fact */
-    String type();
+	/** fully qualified type of the fact */
+	String type();
 
-    /** optional description to aid documentation */
-    String description();
+	/** optional description to aid documentation */
+	String description();
 
-    /**
-     * Default fact declaration.
-     */
-    record Definition(String name, String type, String description) implements Fact { }
+	/**
+	 * Default fact declaration.
+	 */
+	record Definition(String name, String type, String description) implements Fact {
+	}
 }
-

@@ -11,39 +11,39 @@ import work.spell.iskibal.parser.diagnostic.IskaraDiagnosticListener;
  */
 public class StatementVisitor extends IskaraParserBaseVisitor<Statement> {
 
-    private final ExpressionVisitor expressionVisitor;
-    private final IskaraDiagnosticListener diagnostics;
+	private final ExpressionVisitor expressionVisitor;
+	private final IskaraDiagnosticListener diagnostics;
 
-    public StatementVisitor(ExpressionVisitor expressionVisitor, IskaraDiagnosticListener diagnostics) {
-        this.expressionVisitor = expressionVisitor;
-        this.diagnostics = diagnostics;
-    }
+	public StatementVisitor(ExpressionVisitor expressionVisitor, IskaraDiagnosticListener diagnostics) {
+		this.expressionVisitor = expressionVisitor;
+		this.diagnostics = diagnostics;
+	}
 
-    @Override
-    public Statement visitStatement(IskaraParser.StatementContext ctx) {
-        if (ctx.letStatement() != null) {
-            return visit(ctx.letStatement());
-        } else if (ctx.expressionStatement() != null) {
-            return visit(ctx.expressionStatement());
-        }
-        return null;
-    }
+	@Override
+	public Statement visitStatement(IskaraParser.StatementContext ctx) {
+		if (ctx.letStatement() != null) {
+			return visit(ctx.letStatement());
+		} else if (ctx.expressionStatement() != null) {
+			return visit(ctx.expressionStatement());
+		}
+		return null;
+	}
 
-    @Override
-    public Statement visitLetStatement(IskaraParser.LetStatementContext ctx) {
-        String name = expressionVisitor.extractIdentifier(ctx.identifier());
-        Expression value = expressionVisitor.visit(ctx.expression());
-        return new Statement.LetStatement(name, value);
-    }
+	@Override
+	public Statement visitLetStatement(IskaraParser.LetStatementContext ctx) {
+		String name = expressionVisitor.extractIdentifier(ctx.identifier());
+		Expression value = expressionVisitor.visit(ctx.expression());
+		return new Statement.LetStatement(name, value);
+	}
 
-    @Override
-    public Statement visitExpressionStatement(IskaraParser.ExpressionStatementContext ctx) {
-        Expression expression;
-        if (ctx.expression() != null) {
-            expression = expressionVisitor.visit(ctx.expression());
-        } else {
-            expression = expressionVisitor.visit(ctx.commaExpr());
-        }
-        return new Statement.ExpressionStatement(expression);
-    }
+	@Override
+	public Statement visitExpressionStatement(IskaraParser.ExpressionStatementContext ctx) {
+		Expression expression;
+		if (ctx.expression() != null) {
+			expression = expressionVisitor.visit(ctx.expression());
+		} else {
+			expression = expressionVisitor.visit(ctx.commaExpr());
+		}
+		return new Statement.ExpressionStatement(expression);
+	}
 }

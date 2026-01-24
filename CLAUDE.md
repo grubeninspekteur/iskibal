@@ -48,6 +48,21 @@ Supporting types: `Fact`, `Global`, `Output`, `Import`, `DataTable` - all sealed
 - **Smalltalk-style Messaging**: `MessageSend` expression supports keyword-based method calls
 - **Java Module System**: Uses JPMS with explicit exports (`module iskibal.rule.model`)
 
+## Code Formatting
+
+The project uses Spotless with Eclipse JDT formatter. Code is automatically formatted on commit via a git hook.
+
+```bash
+# Setup git hooks (run once after cloning)
+git config core.hooksPath hooks
+
+# Manually format code
+./mvnw spotless:apply
+
+# Check formatting without applying
+./mvnw spotless:check
+```
+
 ## Language Specifications
 
 Documentation for the Iskara rule language is in `documentation/examples/specification/`:

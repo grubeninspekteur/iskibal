@@ -1,0 +1,27 @@
+#!/bin/sh
+#
+# Pre-commit hook that runs Spotless to format code automatically.
+# Formatted files are re-added to the commit.
+
+# Determine the correct Maven wrapper command
+if [ -f "mvnw.cmd" ] && command -v cmd.exe >/dev/null 2>&1; then
+    MVN="cmd.exe /c mvnw.cmd"
+elif [ -f "mvnw" ]; then
+    MVN="./mvnw"
+else
+    MVN="mvn"
+fi
+
+echo "Formatting code with Spotless..."
+
+$MVN spotless:apply -q
+
+if [ $? -ne 0 ]; then
+    echo "Spotless formatting failed!"
+    exit 1
+fi
+
+# Re-add any files that were reformatted
+git add -u
+
+exit 0
