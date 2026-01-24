@@ -17,9 +17,9 @@ public sealed interface Rule permits Rule.SimpleRule, Rule.TemplateRule, Rule.De
     String description();
 
     /**
-     * A standard rule with when/then sections.
+     * A standard rule with when/then/else sections.
      */
-    record SimpleRule(String id, String description, List<Statement> when, List<Statement> then)
+    record SimpleRule(String id, String description, List<Statement> when, List<Statement> then, List<Statement> elseStatements)
             implements Rule { }
 
     /**

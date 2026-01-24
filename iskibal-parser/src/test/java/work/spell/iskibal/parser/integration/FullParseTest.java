@@ -244,6 +244,82 @@ class FullParseTest {
                         ))
                 ))));
         }
+
+        @Test
+        void parsesRuleWithElseSection() {
+            String input = """
+                rule AGE_CHECK "Check if customer is adult"
+                when
+                    Customer.age >= 18
+                then
+                    Category := "adult"
+                else
+                    Category := "minor"
+                end
+                """;
+
+            RuleModule module = parseSuccessfully(input);
+
+            assertThat(module.rules()).hasSize(1);
+            SimpleRule rule = (SimpleRule) module.rules().get(0);
+
+            assertThat(rule.id()).isEqualTo("AGE_CHECK");
+            assertThat(rule.description()).isEqualTo("Check if customer is adult");
+
+            // Verify when clause
+            assertThat(rule.when()).hasSize(1);
+
+            // Verify then clause
+            assertThat(rule.then()).hasSize(1);
+            Statement.ExpressionStatement thenStmt = (Statement.ExpressionStatement) rule.then().get(0);
+            Expression.Assignment thenAssign = (Expression.Assignment) thenStmt.expression();
+            assertThat(thenAssign.target()).isEqualTo(new Identifier("Category"));
+            assertThat(thenAssign.value()).isEqualTo(new StringLiteral("adult"));
+
+            // Verify else clause
+            assertThat(rule.elseStatements()).hasSize(1);
+            Statement.ExpressionStatement elseStmt = (Statement.ExpressionStatement) rule.elseStatements().get(0);
+            Expression.Assignment elseAssign = (Expression.Assignment) elseStmt.expression();
+            assertThat(elseAssign.target()).isEqualTo(new Identifier("Category"));
+            assertThat(elseAssign.value()).isEqualTo(new StringLiteral("minor"));
+        }
+
+        @Test
+        void parsesRuleWithMultipleElseStatements() {
+            String input = """
+                rule MULTI_ELSE
+                when
+                    Order.total > 100
+                then
+                    Discount := 10
+                else
+                    Discount := 0
+                    Message := "No discount applied"
+                end
+                """;
+
+            RuleModule module = parseSuccessfully(input);
+            SimpleRule rule = (SimpleRule) module.rules().get(0);
+
+            assertThat(rule.elseStatements()).hasSize(2);
+        }
+
+        @Test
+        void parsesRuleWithoutElseSectionAsEmptyList() {
+            String input = """
+                rule NO_ELSE
+                when
+                    Item.available
+                then
+                    Status := "ready"
+                end
+                """;
+
+            RuleModule module = parseSuccessfully(input);
+            SimpleRule rule = (SimpleRule) module.rules().get(0);
+
+            assertThat(rule.elseStatements()).isEmpty();
+        }
     }
 
     @Nested

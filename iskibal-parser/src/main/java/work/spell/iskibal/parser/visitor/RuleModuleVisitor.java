@@ -165,16 +165,11 @@ public class RuleModuleVisitor extends IskaraParserBaseVisitor<RuleModule> {
 
         List<Statement> when = processStatementList(ctx.whenSection().statementList());
         List<Statement> then = processStatementList(ctx.thenSection().statementList());
+        List<Statement> elseStatements = ctx.elseSection() != null
+                ? processStatementList(ctx.elseSection().statementList())
+                : List.of();
 
-        // Handle else section - create a Block containing else statements
-        if (ctx.elseSection() != null) {
-            List<Statement> elseStatements = processStatementList(ctx.elseSection().statementList());
-            // For now, we represent else as part of the then with a conditional
-            // This may need adjustment based on how the rule compiler handles it
-            // TODO: The rule model may need an 'else' field for SimpleRule
-        }
-
-        return new Rule.SimpleRule(id, description, when, then);
+        return new Rule.SimpleRule(id, description, when, then, elseStatements);
     }
 
     private Rule.TemplateRule processTemplateRule(IskaraParser.TemplateRuleContext ctx) {
