@@ -17,6 +17,8 @@
   <subprojects>
     <subproject>iskibal-rule-model</subproject>
     <subproject>iskibal-parser</subproject>
+    <subproject>iskibal-compiler-common</subproject>
+    <subproject>iskibal-compiler-java</subproject>
   </subprojects>
 
   <build>
