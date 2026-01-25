@@ -3,6 +3,7 @@ module iskibal.compiler.java {
 	requires iskibal.compiler.common;
 
 	exports work.spell.iskibal.compiler.java.api;
+	exports work.spell.iskibal.compiler.java.internal to iskibal.integration.tests;
 
 	uses work.spell.iskibal.compiler.common.api.SemanticAnalyzer;
 
