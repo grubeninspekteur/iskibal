@@ -141,7 +141,7 @@ class JavaCompilerTest {
 		}
 
 		@Test
-		@DisplayName("Generates navigation chain with getters")
+		@DisplayName("Generates navigation chain with null-safe getters")
 		void generatesNavigationChain() {
 			var module = new RuleModule.Default(List.of(), List.of(new Fact.Definition("order", "Order", "")),
 					List.of(),
@@ -157,7 +157,11 @@ class JavaCompilerTest {
 
 			assertThat(result.isSuccess()).isTrue();
 			String source = result.getSourceFiles().orElseThrow().values().iterator().next();
-			assertThat(source).contains("order.getCustomer().getBalance()");
+			// With generateNullChecks=true, navigation chains use Optional for null safety
+			assertThat(source).contains("java.util.Optional.ofNullable(order)");
+			assertThat(source).contains(".map(v -> v.getCustomer())");
+			assertThat(source).contains(".map(v -> v.getBalance())");
+			assertThat(source).contains(".orElse(null)");
 		}
 	}
 

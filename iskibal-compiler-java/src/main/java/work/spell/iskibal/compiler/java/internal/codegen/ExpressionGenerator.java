@@ -170,24 +170,34 @@ public final class ExpressionGenerator {
 	}
 
 	private String generateNavigation(Navigation nav) {
-		StringBuilder sb = new StringBuilder();
 		String receiver = generate(nav.receiver());
 
 		if (options.generateNullChecks() && nav.names().size() > 1) {
-			// Generate null-safe navigation for chains
-			sb.append(receiver);
-			for (String name : nav.names()) {
-				sb.append(".get").append(capitalize(name)).append("()");
+			// Generate null-safe navigation using Optional for chains
+			StringBuilder sb = new StringBuilder();
+			sb.append("java.util.Optional.ofNullable(").append(receiver).append(")");
+
+			// Add .map() for each intermediate step (all but the last)
+			for (int i = 0; i < nav.names().size() - 1; i++) {
+				String name = nav.names().get(i);
+				sb.append(".map(v -> v.get").append(capitalize(name)).append("())");
 			}
+
+			// Add final .map() and .orElse(null) for the last property
+			String lastName = nav.names().getLast();
+			sb.append(".map(v -> v.get").append(capitalize(lastName)).append("())");
+			sb.append(".orElse(null)");
+
+			return sb.toString();
 		} else {
 			// Simple navigation without null checks
+			StringBuilder sb = new StringBuilder();
 			sb.append(receiver);
 			for (String name : nav.names()) {
 				sb.append(".get").append(capitalize(name)).append("()");
 			}
+			return sb.toString();
 		}
-
-		return sb.toString();
 	}
 
 	private String generateBlock(Block block) {

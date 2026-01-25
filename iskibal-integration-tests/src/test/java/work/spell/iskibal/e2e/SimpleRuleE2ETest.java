@@ -275,6 +275,37 @@ class SimpleRuleE2ETest {
 
 			assertThat(rules.<String>getOutput("customerName")).isEqualTo("Alice");
 		}
+
+		@Test
+		@DisplayName("Chained navigation performs null checks")
+		void chainedNavigationWithNullchecks() throws Exception {
+			String source = """
+					facts {
+					    order: work.spell.iskibal.e2e.Order
+					}
+					outputs {
+					    message: String := ""
+					}
+					rule NAV1 "Congratulate customer Alice"
+					when
+					    order.customer.name = "Alice"
+					then
+					    message := "Congratulations, Alice!"
+					end
+					""";
+
+			// order with intentional null cusomter
+			var order = new Order(new BigDecimal("100"), null);
+
+			var result = RuleTestBuilder.forSource(source).withFact(order).build();
+
+			assertResultSuccess(result);
+
+			var rules = result.rules().orElseThrow();
+			rules.evaluate();
+
+			assertThat(rules.<String>getOutput("message")).isEqualTo("");
+		}
 	}
 
 	private void assertResultSuccess(RuleTestResult result) {
