@@ -4,10 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.math.BigDecimal;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import work.spell.iskibal.testing.CompiledRuleTemplate;
 import work.spell.iskibal.testing.RuleTestBuilder;
 import work.spell.iskibal.testing.RuleTestResult;
 
@@ -22,25 +24,34 @@ class SimpleRuleE2ETest {
 	@DisplayName("Basic Rule Execution")
 	class BasicRuleExecution {
 
+		private static final String WIGGLY_DOLL_SOURCE = """
+				facts {
+				    item: work.spell.iskibal.e2e.Item
+				}
+				outputs {
+				    discount: BigDecimal := 100
+				}
+				rule WIG1 "Wiggly dolls exempt"
+				when
+				    item.type = "WigglyDoll"
+				then
+				    discount := 0
+				end
+				""";
+
+		private static CompiledRuleTemplate.Success template;
+
+		@BeforeAll
+		static void compileOnce() {
+			var compiled = RuleTestBuilder.forSource(WIGGLY_DOLL_SOURCE).compile();
+			assertThat(compiled.isSuccess()).isTrue();
+			template = (CompiledRuleTemplate.Success) compiled;
+		}
+
 		@Test
 		@DisplayName("Wiggly doll gets no discount when type matches")
 		void wigglyDollGetsNoDiscount() throws Exception {
-			String source = """
-					facts {
-					    item: work.spell.iskibal.e2e.Item
-					}
-					outputs {
-					    discount: BigDecimal := 100
-					}
-					rule WIG1 "Wiggly dolls exempt"
-					when
-					    item.type = "WigglyDoll"
-					then
-					    discount := 0
-					end
-					""";
-
-			var result = RuleTestBuilder.forSource(source).withFact(new Item("WigglyDoll")).build();
+			var result = template.instantiate(new Item("WigglyDoll"));
 
 			assertResultSuccess(result);
 
@@ -53,22 +64,7 @@ class SimpleRuleE2ETest {
 		@Test
 		@DisplayName("Non-wiggly item keeps default discount")
 		void nonWigglyItemKeepsDiscount() throws Exception {
-			String source = """
-					facts {
-					    item: work.spell.iskibal.e2e.Item
-					}
-					outputs {
-					    discount: BigDecimal := 100
-					}
-					rule WIG1 "Wiggly dolls exempt"
-					when
-					    item.type = "WigglyDoll"
-					then
-					    discount := 0
-					end
-					""";
-
-			var result = RuleTestBuilder.forSource(source).withFact(new Item("RegularToy")).build();
+			var result = template.instantiate(new Item("RegularToy"));
 
 			assertResultSuccess(result);
 
@@ -83,27 +79,36 @@ class SimpleRuleE2ETest {
 	@DisplayName("Rule with Else Section")
 	class RuleWithElseSection {
 
-		@Test
-		@DisplayName("Else branch executes when condition is false")
-		void elseBranchExecutesWhenConditionFalse() throws Exception {
-			String source = """
-					facts {
-					    customer: work.spell.iskibal.e2e.Customer
-					}
-					outputs {
-					    category: String := "unknown"
-					}
-					rule AGE1 "Age category"
-					when
-					    customer.age >= 18
-					then
-					    category := "adult"
-					else
-					    category := "minor"
-					end
-					""";
+		private static final String AGE_CATEGORY_SOURCE = """
+				facts {
+				    customer: work.spell.iskibal.e2e.Customer
+				}
+				outputs {
+				    category: String := "unknown"
+				}
+				rule AGE1 "Age category"
+				when
+				    customer.age >= 18
+				then
+				    category := "adult"
+				else
+				    category := "minor"
+				end
+				""";
 
-			var result = RuleTestBuilder.forSource(source).withFact(new Customer("Alice", 25)).build();
+		private static CompiledRuleTemplate.Success template;
+
+		@BeforeAll
+		static void compileOnce() {
+			var compiled = RuleTestBuilder.forSource(AGE_CATEGORY_SOURCE).compile();
+			assertThat(compiled.isSuccess()).isTrue();
+			template = (CompiledRuleTemplate.Success) compiled;
+		}
+
+		@Test
+		@DisplayName("Then branch executes when condition is true")
+		void thenBranchExecutesWhenConditionTrue() throws Exception {
+			var result = template.instantiate(new Customer("Alice", 25));
 
 			assertResultSuccess(result);
 
@@ -114,26 +119,9 @@ class SimpleRuleE2ETest {
 		}
 
 		@Test
-		@DisplayName("Then branch executes when condition is true")
-		void thenBranchExecutesWhenConditionTrue() throws Exception {
-			String source = """
-					facts {
-					    customer: work.spell.iskibal.e2e.Customer
-					}
-					outputs {
-					    category: String := "unknown"
-					}
-					rule AGE1 "Age category"
-					when
-					    customer.age >= 18
-					then
-					    category := "adult"
-					else
-					    category := "minor"
-					end
-					""";
-
-			var result = RuleTestBuilder.forSource(source).withFact(new Customer("Bob", 15)).build();
+		@DisplayName("Else branch executes when condition is false")
+		void elseBranchExecutesWhenConditionFalse() throws Exception {
+			var result = template.instantiate(new Customer("Bob", 15));
 
 			assertResultSuccess(result);
 

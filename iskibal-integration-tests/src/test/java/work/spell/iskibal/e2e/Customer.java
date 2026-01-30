@@ -1,25 +1,24 @@
 package work.spell.iskibal.e2e;
 
-import java.math.BigDecimal;
-
 /**
- * Test fixture class representing a customer for rule tests.
+ * Test fixture class representing a customer for rule tests. Uses int for age
+ * to test type coercion between int and BigDecimal.
  */
 public class Customer {
 
 	private final String name;
-	private final BigDecimal age;
+	private final int age;
 
 	public Customer(String name, int age) {
 		this.name = name;
-		this.age = BigDecimal.valueOf(age);
+		this.age = age;
 	}
 
 	public String getName() {
 		return name;
 	}
 
-	public BigDecimal getAge() {
+	public int getAge() {
 		return age;
 	}
 }

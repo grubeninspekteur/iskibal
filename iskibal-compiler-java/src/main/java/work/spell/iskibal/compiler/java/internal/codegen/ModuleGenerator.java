@@ -36,7 +36,8 @@ public final class ModuleGenerator {
 
 		// Imports
 		sb.append("import java.math.BigDecimal;\n");
-		sb.append("import java.util.Objects;\n\n");
+		sb.append("import java.util.Objects;\n");
+		sb.append("import static work.spell.iskibal.compiler.java.runtime.NumericHelpers.*;\n\n");
 
 		// Class declaration
 		sb.append("public class ").append(options.className()).append(" {\n\n");

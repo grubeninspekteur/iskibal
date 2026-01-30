@@ -1,5 +1,7 @@
 package work.spell.iskibal.compiler.java.internal.codegen;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -104,9 +106,15 @@ public final class ExpressionGenerator {
 
 		// Build method name from keyword parts (Smalltalk style)
 		if (ms.parts().size() == 1) {
-			// Single keyword message: receiver keyword: arg -> receiver.keyword(arg)
 			MessageSend.MessagePart part = ms.parts().getFirst();
 			String methodName = part.name();
+
+			// Unary message: receiver message -> receiver.message()
+			if (part.argument() == null) {
+				return receiver + "." + methodName + "()";
+			}
+
+			// Single keyword message: receiver keyword: arg -> receiver.keyword(arg)
 			String arg = generate(part.argument());
 			return receiver + "." + methodName + "(" + arg + ")";
 		}
@@ -132,24 +140,50 @@ public final class ExpressionGenerator {
 		String left = generate(bin.left());
 		String right = generate(bin.right());
 
+		// Use helper methods for type-safe numeric operations
+		// This handles both BigDecimal and primitive int/long values
 		return switch (bin.operator()) {
-			case EQUALS -> "java.util.Objects.equals(" + left + ", " + right + ")";
-			case NOT_EQUALS -> "!java.util.Objects.equals(" + left + ", " + right + ")";
-			case PLUS -> left + ".add(" + right + ")";
-			case MINUS -> left + ".subtract(" + right + ")";
-			case MULTIPLY -> left + ".multiply(" + right + ")";
-			case DIVIDE -> left + ".divide(" + right + ")";
-			case GREATER_THAN -> left + ".compareTo(" + right + ") > 0";
-			case GREATER_EQUALS -> left + ".compareTo(" + right + ") >= 0";
-			case LESS_THAN -> left + ".compareTo(" + right + ") < 0";
-			case LESS_EQUALS -> left + ".compareTo(" + right + ") <= 0";
+			case EQUALS -> "equalsNumericAware(" + left + ", " + right + ")";
+			case NOT_EQUALS -> "!equalsNumericAware(" + left + ", " + right + ")";
+			case PLUS -> "addNumeric(" + left + ", " + right + ")";
+			case MINUS -> "subtractNumeric(" + left + ", " + right + ")";
+			case MULTIPLY -> "multiplyNumeric(" + left + ", " + right + ")";
+			case DIVIDE -> "divideNumeric(" + left + ", " + right + ")";
+			case GREATER_THAN -> "compareNumeric(" + left + ", " + right + ") > 0";
+			case GREATER_EQUALS -> "compareNumeric(" + left + ", " + right + ") >= 0";
+			case LESS_THAN -> "compareNumeric(" + left + ", " + right + ") < 0";
+			case LESS_EQUALS -> "compareNumeric(" + left + ", " + right + ") <= 0";
 		};
 	}
 
 	private String generateAssignment(Assignment assign) {
+		// Handle navigation assignment specially - generates setter call
+		if (assign.target() instanceof Navigation nav) {
+			return generateNavigationAssignment(nav, assign.value());
+		}
+
 		String target = generateAssignmentTarget(assign.target());
 		String value = generate(assign.value());
 		return target + " = " + value;
+	}
+
+	private String generateNavigationAssignment(Navigation nav, Expression value) {
+		String receiver = generate(nav.receiver());
+		String valueCode = generate(value);
+
+		// Build the navigation path, using getters for all but the last property
+		StringBuilder sb = new StringBuilder();
+		sb.append(receiver);
+		for (int i = 0; i < nav.names().size() - 1; i++) {
+			String name = nav.names().get(i);
+			sb.append(".get").append(capitalize(name)).append("()");
+		}
+
+		// Use setter for the last property
+		String lastName = nav.names().getLast();
+		sb.append(".set").append(capitalize(lastName)).append("(").append(valueCode).append(")");
+
+		return sb.toString();
 	}
 
 	private String generateAssignmentTarget(Expression target) {
@@ -201,20 +235,38 @@ public final class ExpressionGenerator {
 	}
 
 	private String generateBlock(Block block) {
-		// Blocks are translated to lambdas or inline code
+		// Extract block parameters (represented as LetStatement with
+		// Identifier("param"))
+		List<String> params = new ArrayList<>();
+		List<Statement> bodyStatements = new ArrayList<>();
+
+		for (Statement stmt : block.statements()) {
+			if (stmt instanceof Statement.LetStatement ls && ls.expression() instanceof Identifier id
+					&& "param".equals(id.name())) {
+				// This is a block parameter placeholder
+				params.add(ls.name());
+			} else {
+				bodyStatements.add(stmt);
+			}
+		}
+
+		// Build lambda parameter list
+		String paramList = params.isEmpty()
+				? "()"
+				: params.size() == 1 ? params.getFirst() : "(" + String.join(", ", params) + ")";
+
 		// For simple single-expression blocks, generate inline
-		if (block.statements().size() == 1
-				&& block.statements().getFirst() instanceof Statement.ExpressionStatement es) {
-			return "() -> " + generate(es.expression());
+		if (bodyStatements.size() == 1 && bodyStatements.getFirst() instanceof Statement.ExpressionStatement es) {
+			return paramList + " -> " + generate(es.expression());
 		}
 
 		// Multi-statement blocks generate a Supplier or Runnable
 		StringBuilder sb = new StringBuilder();
-		sb.append("() -> {\n");
-		for (Statement stmt : block.statements()) {
+		sb.append(paramList).append(" -> {\n");
+		for (Statement stmt : bodyStatements) {
 			sb.append("    ");
 			if (stmt instanceof Statement.ExpressionStatement es) {
-				if (stmt == block.statements().getLast()) {
+				if (stmt == bodyStatements.getLast()) {
 					sb.append("return ").append(generate(es.expression())).append(";\n");
 				} else {
 					sb.append(generate(es.expression())).append(";\n");

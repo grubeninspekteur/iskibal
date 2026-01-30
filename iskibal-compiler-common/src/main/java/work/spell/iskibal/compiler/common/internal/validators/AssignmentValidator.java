@@ -192,12 +192,10 @@ public final class AssignmentValidator {
 					diagnostics.add(SemanticDiagnostic.error("Output can only be assigned in then/else section", name));
 				}
 			}
-			case Navigation nav -> {
-				// Navigation assignments are allowed (e.g., obj.property := value)
-				// The receiver must not be a fact at the root
-				if (nav.receiver() instanceof Identifier id && factNames.contains(id.name())) {
-					diagnostics.add(SemanticDiagnostic.error("Cannot assign to property of a fact", id.name()));
-				}
+			case Navigation _ -> {
+				// Navigation assignments are allowed (e.g., customer.category := "VIP")
+				// This translates to setter calls (customer.setCategory("VIP"))
+				// Only direct assignment to facts is disallowed, not property assignments
 			}
 			default -> {
 				// Other assignment targets (like message sends) are handled by validation

@@ -15,6 +15,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ./mvnw clean install
 ```
 
+Use `-pl` to build specific projects, together with `-am` to also make dependents.
+Since the project builds fast enough, a `mvn verify` without specific projects should be enough in most cases. Reduce output with `-q` (quiet) and other optimizations so only relevant tokens are consumed.
+
+On Windows, patch the command through PowerShell.
+
 ## Project Overview
 
 Iskibal is a business rules compiler with a 3-tier architecture:

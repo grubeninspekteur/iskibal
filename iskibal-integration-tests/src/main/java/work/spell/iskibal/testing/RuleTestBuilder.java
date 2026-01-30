@@ -126,6 +126,69 @@ public class RuleTestBuilder {
 	}
 
 	/**
+	 * Compiles the rules without instantiation, returning a reusable template.
+	 * <p>
+	 * This allows tests to compile once and instantiate multiple times with
+	 * different arguments, improving performance for parameterized tests.
+	 * <p>
+	 * This method orchestrates stages 1-4 of the pipeline:
+	 * <ol>
+	 * <li>Parse the Iskara source</li>
+	 * <li>Run semantic analysis</li>
+	 * <li>Generate Java source code</li>
+	 * <li>Compile Java source to bytecode</li>
+	 * </ol>
+	 *
+	 * @return a template that can be instantiated multiple times
+	 */
+	public CompiledRuleTemplate compile() {
+		// Stage 1: Parse
+		Parser parser = new IskaraParserImpl();
+		ParseResult<RuleModule> parseResult = parser.parse(source);
+
+		if (!parseResult.isSuccess()) {
+			List<String> errors = parseResult.getDiagnostics().stream().map(d -> d.message()).toList();
+			return new CompiledRuleTemplate.Failure(new RuleTestResult.ParseFailure(errors));
+		}
+
+		RuleModule module = parseResult.getValue().orElseThrow();
+
+		// Stage 2: Semantic analysis
+		SemanticAnalyzer analyzer = new SemanticAnalyzerImpl();
+		AnalysisResult analysisResult = analyzer.analyze(module);
+
+		if (!analysisResult.isSuccess()) {
+			List<String> errors = analysisResult.getDiagnostics().stream().map(d -> d.message()).toList();
+			return new CompiledRuleTemplate.Failure(new RuleTestResult.AnalysisFailure(errors));
+		}
+
+		// Stage 3: Generate Java code
+		JavaCompiler javaCompiler = new JavaCompilerImpl();
+		JavaCompilerOptions options = new JavaCompilerOptions(packageName, className, true);
+		CompilationResult codegenResult = javaCompiler.compile(module, options);
+
+		if (!codegenResult.isSuccess()) {
+			return new CompiledRuleTemplate.Failure(new RuleTestResult.CodegenFailure(codegenResult.getErrors()));
+		}
+
+		Map<String, String> sourceFiles = codegenResult.getSourceFiles().orElseThrow();
+		String generatedSource = sourceFiles.values().iterator().next();
+		String fullyQualifiedName = options.fullyQualifiedClassName();
+
+		// Stage 4: Compile Java to bytecode
+		InMemoryCompiler memCompiler = new InMemoryCompiler();
+		InMemoryCompilationResult compileResult = memCompiler.compile(fullyQualifiedName, generatedSource);
+
+		if (!compileResult.isSuccess()) {
+			return new CompiledRuleTemplate.Failure(
+					new RuleTestResult.CompilationFailure(compileResult.getDiagnostics(), generatedSource));
+		}
+
+		Class<?> compiledClass = compileResult.getCompiledClass().orElseThrow();
+		return new CompiledRuleTemplate.Success(compiledClass, generatedSource);
+	}
+
+	/**
 	 * Builds and compiles the rules, returning the result.
 	 * <p>
 	 * This method orchestrates the full pipeline:

@@ -71,7 +71,7 @@ class JavaCompilerTest {
 			assertThat(source).contains("private final Item item;");
 			assertThat(source).contains("private BigDecimal discount;");
 			assertThat(source).contains("private void rule_WIG1()");
-			assertThat(source).contains("java.util.Objects.equals(item.getType(), \"WigglyDoll\")");
+			assertThat(source).contains("equalsNumericAware(item.getType(), \"WigglyDoll\")");
 		}
 
 		@Test
@@ -117,7 +117,7 @@ class JavaCompilerTest {
 
 			assertThat(result.isSuccess()).isTrue();
 			String source = result.getSourceFiles().orElseThrow().values().iterator().next();
-			assertThat(source).contains(".add(");
+			assertThat(source).contains("addNumeric(");
 		}
 
 		@Test
