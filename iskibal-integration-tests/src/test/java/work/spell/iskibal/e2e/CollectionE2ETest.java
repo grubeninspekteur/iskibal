@@ -200,7 +200,7 @@ class CollectionE2ETest {
 		@Test
 		@DisplayName("Flattens lists to values")
 		void flattensItemsToValues() throws Exception {
-			String source = createShoppingCartRule("String", "result := cart.items.name");
+			String source = createShoppingCartRule("java.util.List", "result := cart.items.name");
 			assertThat(getResult(source, List.class)).containsExactly("Apple", "Banana", "Cherry");
 		}
 

@@ -8,6 +8,9 @@ import java.util.Map;
 import java.util.Set;
 
 import work.spell.iskibal.compiler.java.api.JavaCompilerOptions;
+import work.spell.iskibal.compiler.java.types.JavaTypeInferenceContext;
+import work.spell.iskibal.compiler.java.types.JavaTypeInferenceVisitor;
+import work.spell.iskibal.compiler.java.types.JavaTypeResolver;
 import work.spell.iskibal.model.Fact;
 import work.spell.iskibal.model.Global;
 import work.spell.iskibal.model.Output;
@@ -63,7 +66,16 @@ public final class ModuleGenerator {
 			outputTypes.put(o.name(), o.type());
 		}
 
-		ExpressionGenerator exprGen = new ExpressionGenerator(options, globalNames, outputNames, outputTypes);
+		// Create type inference visitor if type inference is enabled
+		JavaTypeInferenceVisitor typeVisitor = null;
+		if (options.typeInferenceEnabled()) {
+			JavaTypeResolver resolver = new JavaTypeResolver(options.typeClassLoader());
+			JavaTypeInferenceContext context = JavaTypeInferenceContext.fromModule(module, resolver);
+			typeVisitor = new JavaTypeInferenceVisitor(context);
+		}
+
+		ExpressionGenerator exprGen = new ExpressionGenerator(options, globalNames, outputNames, outputTypes,
+				typeVisitor);
 		StatementGenerator stmtGen = new StatementGenerator(exprGen);
 		RuleGenerator ruleGen = new RuleGenerator(stmtGen, exprGen);
 

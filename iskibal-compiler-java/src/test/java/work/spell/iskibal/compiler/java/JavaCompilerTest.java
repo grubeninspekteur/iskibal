@@ -37,7 +37,7 @@ class JavaCompilerTest {
 	@BeforeEach
 	void setUp() {
 		compiler = new JavaCompilerImpl();
-		options = new JavaCompilerOptions("com.example.rules", "GeneratedRules", true);
+		options = JavaCompilerOptions.of("com.example.rules", "GeneratedRules", true);
 	}
 
 	@Nested

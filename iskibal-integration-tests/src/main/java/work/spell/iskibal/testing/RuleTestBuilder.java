@@ -163,7 +163,8 @@ public class RuleTestBuilder {
 
 		// Stage 3: Generate Java code
 		JavaCompiler javaCompiler = new JavaCompilerImpl();
-		JavaCompilerOptions options = new JavaCompilerOptions(packageName, className, true);
+		JavaCompilerOptions options = JavaCompilerOptions.withTypeInference(packageName, className,
+				Thread.currentThread().getContextClassLoader());
 		CompilationResult codegenResult = javaCompiler.compile(module, options);
 
 		if (!codegenResult.isSuccess()) {
@@ -224,7 +225,8 @@ public class RuleTestBuilder {
 
 		// Stage 3: Generate Java code
 		JavaCompiler javaCompiler = new JavaCompilerImpl();
-		JavaCompilerOptions options = new JavaCompilerOptions(packageName, className, true);
+		JavaCompilerOptions options = JavaCompilerOptions.withTypeInference(packageName, className,
+				Thread.currentThread().getContextClassLoader());
 		CompilationResult codegenResult = javaCompiler.compile(module, options);
 
 		if (!codegenResult.isSuccess()) {

@@ -93,3 +93,4 @@ nb-configuration.xml
 ## Agents
 ##############################
 .claude/settings.local.json
+.agent-plans

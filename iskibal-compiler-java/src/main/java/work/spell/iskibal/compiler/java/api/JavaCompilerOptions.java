@@ -9,14 +9,18 @@ package work.spell.iskibal.compiler.java.api;
  *            the name of the generated class
  * @param generateNullChecks
  *            whether to generate null safety checks for navigation expressions
+ * @param typeClassLoader
+ *            the class loader to use for resolving types (null to disable type
+ *            inference)
  */
-public record JavaCompilerOptions(String packageName, String className, boolean generateNullChecks) {
+public record JavaCompilerOptions(String packageName, String className, boolean generateNullChecks,
+		ClassLoader typeClassLoader) {
 
 	/**
 	 * Creates default options with no package and "GeneratedRules" class name.
 	 */
 	public static JavaCompilerOptions defaults() {
-		return new JavaCompilerOptions("", "GeneratedRules", true);
+		return new JavaCompilerOptions("", "GeneratedRules", true, null);
 	}
 
 	/**
@@ -24,7 +28,30 @@ public record JavaCompilerOptions(String packageName, String className, boolean 
 	 * enabled.
 	 */
 	public static JavaCompilerOptions of(String packageName, String className) {
-		return new JavaCompilerOptions(packageName, className, true);
+		return new JavaCompilerOptions(packageName, className, true, null);
+	}
+
+	/**
+	 * Creates options with the specified package, class name, and null check
+	 * setting.
+	 */
+	public static JavaCompilerOptions of(String packageName, String className, boolean generateNullChecks) {
+		return new JavaCompilerOptions(packageName, className, generateNullChecks, null);
+	}
+
+	/**
+	 * Creates options with type inference enabled using the specified class loader.
+	 */
+	public static JavaCompilerOptions withTypeInference(String packageName, String className,
+			ClassLoader typeClassLoader) {
+		return new JavaCompilerOptions(packageName, className, true, typeClassLoader);
+	}
+
+	/**
+	 * Returns true if type inference is enabled.
+	 */
+	public boolean typeInferenceEnabled() {
+		return typeClassLoader != null;
 	}
 
 	/**

@@ -73,3 +73,9 @@ git config core.hooksPath hooks
 Documentation for the Iskara rule language is in `documentation/examples/specification/`:
 - `Iskara_Language_Reference.adoc` - Core language syntax
 - `AsciiDoc_plus_Iskara.adoc` - Embedding rules in AsciiDoc documents
+
+## Agent Plans
+
+Larger changes (especially architectural ones) should be drafted as plans. These can be stored in `.agent-plans`. Move completed plans to `.agent-plans/archive`. If the user tells you to "resume plan", resume the plan in `.agent-plans`.
+
+If plans get really large, split them into subplans.

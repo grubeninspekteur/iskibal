@@ -4,6 +4,7 @@ module iskibal.compiler.java {
 
 	exports work.spell.iskibal.compiler.java.api;
 	exports work.spell.iskibal.compiler.java.runtime;
+	exports work.spell.iskibal.compiler.java.types;
 	exports work.spell.iskibal.compiler.java.internal to iskibal.integration.tests;
 
 	uses work.spell.iskibal.compiler.common.api.SemanticAnalyzer;

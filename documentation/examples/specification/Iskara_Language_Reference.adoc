@@ -173,7 +173,7 @@ items each: [:item | item discard]
 
 ==== Shorthand block syntax
 
-If the block has exactly one parameter and you want to send a message to it, you can use the shorthand block syntax by omitting the parameter:
+If the block has exactly one parameter, you can use the shorthand block syntax by omitting the parameter:
 
 [source,iskara]
 ----

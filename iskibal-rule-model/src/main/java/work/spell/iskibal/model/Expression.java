@@ -61,7 +61,9 @@ public sealed interface Expression permits Expression.Identifier, Expression.Lit
 		record UnaryMessage(Expression receiver, String selector) implements MessageSend {
 		}
 
-		/** Keyword message: receiver key1: arg1 key2: arg2 (e.g., errors add: "message") */
+		/**
+		 * Keyword message: receiver key1: arg1 key2: arg2 (e.g., errors add: "message")
+		 */
 		record KeywordMessage(Expression receiver, List<KeywordPart> parts) implements MessageSend {
 			public record KeywordPart(String keyword, Expression argument) {
 			}
