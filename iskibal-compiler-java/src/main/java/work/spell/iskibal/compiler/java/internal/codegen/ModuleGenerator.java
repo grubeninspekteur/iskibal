@@ -1,8 +1,10 @@
 package work.spell.iskibal.compiler.java.internal.codegen;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import work.spell.iskibal.compiler.java.api.JavaCompilerOptions;
@@ -37,7 +39,8 @@ public final class ModuleGenerator {
 		// Imports
 		sb.append("import java.math.BigDecimal;\n");
 		sb.append("import java.util.Objects;\n");
-		sb.append("import static work.spell.iskibal.compiler.java.runtime.NumericHelpers.*;\n\n");
+		sb.append("import static work.spell.iskibal.compiler.java.runtime.NumericHelpers.*;\n");
+		sb.append("import static work.spell.iskibal.compiler.java.runtime.CollectionHelpers.*;\n\n");
 
 		// Class declaration
 		sb.append("public class ").append(options.className()).append(" {\n\n");
@@ -54,11 +57,13 @@ public final class ModuleGenerator {
 			globalNames.add(g.name());
 		}
 		Set<String> outputNames = new HashSet<>();
+		Map<String, String> outputTypes = new HashMap<>();
 		for (Output o : module.outputs()) {
 			outputNames.add(o.name());
+			outputTypes.put(o.name(), o.type());
 		}
 
-		ExpressionGenerator exprGen = new ExpressionGenerator(options, globalNames, outputNames);
+		ExpressionGenerator exprGen = new ExpressionGenerator(options, globalNames, outputNames, outputTypes);
 		StatementGenerator stmtGen = new StatementGenerator(exprGen);
 		RuleGenerator ruleGen = new RuleGenerator(stmtGen, exprGen);
 

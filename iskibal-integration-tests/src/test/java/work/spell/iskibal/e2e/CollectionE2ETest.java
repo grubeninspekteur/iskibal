@@ -208,7 +208,7 @@ class CollectionE2ETest {
 		@DisplayName("Access lists by 0-indexed `at:` operation")
 		void accessAtIndex() throws Exception {
 			String source = createShoppingCartRule("String", "result := (cart.items at: 1).name");
-			assertThat(getResult(source, List.class)).isEqualTo("Banana");
+			assertThat(getResult(source, String.class)).isEqualTo("Banana");
 		}
 
 		@Test
@@ -242,7 +242,7 @@ class CollectionE2ETest {
 		@DisplayName("Get map size")
 		void getSizeOfMap() throws Exception {
 			String source = createShoppingCartRule("int", """
-					result := ["Han": "Solo"]
+					result := ["Han": "Solo"] size
 					""");
 			assertThat(getResult(source, Integer.class)).isEqualTo(1);
 		}
@@ -258,7 +258,7 @@ class CollectionE2ETest {
 		@DisplayName("check presence with exists and empty")
 		void existsOperation() throws Exception {
 			String source = createShoppingCartRule("java.util.List", """
-					 items := cart.items
+					 let items := cart.items
 					 result := [
 					   items exists,
 					   items notEmpty,
@@ -278,13 +278,13 @@ class CollectionE2ETest {
 		@DisplayName("Check containment with contains")
 		void containsOperation() throws Exception {
 			String source = createShoppingCartRule("java.util.Map", """
-					itemNames := cart.items.name
+					let itemNames := cart.items.name
 					result := [
 					  "hasItemsWithBanana": (itemNames contains: "Banana"),
 					  "hasItemsWithGold": (itemNames contains: "Gold"),
 					  "emptyListContains": ([] contains: "Foo"),
 					  "mapContainsKeyExists": (["Foo": "Bar"] contains: "Foo"),
-					  "mapContainsKeyDoesNotExist": (["Foo": "Bar"] contains: "Bar"),
+					  "mapContainsKeyDoesNotExist": (["Foo": "Bar"] contains: "Bar")
 					]
 					""");
 			assertThat(getResult(source, Map.class))

@@ -134,4 +134,95 @@ public final class NumericHelpers {
 	public static BigDecimal divideNumeric(Object left, Object right) {
 		return toBigDecimal(left).divide(toBigDecimal(right));
 	}
+
+	/**
+	 * Converts a numeric value to int. Uses exact conversion for BigDecimal.
+	 *
+	 * @param value
+	 *            the value to convert
+	 * @return the value as int
+	 * @throws ArithmeticException
+	 *             if the value cannot be represented exactly as int
+	 */
+	public static int toInt(Object value) {
+		if (value instanceof Integer i)
+			return i;
+		if (value instanceof BigDecimal bd)
+			return bd.intValueExact();
+		if (value instanceof Number n)
+			return n.intValue();
+		throw new IllegalArgumentException("Cannot convert to int: " + value);
+	}
+
+	/**
+	 * Converts a numeric value to long. Uses exact conversion for BigDecimal.
+	 *
+	 * @param value
+	 *            the value to convert
+	 * @return the value as long
+	 * @throws ArithmeticException
+	 *             if the value cannot be represented exactly as long
+	 */
+	public static long toLong(Object value) {
+		if (value instanceof Long l)
+			return l;
+		if (value instanceof Integer i)
+			return i.longValue();
+		if (value instanceof BigDecimal bd)
+			return bd.longValueExact();
+		if (value instanceof Number n)
+			return n.longValue();
+		throw new IllegalArgumentException("Cannot convert to long: " + value);
+	}
+
+	/**
+	 * Converts a numeric value to float.
+	 *
+	 * @param value
+	 *            the value to convert
+	 * @return the value as float
+	 */
+	public static float toFloat(Object value) {
+		if (value instanceof Float f)
+			return f;
+		if (value instanceof BigDecimal bd)
+			return bd.floatValue();
+		if (value instanceof Number n)
+			return n.floatValue();
+		throw new IllegalArgumentException("Cannot convert to float: " + value);
+	}
+
+	/**
+	 * Converts a numeric value to double.
+	 *
+	 * @param value
+	 *            the value to convert
+	 * @return the value as double
+	 */
+	public static double toDouble(Object value) {
+		if (value instanceof Double d)
+			return d;
+		if (value instanceof BigDecimal bd)
+			return bd.doubleValue();
+		if (value instanceof Number n)
+			return n.doubleValue();
+		throw new IllegalArgumentException("Cannot convert to double: " + value);
+	}
+
+	/**
+	 * Converts a numeric value to BigInteger.
+	 *
+	 * @param value
+	 *            the value to convert
+	 * @return the value as BigInteger
+	 */
+	public static java.math.BigInteger toBigInteger(Object value) {
+		if (value instanceof java.math.BigInteger bi)
+			return bi;
+		if (value instanceof BigDecimal bd)
+			return bd.toBigInteger();
+		if (value instanceof Number n)
+			return java.math.BigInteger.valueOf(n.longValue());
+		throw new IllegalArgumentException("Cannot convert to BigInteger: " + value);
+	}
 }

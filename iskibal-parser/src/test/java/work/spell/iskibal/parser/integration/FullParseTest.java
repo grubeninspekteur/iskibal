@@ -11,7 +11,9 @@ import work.spell.iskibal.model.Expression.Identifier;
 import work.spell.iskibal.model.Expression.Literal.NumberLiteral;
 import work.spell.iskibal.model.Expression.Literal.StringLiteral;
 import work.spell.iskibal.model.Expression.MessageSend;
-import work.spell.iskibal.model.Expression.MessageSend.MessagePart;
+import work.spell.iskibal.model.Expression.MessageSend.KeywordMessage;
+import work.spell.iskibal.model.Expression.MessageSend.KeywordMessage.KeywordPart;
+import work.spell.iskibal.model.Expression.MessageSend.UnaryMessage;
 import work.spell.iskibal.model.Expression.Navigation;
 import work.spell.iskibal.model.Rule.SimpleRule;
 import work.spell.iskibal.model.Statement.ExpressionStatement;
@@ -217,10 +219,10 @@ class FullParseTest {
 
 			assertThat(module.rules()).singleElement().asInstanceOf(InstanceOfAssertFactories.type(SimpleRule.class))
 					.extracting(SimpleRule::when)
-					.isEqualTo(List.of(new ExpressionStatement(new MessageSend(
+					.isEqualTo(List.of(new ExpressionStatement(new KeywordMessage(
 							new Expression.Binary(new Navigation(new Identifier("Car"), List.of("maker")),
 									Operator.EQUALS, new StringLiteral("ACME")),
-							List.of(new MessagePart("and",
+							List.of(new KeywordPart("and",
 									new Binary(new Navigation(new Identifier("Car"), List.of("color")), Operator.EQUALS,
 											new StringLiteral("blue"))))))));
 		}
@@ -372,7 +374,7 @@ class FullParseTest {
 			SimpleRule rule = (SimpleRule) module.rules().get(0);
 
 			Statement.ExpressionStatement stmt = (Statement.ExpressionStatement) rule.then().get(0);
-			assertThat(stmt.expression()).isEqualTo(new MessageSend(new Identifier("machine"), List.of()));
+			assertThat(stmt.expression()).isEqualTo(new UnaryMessage(new Identifier("machine"), "run"));
 		}
 
 		@Test
@@ -390,11 +392,11 @@ class FullParseTest {
 			SimpleRule rule = (SimpleRule) module.rules().get(0);
 
 			Statement.ExpressionStatement stmt = (Statement.ExpressionStatement) rule.then().get(0);
-			MessageSend msg = (MessageSend) stmt.expression();
+			KeywordMessage msg = (KeywordMessage) stmt.expression();
 
 			assertThat(msg.receiver()).isEqualTo(new Identifier("errors"));
 			assertThat(msg.parts()).hasSize(1);
-			assertThat(msg.parts().get(0).name()).isEqualTo("add");
+			assertThat(msg.parts().get(0).keyword()).isEqualTo("add");
 			assertThat(msg.parts().get(0).argument()).isEqualTo(new Expression.Literal.StringLiteral("error message"));
 		}
 
@@ -415,9 +417,9 @@ class FullParseTest {
 			assertThat(rule.then()).singleElement()
 					.asInstanceOf(InstanceOfAssertFactories.type(ExpressionStatement.class))
 					.extracting(ExpressionStatement::expression)
-					.isEqualTo(new MessageSend(new Identifier("list"),
-							List.of(new MessagePart("find", new NumberLiteral(BigDecimal.valueOf(5L))),
-									new MessagePart("cardsOfType", new Identifier("MAGICIAN")))));
+					.isEqualTo(new KeywordMessage(new Identifier("list"),
+							List.of(new KeywordPart("find", new NumberLiteral(BigDecimal.valueOf(5L))),
+									new KeywordPart("cardsOfType", new Identifier("MAGICIAN")))));
 		}
 	}
 
@@ -438,7 +440,7 @@ class FullParseTest {
 			SimpleRule rule = (SimpleRule) module.rules().get(0);
 
 			Statement.ExpressionStatement stmt = (Statement.ExpressionStatement) rule.when().get(0);
-			MessageSend msg = (MessageSend) stmt.expression();
+			KeywordMessage msg = (KeywordMessage) stmt.expression();
 			Expression.Block block = (Expression.Block) msg.parts().get(0).argument();
 
 			assertThat(block.statements()).isNotEmpty();

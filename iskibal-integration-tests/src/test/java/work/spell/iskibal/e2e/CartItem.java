@@ -29,6 +29,11 @@ public class CartItem {
 		return active;
 	}
 
+	/** Alias for isActive() to support JavaBeans-style navigation */
+	public boolean getActive() {
+		return active;
+	}
+
 	public void setName(String name) {
 		this.name = name;
 	}

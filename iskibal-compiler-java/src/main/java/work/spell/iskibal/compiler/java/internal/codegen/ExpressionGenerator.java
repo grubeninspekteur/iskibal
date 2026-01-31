@@ -14,6 +14,9 @@ import work.spell.iskibal.model.Expression.Block;
 import work.spell.iskibal.model.Expression.Identifier;
 import work.spell.iskibal.model.Expression.Literal;
 import work.spell.iskibal.model.Expression.MessageSend;
+import work.spell.iskibal.model.Expression.MessageSend.DefaultMessage;
+import work.spell.iskibal.model.Expression.MessageSend.KeywordMessage;
+import work.spell.iskibal.model.Expression.MessageSend.UnaryMessage;
 import work.spell.iskibal.model.Expression.Navigation;
 import work.spell.iskibal.model.Statement;
 
@@ -25,11 +28,18 @@ public final class ExpressionGenerator {
 	private final JavaCompilerOptions options;
 	private final Set<String> globalNames;
 	private final Set<String> outputNames;
+	private final Map<String, String> outputTypes;
 
 	public ExpressionGenerator(JavaCompilerOptions options, Set<String> globalNames, Set<String> outputNames) {
+		this(options, globalNames, outputNames, Map.of());
+	}
+
+	public ExpressionGenerator(JavaCompilerOptions options, Set<String> globalNames, Set<String> outputNames,
+			Map<String, String> outputTypes) {
 		this.options = options;
 		this.globalNames = globalNames;
 		this.outputNames = outputNames;
+		this.outputTypes = outputTypes;
 	}
 
 	/**
@@ -96,44 +106,75 @@ public final class ExpressionGenerator {
 		if (lit.entries().isEmpty()) {
 			return "java.util.Map.of()";
 		}
+		// Use Map.ofEntries to support any number of entries (Map.of only supports up to 10)
 		String entries = lit.entries().entrySet().stream()
-				.map(e -> generate(e.getKey()) + ", " + generate(e.getValue())).collect(Collectors.joining(", "));
-		return "java.util.Map.of(" + entries + ")";
+				.map(e -> "java.util.Map.entry(" + generate(e.getKey()) + ", " + generate(e.getValue()) + ")")
+				.collect(Collectors.joining(", "));
+		return "java.util.Map.ofEntries(" + entries + ")";
 	}
 
 	private String generateMessageSend(MessageSend ms) {
 		String receiver = generate(ms.receiver());
 
-		// Build method name from keyword parts (Smalltalk style)
-		if (ms.parts().size() == 1) {
-			MessageSend.MessagePart part = ms.parts().getFirst();
-			String methodName = part.name();
-
-			// Unary message: receiver message -> receiver.message()
-			if (part.argument() == null) {
-				return receiver + "." + methodName + "()";
+		return switch (ms) {
+			case UnaryMessage um -> generateUnaryMessage(receiver, um.selector());
+			case KeywordMessage km -> generateKeywordMessage(receiver, km);
+			case DefaultMessage _ -> {
+				// Default message: receiver! -> receiver.apply() or similar
+				yield receiver + ".apply()";
 			}
+		};
+	}
 
-			// Single keyword message: receiver keyword: arg -> receiver.keyword(arg)
+	private String generateUnaryMessage(String receiver, String selector) {
+		// Handle special collection unary messages
+		return switch (selector) {
+			case "exists", "notEmpty" -> "!" + receiver + ".isEmpty()";
+			case "doesNotExist", "empty" -> receiver + ".isEmpty()";
+			case "sum" -> receiver + ".stream().reduce(java.math.BigDecimal.ZERO, (a, b) -> a.add(toBigDecimal(b)))";
+			default -> receiver + "." + selector + "()";
+		};
+	}
+
+	private String generateKeywordMessage(String receiver, KeywordMessage km) {
+		if (km.parts().size() == 1) {
+			KeywordMessage.KeywordPart part = km.parts().getFirst();
+			String keyword = part.keyword();
 			String arg = generate(part.argument());
-			return receiver + "." + methodName + "(" + arg + ")";
-		}
 
+			// Handle special collection keyword messages
+			return switch (keyword) {
+				case "all" -> receiver + ".stream().allMatch(" + arg + ")";
+				case "each" -> receiver + ".forEach(" + arg + ")";
+				case "where" -> receiver + ".stream().filter(" + arg + ").toList()";
+				case "at" -> generateAtAccess(receiver, arg);
+				case "contains" -> receiver + ".contains(" + arg + ")";
+				case "and" -> receiver + " && " + arg;
+				case "or" -> receiver + " || " + arg;
+				default -> receiver + "." + keyword + "(" + arg + ")";
+			};
+		}
 		// Multi-keyword message: receiver k1: a1 k2: a2 -> receiver.k1K2(a1, a2)
 		StringBuilder methodName = new StringBuilder();
 		StringBuilder args = new StringBuilder();
 		boolean first = true;
-		for (MessageSend.MessagePart part : ms.parts()) {
+		for (KeywordMessage.KeywordPart part : km.parts()) {
 			if (first) {
-				methodName.append(part.name());
+				methodName.append(part.keyword());
 				first = false;
 			} else {
-				methodName.append(capitalize(part.name()));
+				methodName.append(capitalize(part.keyword()));
 				args.append(", ");
 			}
 			args.append(generate(part.argument()));
 		}
 		return receiver + "." + methodName + "(" + args + ")";
+	}
+
+	private String generateAtAccess(String receiver, String indexOrKey) {
+		// The at: message is used for both list index access and map key access.
+		// Use runtime helper that handles both cases.
+		return "at(" + receiver + ", " + indexOrKey + ")";
 	}
 
 	private String generateBinary(Binary bin) {
@@ -164,7 +205,32 @@ public final class ExpressionGenerator {
 
 		String target = generateAssignmentTarget(assign.target());
 		String value = generate(assign.value());
+
+		// Apply type coercion for output assignments
+		if (assign.target() instanceof Identifier id) {
+			String outputName = id.name();
+			if (outputNames.contains(outputName)) {
+				String targetType = outputTypes.get(outputName);
+				value = applyTypeCoercion(value, targetType);
+			}
+		}
+
 		return target + " = " + value;
+	}
+
+	private String applyTypeCoercion(String value, String targetType) {
+		if (targetType == null) {
+			return value;
+		}
+		return switch (targetType) {
+			case "int", "Integer", "java.lang.Integer" -> "toInt(" + value + ")";
+			case "long", "Long", "java.lang.Long" -> "toLong(" + value + ")";
+			case "float", "Float", "java.lang.Float" -> "toFloat(" + value + ")";
+			case "double", "Double", "java.lang.Double" -> "toDouble(" + value + ")";
+			case "BigInteger", "java.math.BigInteger" -> "toBigInteger(" + value + ")";
+			case "BigDecimal", "java.math.BigDecimal" -> "toBigDecimal(" + value + ")";
+			default -> value;
+		};
 	}
 
 	private String generateNavigationAssignment(Navigation nav, Expression value) {

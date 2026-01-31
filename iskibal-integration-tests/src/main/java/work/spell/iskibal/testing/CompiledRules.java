@@ -59,10 +59,23 @@ public class CompiledRules {
 	 *
 	 * @throws ReflectiveOperationException
 	 *             if the method call fails
+	 * @throws RuntimeException
+	 *             if the evaluation throws a runtime exception (unwrapped from
+	 *             InvocationTargetException)
 	 */
 	public void evaluate() throws ReflectiveOperationException {
 		Method evaluateMethod = rulesClass.getMethod("evaluate");
-		evaluateMethod.invoke(instance);
+		try {
+			evaluateMethod.invoke(instance);
+		} catch (InvocationTargetException e) {
+			Throwable cause = e.getCause();
+			if (cause instanceof RuntimeException re) {
+				throw re;
+			} else if (cause instanceof Error err) {
+				throw err;
+			}
+			throw e;
+		}
 	}
 
 	/**

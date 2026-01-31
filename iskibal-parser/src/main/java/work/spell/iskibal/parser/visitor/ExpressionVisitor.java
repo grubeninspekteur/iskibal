@@ -3,6 +3,10 @@ package work.spell.iskibal.parser.visitor;
 import org.antlr.v4.runtime.Token;
 import work.spell.iskibal.model.Expression;
 import work.spell.iskibal.model.Expression.*;
+import work.spell.iskibal.model.Expression.MessageSend.DefaultMessage;
+import work.spell.iskibal.model.Expression.MessageSend.KeywordMessage;
+import work.spell.iskibal.model.Expression.MessageSend.KeywordMessage.KeywordPart;
+import work.spell.iskibal.model.Expression.MessageSend.UnaryMessage;
 import work.spell.iskibal.model.Statement;
 import work.spell.iskibal.parser.IskaraParser;
 import work.spell.iskibal.parser.IskaraParserBaseVisitor;
@@ -41,8 +45,8 @@ public class ExpressionVisitor extends IskaraParserBaseVisitor<Expression> {
 		Expression left = visit(ctx.expression(0));
 		Expression right = visit(ctx.expression(1));
 		// Comma is a logical AND with lowest precedence
-		// Use a message send to represent the AND operation
-		return new MessageSend(left, List.of(new MessageSend.MessagePart("and", right)));
+		// Use a keyword message to represent the AND operation
+		return new KeywordMessage(left, List.of(new KeywordPart("and", right)));
 	}
 
 	@Override
@@ -110,24 +114,29 @@ public class ExpressionVisitor extends IskaraParserBaseVisitor<Expression> {
 	}
 
 	private Expression visitKeywordMessagePart(Expression receiver, IskaraParser.KeywordMessagePartContext ctx) {
-		List<MessageSend.MessagePart> parts = new ArrayList<>();
-		var identifiers = ctx.IDENTIFIER();
+		List<KeywordPart> parts = new ArrayList<>();
+		var selectors = ctx.messageSelector();
 		var expressions = ctx.navigationExpr();
-		for (int i = 0; i < identifiers.size(); i++) {
-			String name = identifiers.get(i).getText();
+		for (int i = 0; i < selectors.size(); i++) {
+			String keyword = extractMessageSelector(selectors.get(i));
 			Expression arg = visit(expressions.get(i));
-			parts.add(new MessageSend.MessagePart(name, arg));
+			parts.add(new KeywordPart(keyword, arg));
 		}
-		return new MessageSend(receiver, parts);
+		return new KeywordMessage(receiver, parts);
 	}
 
 	private Expression visitUnaryMessagePart(Expression receiver, IskaraParser.UnaryMessagePartContext ctx) {
-		String name = ctx.IDENTIFIER().getText();
-		return new MessageSend(receiver, List.of(new MessageSend.MessagePart(name, null)));
+		String selector = extractMessageSelector(ctx.messageSelector());
+		return new UnaryMessage(receiver, selector);
+	}
+
+	private String extractMessageSelector(IskaraParser.MessageSelectorContext ctx) {
+		// messageSelector can be IDENTIFIER or a keyword like WHERE, END, etc.
+		return ctx.getText();
 	}
 
 	private Expression visitDefaultMessagePart(Expression receiver, IskaraParser.DefaultMessagePartContext ctx) {
-		return new MessageSend(receiver, List.of(new MessageSend.MessagePart("", null)));
+		return new DefaultMessage(receiver);
 	}
 
 	// =========================================================================
@@ -181,8 +190,8 @@ public class ExpressionVisitor extends IskaraParserBaseVisitor<Expression> {
 	public Expression visitIndexExpr(IskaraParser.IndexExprContext ctx) {
 		Expression receiver = visit(ctx.primaryExpr());
 		Expression index = visit(ctx.expression());
-		// Index access is represented as a message send with "at" keyword
-		return new MessageSend(receiver, List.of(new MessageSend.MessagePart("at", index)));
+		// Index access is represented as a keyword message with "at" keyword
+		return new KeywordMessage(receiver, List.of(new KeywordPart("at", index)));
 	}
 
 	// =========================================================================
@@ -317,8 +326,8 @@ public class ExpressionVisitor extends IskaraParserBaseVisitor<Expression> {
 				// Range literal like {1..10}
 				Expression start = visit(elem.expression(0));
 				Expression end = visit(elem.expression(1));
-				// Represent range as a special message send
-				elements.add(new MessageSend(start, List.of(new MessageSend.MessagePart("to", end))));
+				// Represent range as a keyword message
+				elements.add(new KeywordMessage(start, List.of(new KeywordPart("to", end))));
 			} else {
 				elements.add(visit(elem.expression(0)));
 			}

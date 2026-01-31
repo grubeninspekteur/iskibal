@@ -15,6 +15,9 @@ import work.spell.iskibal.model.Expression.Block;
 import work.spell.iskibal.model.Expression.Identifier;
 import work.spell.iskibal.model.Expression.Literal;
 import work.spell.iskibal.model.Expression.MessageSend;
+import work.spell.iskibal.model.Expression.MessageSend.DefaultMessage;
+import work.spell.iskibal.model.Expression.MessageSend.KeywordMessage;
+import work.spell.iskibal.model.Expression.MessageSend.UnaryMessage;
 import work.spell.iskibal.model.Expression.Navigation;
 import work.spell.iskibal.model.Fact;
 import work.spell.iskibal.model.Output;
@@ -135,8 +138,18 @@ public final class AssignmentValidator {
 			}
 			case MessageSend ms -> {
 				validateExpression(ms.receiver(), factNames, outputNames, inActionSection);
-				for (MessageSend.MessagePart part : ms.parts()) {
-					validateExpression(part.argument(), factNames, outputNames, inActionSection);
+				switch (ms) {
+					case UnaryMessage _ -> {
+						// No arguments to validate
+					}
+					case KeywordMessage km -> {
+						for (KeywordMessage.KeywordPart part : km.parts()) {
+							validateExpression(part.argument(), factNames, outputNames, inActionSection);
+						}
+					}
+					case DefaultMessage _ -> {
+						// No arguments to validate
+					}
 				}
 			}
 			case Binary bin -> {

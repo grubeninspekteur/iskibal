@@ -170,8 +170,8 @@ expressionStatement
 // ============================================================================
 
 expression
-    : navigationExpr                                              # navigation
-    | messageSendExpr                                             # messageSend
+    : messageSendExpr                                             # messageSend
+    | navigationExpr                                              # navigation
     | MINUS expression                                            # unaryMinusExpr
     | expression multiplicativeOp expression                      # multiplicativeExpr
     | expression additiveOp expression                            # additiveExpr
@@ -202,9 +202,18 @@ messageSendExpr
     ;
 
 messagePart
-    : IDENTIFIER COLON navigationExpr (IDENTIFIER COLON navigationExpr)*  # keywordMessagePart
-    | IDENTIFIER                                                          # unaryMessagePart
-    | BANG                                                                # defaultMessagePart
+    : messageSelector COLON navigationExpr (messageSelector COLON navigationExpr)*  # keywordMessagePart
+    | messageSelector                                                               # unaryMessagePart
+    | BANG                                                                          # defaultMessagePart
+    ;
+
+// Message selectors can be identifiers or keywords (to allow 'where:', 'end', etc. as message names)
+messageSelector
+    : IDENTIFIER
+    | WHERE    // collection filter
+    | END      // might be used as selector
+    | DATA     // might be used as selector
+    | TABLE    // might be used as selector
     ;
 
 // Navigation with dot

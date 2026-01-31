@@ -15,6 +15,9 @@ import work.spell.iskibal.model.Expression.Block;
 import work.spell.iskibal.model.Expression.Identifier;
 import work.spell.iskibal.model.Expression.Literal;
 import work.spell.iskibal.model.Expression.MessageSend;
+import work.spell.iskibal.model.Expression.MessageSend.DefaultMessage;
+import work.spell.iskibal.model.Expression.MessageSend.KeywordMessage;
+import work.spell.iskibal.model.Expression.MessageSend.UnaryMessage;
 import work.spell.iskibal.model.Expression.Navigation;
 import work.spell.iskibal.model.Fact;
 import work.spell.iskibal.model.Global;
@@ -146,8 +149,13 @@ public final class ReferenceValidator {
 		switch (stmt) {
 			case Statement.ExpressionStatement es -> validateExpression(es.expression(), scope);
 			case Statement.LetStatement ls -> {
-				// First validate the expression, then add the local to scope
-				validateExpression(ls.expression(), scope);
+				// Check if this is a block parameter placeholder (Identifier("param"))
+				// Block parameters are represented as LetStatement(name, Identifier("param"))
+				boolean isBlockParam = ls.expression() instanceof Identifier id && "param".equals(id.name());
+				if (!isBlockParam) {
+					// First validate the expression, then add the local to scope
+					validateExpression(ls.expression(), scope);
+				}
 				scope.define(Symbol.local(ls.name()));
 			}
 		}
@@ -159,8 +167,18 @@ public final class ReferenceValidator {
 			case Literal lit -> validateLiteral(lit, scope);
 			case MessageSend ms -> {
 				validateExpression(ms.receiver(), scope);
-				for (MessageSend.MessagePart part : ms.parts()) {
-					validateExpression(part.argument(), scope);
+				switch (ms) {
+					case UnaryMessage _ -> {
+						// No arguments to validate
+					}
+					case KeywordMessage km -> {
+						for (KeywordMessage.KeywordPart part : km.parts()) {
+							validateExpression(part.argument(), scope);
+						}
+					}
+					case DefaultMessage _ -> {
+						// No arguments to validate
+					}
 				}
 			}
 			case Binary bin -> {

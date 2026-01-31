@@ -53,9 +53,22 @@ public sealed interface Expression permits Expression.Identifier, Expression.Lit
 	/**
 	 * Sends a message to a receiver, similar to Smalltalk style messaging.
 	 */
-	record MessageSend(Expression receiver, List<MessagePart> parts) implements Expression {
-		/** A single part of a message consisting of a keyword and an argument. */
-		public record MessagePart(String name, Expression argument) {
+	sealed interface MessageSend extends Expression
+			permits MessageSend.UnaryMessage, MessageSend.KeywordMessage, MessageSend.DefaultMessage {
+		Expression receiver();
+
+		/** Unary message: receiver selector (e.g., machine run) */
+		record UnaryMessage(Expression receiver, String selector) implements MessageSend {
+		}
+
+		/** Keyword message: receiver key1: arg1 key2: arg2 (e.g., errors add: "message") */
+		record KeywordMessage(Expression receiver, List<KeywordPart> parts) implements MessageSend {
+			public record KeywordPart(String keyword, Expression argument) {
+			}
+		}
+
+		/** Default message: receiver! (explicit default message invocation) */
+		record DefaultMessage(Expression receiver) implements MessageSend {
 		}
 	}
 
