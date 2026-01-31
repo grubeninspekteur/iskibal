@@ -53,8 +53,8 @@ public final class NumericHelpers {
 	/**
 	 * Performs numeric-aware equality comparison.
 	 * <p>
-	 * If both values are numeric, they are compared as BigDecimal values. Otherwise,
-	 * standard equals comparison is used.
+	 * If both values are numeric, they are compared as BigDecimal values.
+	 * Otherwise, standard equals comparison is used.
 	 *
 	 * @param left
 	 *            the left operand

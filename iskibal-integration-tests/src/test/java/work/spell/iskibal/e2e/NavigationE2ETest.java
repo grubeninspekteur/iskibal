@@ -171,9 +171,11 @@ class NavigationE2ETest {
 					end
 					""";
 
-			// TODO PersonRecord had been extended by Claude to have getters. That's not what should happen.
-			//  Records access needs to work as-is. The compiler needs to infer the correct access pattern.
-			//  For this it needs to keep track of return types at every part of the chain.
+			// TODO PersonRecord had been extended by Claude to have getters. That's not
+			// what should happen.
+			// Records access needs to work as-is. The compiler needs to infer the correct
+			// access pattern.
+			// For this it needs to keep track of return types at every part of the chain.
 			var person = new PersonRecord("Alice", 30);
 			var result = RuleTestBuilder.forSource(source).withFact(person).build();
 

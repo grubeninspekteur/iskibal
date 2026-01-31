@@ -105,15 +105,14 @@ class CollectionE2ETest {
 			var rules = result.rules().orElseThrow();
 			rules.evaluate();
 
-			assertThat(rules.<Map<?, ?>>getOutput("result")).isEqualTo(
-					Map.of("hello", "world",
-							"number", BigDecimal.valueOf(42))
-			);
+			assertThat(rules.<Map<?, ?>>getOutput("result"))
+					.isEqualTo(Map.of("hello", "world", "number", BigDecimal.valueOf(42)));
 		}
 
 		/**
-		 * A naiive implementation would use {@link Map#of()} with key-value pairs, which is only
-		 * defined for at most 10 pairs. Rather, {@link Map#ofEntries(Entry[])} should be used.
+		 * A naiive implementation would use {@link Map#of()} with key-value pairs,
+		 * which is only defined for at most 10 pairs. Rather,
+		 * {@link Map#ofEntries(Entry[])} should be used.
 		 */
 		@Test
 		@DisplayName("Map literals with many arguments be created")
@@ -256,6 +255,53 @@ class CollectionE2ETest {
 		}
 
 		@Test
+		@DisplayName("check presence with exists and empty")
+		void existsOperation() throws Exception {
+			String source = createShoppingCartRule("java.util.List", """
+					 items := cart.items
+					 result := [
+					   items exists,
+					   items notEmpty,
+					   items doesNotExist,
+					   items empty,
+					   [] exists,
+					   [] notEmpty,
+					   [] doesNotExist,
+					   [] empty
+					 ]
+					""");
+			assertThat(getResult(source, List.class))
+					.isEqualTo(List.of(true, true, false, false, false, false, true, true));
+		}
+
+		@Test
+		@DisplayName("Check containment with contains")
+		void containsOperation() throws Exception {
+			String source = createShoppingCartRule("java.util.Map", """
+					itemNames := cart.items.name
+					result := [
+					  "hasItemsWithBanana": (itemNames contains: "Banana"),
+					  "hasItemsWithGold": (itemNames contains: "Gold"),
+					  "emptyListContains": ([] contains: "Foo"),
+					  "mapContainsKeyExists": (["Foo": "Bar"] contains: "Foo"),
+					  "mapContainsKeyDoesNotExist": (["Foo": "Bar"] contains: "Bar"),
+					]
+					""");
+			assertThat(getResult(source, Map.class))
+					.isEqualTo(Map.of("hasItemsWithBanana", true, "hasItemsWithGold", false, "emptyListContains", false,
+							"mapContainsKeyExists", true, "mapContainsKeyDoesNotExist", false));
+		}
+
+		@Test
+		@DisplayName("filter with where")
+		void whereOperation() throws Exception {
+			String source = createShoppingCartRule("java.util.List", """
+					  result := cart.items where: [:item | item.active = true]
+					""");
+			assertThat(getResult(source, List.class)).extracting("name").containsExactly("Apple", "Cherry");
+		}
+
+		@Test
 		@DisplayName("apply with each")
 		void eachOperation() throws Exception {
 			String source = createShoppingCartRule("boolean", """
@@ -263,9 +309,7 @@ class CollectionE2ETest {
 					cart.items each: [:item | item.name := "Foo"]
 					""");
 			assertThat(getResult(source, Boolean.class)).isTrue();
-			assertThat(cart.getItems()).extracting(CartItem::getName)
-					.hasSize(3)
-					.containsOnly("Foo");
+			assertThat(cart.getItems()).extracting(CartItem::getName).hasSize(3).containsOnly("Foo");
 		}
 	}
 

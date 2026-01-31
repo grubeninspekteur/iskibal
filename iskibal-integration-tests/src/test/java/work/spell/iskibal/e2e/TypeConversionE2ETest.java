@@ -185,7 +185,7 @@ class TypeConversionE2ETest {
 					  bigDecimalValue: java.math.BigDecimal
 					  bigIntegerValue: java.math.BigInteger
 					}
-					
+
 					rule TARGET "Converts to target value"
 					when true
 					then
@@ -198,20 +198,20 @@ class TypeConversionE2ETest {
 					end
 					""";
 
-					var result = RuleTestBuilder.forSource(source).withFact(1).build();
+			var result = RuleTestBuilder.forSource(source).withFact(1).build();
 
-					assertResultSuccess(result);
+			assertResultSuccess(result);
 
-					var rules = result.rules().orElseThrow();
-					rules.evaluate();
+			var rules = result.rules().orElseThrow();
+			rules.evaluate();
 
-					assertThat(rules.<Integer>getOutput("intValue")).isEqualTo(6);
-				assertThat(rules.<Integer>getOutput("intObject")).as("not getting assigned").isNull();
-				assertThat(rules.<Long>getOutput("longValue")).isEqualTo(5);
-				assertThat(rules.<Float>getOutput("floatValue")).isEqualTo(0.5f);
-				assertThat(rules.<Double>getOutput("doubleValue")).isEqualTo(0.25d);
-				assertThat(rules.<BigDecimal>getOutput("bigDecimalValue")).isEqualTo(new BigDecimal("0.125"));
-				assertThat(rules.<BigInteger>getOutput("bigIntegerValue")).isEqualTo(new BigInteger("10000000000000000"));
+			assertThat(rules.<Integer>getOutput("intValue")).isEqualTo(6);
+			assertThat(rules.<Integer>getOutput("intObject")).as("not getting assigned").isNull();
+			assertThat(rules.<Long>getOutput("longValue")).isEqualTo(5);
+			assertThat(rules.<Float>getOutput("floatValue")).isEqualTo(0.5f);
+			assertThat(rules.<Double>getOutput("doubleValue")).isEqualTo(0.25d);
+			assertThat(rules.<BigDecimal>getOutput("bigDecimalValue")).isEqualTo(new BigDecimal("0.125"));
+			assertThat(rules.<BigInteger>getOutput("bigIntegerValue")).isEqualTo(new BigInteger("10000000000000000"));
 		}
 
 		@Test
@@ -224,7 +224,7 @@ class TypeConversionE2ETest {
 					outputs {
 					  intValue: int
 					}
-					
+
 					rule TARGET2 "Uses intExact"
 					when true
 					then
@@ -237,8 +237,7 @@ class TypeConversionE2ETest {
 			assertResultSuccess(result);
 
 			var rules = result.rules().orElseThrow();
-			assertThatExceptionOfType(ArithmeticException.class)
-					.isThrownBy(rules::evaluate);
+			assertThatExceptionOfType(ArithmeticException.class).isThrownBy(rules::evaluate);
 		}
 	}
 
