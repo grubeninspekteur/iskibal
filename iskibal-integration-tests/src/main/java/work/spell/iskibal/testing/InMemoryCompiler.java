@@ -1,10 +1,14 @@
 package work.spell.iskibal.testing;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StringWriter;
+import java.io.UncheckedIOException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +21,7 @@ import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.SimpleJavaFileObject;
 import javax.tools.StandardJavaFileManager;
+import javax.tools.StandardLocation;
 import javax.tools.ToolProvider;
 
 /**
@@ -71,8 +76,10 @@ public class InMemoryCompiler {
 		DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
 		StringWriter output = new StringWriter();
 
-		InMemoryFileManager fileManager = new InMemoryFileManager(
-				compiler.getStandardFileManager(diagnostics, null, null), additionalClasses);
+		StandardJavaFileManager standardFileManager = compiler.getStandardFileManager(diagnostics, null, null);
+		configureCompilationPaths(standardFileManager);
+
+		InMemoryFileManager fileManager = new InMemoryFileManager(standardFileManager, additionalClasses);
 
 		JavaFileObject sourceFile = new InMemorySourceFile(className, sourceCode);
 
@@ -105,6 +112,41 @@ public class InMemoryCompiler {
 		}
 		sb.append(diagnostic.getMessage(null));
 		return sb.toString();
+	}
+
+	/**
+	 * Configures the file manager with paths from the running JVM.
+	 * <p>
+	 * When running with module path (e.g., IntelliJ with module path enabled), the
+	 * {@link StandardJavaFileManager} doesn't automatically inherit the JVM's
+	 * paths. We combine both the module path (for dependencies) and class path (for
+	 * test classes) to ensure the compiler can resolve all types.
+	 * <p>
+	 * The compiled code ends up in the unnamed module, which can read all exported
+	 * packages from named modules at runtime.
+	 */
+	private void configureCompilationPaths(StandardJavaFileManager fileManager) {
+		List<File> allPaths = new ArrayList<>();
+
+		// Add module path entries (dependencies)
+		String modulePath = System.getProperty("jdk.module.path");
+		if (modulePath != null && !modulePath.isEmpty()) {
+			Arrays.stream(modulePath.split(File.pathSeparator)).map(File::new).forEach(allPaths::add);
+		}
+
+		// Add class path entries (test classes, etc.)
+		String classPath = System.getProperty("java.class.path");
+		if (classPath != null && !classPath.isEmpty()) {
+			Arrays.stream(classPath.split(File.pathSeparator)).map(File::new).forEach(allPaths::add);
+		}
+
+		if (!allPaths.isEmpty()) {
+			try {
+				fileManager.setLocation(StandardLocation.CLASS_PATH, allPaths);
+			} catch (IOException e) {
+				throw new UncheckedIOException("Failed to configure compilation paths", e);
+			}
+		}
 	}
 
 	/**

@@ -39,9 +39,8 @@ public class Calculator {
 	}
 
 	/**
-	 * Multi-keyword message - scales value by a then adds b.
-	 * Method name deliberately chosen to be unique and not confusable with unary
-	 * calls.
+	 * Multi-keyword message - scales value by a then adds b. Method name
+	 * deliberately chosen to be unique and not confusable with unary calls.
 	 */
 	public BigDecimal scaleByThenAdd(BigDecimal a, BigDecimal b) {
 		return value.multiply(a).add(b);
