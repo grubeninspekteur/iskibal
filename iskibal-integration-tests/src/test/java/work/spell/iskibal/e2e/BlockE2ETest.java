@@ -22,6 +22,7 @@ class BlockE2ETest {
 	@DisplayName("Block Code Generation")
 	class BlockCodeGeneration {
 
+		// TODO these are not testing blocks at all?!
 		@Test
 		@DisplayName("Block without parameters generates parameterless lambda")
 		void blockWithoutParametersGeneratesParameterlessLambda() throws Exception {

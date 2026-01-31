@@ -1,9 +1,12 @@
 package work.spell.iskibal.e2e;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatException;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import java.math.BigDecimal;
 
+import java.math.BigInteger;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -164,6 +167,78 @@ class TypeConversionE2ETest {
 			rules.evaluate();
 
 			assertThat(rules.<BigDecimal>getOutput("result")).isEqualByComparingTo(new BigDecimal("35"));
+		}
+
+		@Test
+		@DisplayName("convert to output format")
+		void convertToOutputFormat() throws Exception {
+			String source = """
+					facts {
+					  input: int
+					}
+					outputs {
+					  intValue: int
+					  intObject: Integer
+					  longValue: long
+					  floatValue: float
+					  doubleValue: double
+					  bigDecimalValue: java.math.BigDecimal
+					  bigIntegerValue: java.math.BigInteger
+					}
+					
+					rule TARGET "Converts to target value"
+					when true
+					then
+					    intValue := input + 5
+					    longValue := input + 4
+					    floatValue := input / 2
+					    doubleValue := input / 4
+					    bigDecimalValue := input / 8
+					    bigIntegerValue := input * 10000000000000000
+					end
+					""";
+
+					var result = RuleTestBuilder.forSource(source).withFact(1).build();
+
+					assertResultSuccess(result);
+
+					var rules = result.rules().orElseThrow();
+					rules.evaluate();
+
+					assertThat(rules.<Integer>getOutput("intValue")).isEqualTo(6);
+				assertThat(rules.<Integer>getOutput("intObject")).as("not getting assigned").isNull();
+				assertThat(rules.<Long>getOutput("longValue")).isEqualTo(5);
+				assertThat(rules.<Float>getOutput("floatValue")).isEqualTo(0.5f);
+				assertThat(rules.<Double>getOutput("doubleValue")).isEqualTo(0.25d);
+				assertThat(rules.<BigDecimal>getOutput("bigDecimalValue")).isEqualTo(new BigDecimal("0.125"));
+				assertThat(rules.<BigInteger>getOutput("bigIntegerValue")).isEqualTo(new BigInteger("10000000000000000"));
+		}
+
+		@Test
+		@DisplayName("uses intExact for conversion to int")
+		void convertToIntExact() {
+			String source = """
+					facts {
+					  input: int
+					}
+					outputs {
+					  intValue: int
+					}
+					
+					rule TARGET2 "Uses intExact"
+					when true
+					then
+					    intValue := input / 2
+					end
+					""";
+
+			var result = RuleTestBuilder.forSource(source).withFact(1).build();
+
+			assertResultSuccess(result);
+
+			var rules = result.rules().orElseThrow();
+			assertThatExceptionOfType(ArithmeticException.class)
+					.isThrownBy(rules::evaluate);
 		}
 	}
 

@@ -358,6 +358,24 @@ class FullParseTest {
 	@Nested
 	class MessageSendExpressions {
 		@Test
+		void parsesUnaryMessage() {
+			String input = """
+					rule TEST
+					when
+					    true
+					then
+					    machine run
+					end
+					""";
+
+			RuleModule module = parseSuccessfully(input);
+			SimpleRule rule = (SimpleRule) module.rules().get(0);
+
+			Statement.ExpressionStatement stmt = (Statement.ExpressionStatement) rule.then().get(0);
+			assertThat(stmt.expression()).isEqualTo(new MessageSend(new Identifier("machine"), List.of()));
+		}
+
+		@Test
 		void parsesKeywordMessageWithSinglePart() {
 			String input = """
 					rule TEST

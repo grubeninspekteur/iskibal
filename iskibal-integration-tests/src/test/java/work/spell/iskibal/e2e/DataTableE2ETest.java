@@ -17,9 +17,14 @@ import work.spell.iskibal.testing.RuleTestResult;
  */
 class DataTableE2ETest {
 
+	// TODO this only tests template rules, not (local) data tables, and also not decision tables. Needs to be expanded!
+
 	@Nested
 	@DisplayName("Template Rules")
 	class TemplateRules {
+
+		// TODO reuse rule source
+		// TODO change RuleTestBuilder so you can supply facts afterwards, not have to recompile for different facts, refactor other tests to make use of it
 
 		@Test
 		@DisplayName("Template rule generates one method per row")
@@ -125,6 +130,7 @@ class DataTableE2ETest {
 		}
 	}
 
+	// TODO this doesn't belong into the data tables category
 	@Nested
 	@DisplayName("Multiple Rules")
 	class MultipleRules {

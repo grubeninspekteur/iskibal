@@ -22,6 +22,33 @@ class MessagingE2ETest {
 	class SingleKeywordMessages {
 
 		@Test
+		@DisplayName("Unary message")
+		void unaryMessage() throws Exception {
+			String source = """
+					facts {
+					    calculator: work.spell.iskibal.e2e.Calculator
+					}
+					outputs {
+					    result: BigDecimal := 0
+					}
+					rule ADD1 "Add to value"
+					when true
+					then
+					    result := calculator negate
+					end
+					""";
+
+			var result = RuleTestBuilder.forSource(source).withFact(new Calculator(BigDecimal.TEN)).build();
+
+			assertResultSuccess(result);
+
+			var rules = result.rules().orElseThrow();
+			rules.evaluate();
+
+			assertThat(rules.<BigDecimal>getOutput("result")).isEqualTo(BigDecimal.valueOf(-10));
+		}
+
+		@Test
 		@DisplayName("Single keyword message with argument")
 		void singleKeywordMessageWithArgument() throws Exception {
 			String source = """

@@ -7,9 +7,9 @@ import java.math.BigDecimal;
  */
 public class CartItem {
 
-	private final String name;
-	private final BigDecimal price;
-	private final boolean active;
+	private String name;
+	private BigDecimal price;
+	private boolean active;
 
 	public CartItem(String name, BigDecimal price, boolean active) {
 		this.name = name;
@@ -27,5 +27,17 @@ public class CartItem {
 
 	public boolean isActive() {
 		return active;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public void setPrice(BigDecimal price) {
+		this.price = price;
+	}
+
+	public void setActive(boolean active) {
+		this.active = active;
 	}
 }

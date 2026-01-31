@@ -171,6 +171,9 @@ class NavigationE2ETest {
 					end
 					""";
 
+			// TODO PersonRecord had been extended by Claude to have getters. That's not what should happen.
+			//  Records access needs to work as-is. The compiler needs to infer the correct access pattern.
+			//  For this it needs to keep track of return types at every part of the chain.
 			var person = new PersonRecord("Alice", 30);
 			var result = RuleTestBuilder.forSource(source).withFact(person).build();
 
@@ -190,21 +193,18 @@ class NavigationE2ETest {
 		@Test
 		@DisplayName("Navigate to collection property and check size using message")
 		void navigateToCollectionPropertyCheckSize() throws Exception {
-			// Note: According to Iskara syntax, car.passengers.size would send 'size'
-			// message to each passenger. To get collection size, use message syntax:
-			// car.passengers size
 			String source = """
 					facts {
 					    car: work.spell.iskibal.e2e.Car
 					}
 					outputs {
-					    hasPassengers: Boolean := false
+					    passengerSize: BigDecimal := 0
 					}
-					rule NAV4 "Check has passengers"
+					rule NAV4 "Get passenger size"
 					when
-					    car.passengers ~= null
+					    true
 					then
-					    hasPassengers := true
+					    passengerSize := car.passengers size
 					end
 					""";
 
@@ -220,7 +220,7 @@ class NavigationE2ETest {
 			var rules = result.rules().orElseThrow();
 			rules.evaluate();
 
-			assertThat(rules.<Boolean>getOutput("hasPassengers")).isTrue();
+			assertThat(rules.<BigDecimal>getOutput("passengerSize")).isEqualTo(BigDecimal.valueOf(3));
 		}
 	}
 
