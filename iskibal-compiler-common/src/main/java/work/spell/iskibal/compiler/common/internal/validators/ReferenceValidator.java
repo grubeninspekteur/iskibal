@@ -69,6 +69,10 @@ public final class ReferenceValidator {
 			scope.define(Symbol.output(output.name(), output.type()));
 		}
 
+		for (DataTable table : module.dataTables()) {
+			scope.define(Symbol.dataTable(table.id()));
+		}
+
 		return scope;
 	}
 

@@ -11,6 +11,8 @@ import work.spell.iskibal.compiler.java.api.JavaCompilerOptions;
 import work.spell.iskibal.compiler.java.types.JavaTypeInferenceContext;
 import work.spell.iskibal.compiler.java.types.JavaTypeInferenceVisitor;
 import work.spell.iskibal.compiler.java.types.JavaTypeResolver;
+import work.spell.iskibal.model.DataTable;
+import work.spell.iskibal.model.Expression;
 import work.spell.iskibal.model.Fact;
 import work.spell.iskibal.model.Global;
 import work.spell.iskibal.model.Output;
@@ -111,8 +113,67 @@ public final class ModuleGenerator {
 			sb.append("\tprivate ").append(output.type()).append(" ").append(output.name()).append(";\n");
 		}
 
-		if (!module.facts().isEmpty() || !module.globals().isEmpty() || !module.outputs().isEmpty()) {
+		// Data tables (final fields initialized inline from literal values)
+		if (!module.dataTables().isEmpty()) {
+			ExpressionGenerator litGen = new ExpressionGenerator(options, Set.of(), Set.of());
+			for (DataTable table : module.dataTables()) {
+				generateDataTableField(sb, table, litGen);
+			}
+		}
+
+		if (!module.facts().isEmpty() || !module.globals().isEmpty() || !module.outputs().isEmpty()
+				|| !module.dataTables().isEmpty()) {
 			sb.append("\n");
+		}
+	}
+
+	private void generateDataTableField(StringBuilder sb, DataTable table, ExpressionGenerator exprGen) {
+		if (table.rows().isEmpty()) {
+			return;
+		}
+
+		List<String> columns = new ArrayList<>(table.rows().getFirst().values().keySet());
+
+		if (columns.size() == 2) {
+			// Two-column table: Map<Object, Object> keyed by first column
+			String keyCol = columns.get(0);
+			String valueCol = columns.get(1);
+			sb.append("\tprivate final java.util.Map<Object, Object> ").append(table.id())
+					.append(" = java.util.Map.ofEntries(\n");
+			for (int i = 0; i < table.rows().size(); i++) {
+				DataTable.Row row = table.rows().get(i);
+				sb.append("\t\t\tjava.util.Map.entry(").append(exprGen.generate(row.values().get(keyCol))).append(", ")
+						.append(exprGen.generate(row.values().get(valueCol))).append(")");
+				if (i < table.rows().size() - 1) {
+					sb.append(",");
+				}
+				sb.append("\n");
+			}
+			sb.append("\t\t);\n");
+		} else {
+			// Multi-column table: List<Map<String, Object>>
+			sb.append("\tprivate final java.util.List<java.util.Map<String, Object>> ").append(table.id())
+					.append(" = java.util.List.of(\n");
+			for (int i = 0; i < table.rows().size(); i++) {
+				DataTable.Row row = table.rows().get(i);
+				sb.append("\t\t\tjava.util.Map.ofEntries(\n");
+				List<Map.Entry<String, Expression>> entries = new ArrayList<>(row.values().entrySet());
+				for (int j = 0; j < entries.size(); j++) {
+					Map.Entry<String, Expression> entry = entries.get(j);
+					sb.append("\t\t\t\tjava.util.Map.entry(\"").append(entry.getKey()).append("\", ")
+							.append(exprGen.generate(entry.getValue())).append(")");
+					if (j < entries.size() - 1) {
+						sb.append(",");
+					}
+					sb.append("\n");
+				}
+				sb.append("\t\t\t)");
+				if (i < table.rows().size() - 1) {
+					sb.append(",");
+				}
+				sb.append("\n");
+			}
+			sb.append("\t\t);\n");
 		}
 	}
 

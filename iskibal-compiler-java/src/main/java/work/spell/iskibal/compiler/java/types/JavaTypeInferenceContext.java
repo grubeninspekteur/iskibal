@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import work.spell.iskibal.model.DataTable;
 import work.spell.iskibal.model.Fact;
 import work.spell.iskibal.model.Global;
 import work.spell.iskibal.model.Output;
@@ -27,6 +28,7 @@ public final class JavaTypeInferenceContext {
 	private final Map<String, JavaType> globalTypes = new HashMap<>();
 	private final Map<String, JavaType> outputTypes = new HashMap<>();
 	private final Map<String, JavaType> localTypes = new HashMap<>();
+	private final Map<String, JavaType> dataTableTypes = new HashMap<>();
 
 	/**
 	 * Creates a context with the given resolver.
@@ -65,6 +67,24 @@ public final class JavaTypeInferenceContext {
 			JavaType type = resolver.resolve(output.type());
 			outputTypes.put(output.name(), type);
 		}
+
+		// Register data table types
+		for (DataTable table : module.dataTables()) {
+			if (table.rows().isEmpty()) {
+				continue;
+			}
+			int columnCount = table.rows().getFirst().values().size();
+			JavaType type;
+			if (columnCount == 2) {
+				// Two-column table: dictionary (Map<Object, Object>)
+				type = JavaType.ClassType.map("java.util.Map", JavaType.OBJECT, JavaType.OBJECT);
+			} else {
+				// Multi-column table: list of dictionaries (List<Map<String, Object>>)
+				JavaType rowMapType = JavaType.ClassType.map("java.util.Map", JavaType.STRING, JavaType.OBJECT);
+				type = JavaType.ClassType.collection("java.util.List", rowMapType);
+			}
+			dataTableTypes.put(table.id(), type);
+		}
 	}
 
 	/**
@@ -98,6 +118,12 @@ public final class JavaTypeInferenceContext {
 
 		// Check local variables
 		type = localTypes.get(name);
+		if (type != null) {
+			return type;
+		}
+
+		// Check data tables
+		type = dataTableTypes.get(name);
 		if (type != null) {
 			return type;
 		}
@@ -167,6 +193,7 @@ public final class JavaTypeInferenceContext {
 		child.globalTypes.putAll(this.globalTypes);
 		child.outputTypes.putAll(this.outputTypes);
 		child.localTypes.putAll(this.localTypes);
+		child.dataTableTypes.putAll(this.dataTableTypes);
 		return child;
 	}
 }

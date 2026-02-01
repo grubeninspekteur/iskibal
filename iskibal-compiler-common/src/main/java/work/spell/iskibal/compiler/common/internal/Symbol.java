@@ -22,7 +22,9 @@ public record Symbol(String name, Kind kind, String type) {
 		/** Local variable declared with let */
 		LOCAL,
 		/** Data table column - accessible within template rules */
-		COLUMN
+		COLUMN,
+		/** Module-level data table - read-only */
+		DATATABLE
 	}
 
 	public static Symbol fact(String name, String type) {
@@ -43,6 +45,10 @@ public record Symbol(String name, Kind kind, String type) {
 
 	public static Symbol column(String name) {
 		return new Symbol(name, Kind.COLUMN, null);
+	}
+
+	public static Symbol dataTable(String name) {
+		return new Symbol(name, Kind.DATATABLE, null);
 	}
 
 	public boolean isWritable() {
