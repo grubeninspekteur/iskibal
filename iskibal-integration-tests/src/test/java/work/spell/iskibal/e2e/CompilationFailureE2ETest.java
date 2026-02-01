@@ -150,28 +150,6 @@ class CompilationFailureE2ETest {
 			assertThat(result.getStage()).isIn("analysis", "compilation");
 		}
 
-		@Test
-		@DisplayName("Assigning to outputs in when clause is rejected")
-		void assigningToOutputsInWhenClauseRejected() {
-			String source = """
-					outputs {
-					    result: BigDecimal := 0
-					}
-					rule R1 "Rule"
-					when
-					    result := 5
-					then
-					    result := 10
-					end
-					""";
-
-			var result = RuleTestBuilder.forSource(source).build();
-
-			assertThat(result.isSuccess()).isFalse();
-			assertThat(result.getStage()).isEqualTo("analysis");
-			assertThat(result.getErrors()).anyMatch(error -> error.toLowerCase().contains("assign")
-					|| error.toLowerCase().contains("when") || error.toLowerCase().contains("condition"));
-		}
 	}
 
 	@Nested
@@ -221,6 +199,82 @@ class CompilationFailureE2ETest {
 			assertThat(result.getStage()).isEqualTo("analysis");
 			assertThat(result.getErrors()).anyMatch(error -> error.toLowerCase().contains("undefined")
 					|| error.toLowerCase().contains("unknown") || error.toLowerCase().contains("unknownoutput"));
+		}
+	}
+
+	@Nested
+	@DisplayName("When clauses")
+	class WhenClauses {
+		@Test
+		@DisplayName("disallow assigning to anything else but a local variable")
+		void disallowAssigningToAnythingElseButALocalVariable() {
+			String source = """
+					facts {
+					  customer: work.spell.iskibal.e2e.MutableCustomer
+					}
+
+					rule R1 "Rule"
+					when
+					    customer.name := "John"
+					    true
+					then
+					    customer.name = "Jane"
+					end
+					""";
+
+			RuleTestResult result = RuleTestBuilder.forSource(source).build();
+
+			assertThat(result).isInstanceOf(RuleTestResult.AnalysisFailure.class);
+		}
+
+		@Test
+		@DisplayName("disallow boolean expressions at any place except the last line outside of comma")
+		void disallowDisconnectedBooleanExpressionStatements() {
+			String source = """
+					facts {
+					  firstName: String
+					  lastName: String
+					}
+
+					outputs {
+					  result: String
+					}
+
+					rule R1 "Rule"
+					when
+					    firstName = "John"
+					    lastName = "Doe"
+					then
+					    result := "42"
+					end
+					""";
+
+			RuleTestResult result = RuleTestBuilder.forSource(source).withFacts("John", "Doe").build();
+
+			assertThat(result).isInstanceOf(RuleTestResult.AnalysisFailure.class);
+		}
+
+		@Test
+		@DisplayName("disallow assigning to outputs")
+		void disallowAssigningToOutputs() {
+			String source = """
+					outputs {
+					    result: BigDecimal := 0
+					}
+					rule R1 "Rule"
+					when
+					    result := 5
+					then
+					    result := 10
+					end
+					""";
+
+			var result = RuleTestBuilder.forSource(source).build();
+
+			assertThat(result.isSuccess()).isFalse();
+			assertThat(result.getStage()).isEqualTo("analysis");
+			assertThat(result.getErrors()).anyMatch(error -> error.toLowerCase().contains("assign")
+					|| error.toLowerCase().contains("when") || error.toLowerCase().contains("condition"));
 		}
 	}
 

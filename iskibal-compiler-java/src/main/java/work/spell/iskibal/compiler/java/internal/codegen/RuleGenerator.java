@@ -43,6 +43,9 @@ public final class RuleGenerator {
 
 		// Generate when section as condition
 		if (!rule.when().isEmpty()) {
+			// First, generate let statements as local variable declarations
+			sb.append(generateLetStatements(rule.when(), "\t\t"));
+
 			sb.append("\t\tif (");
 			sb.append(generateCondition(rule.when()));
 			sb.append(") {\n");
@@ -94,6 +97,9 @@ public final class RuleGenerator {
 
 			// Generate when section as condition
 			if (!rule.when().isEmpty()) {
+				// First, generate let statements as local variable declarations
+				sb.append(generateLetStatements(rule.when(), "\t\t"));
+
 				sb.append("\t\tif (");
 				sb.append(generateCondition(rule.when()));
 				sb.append(") {\n");
@@ -121,6 +127,9 @@ public final class RuleGenerator {
 			sb.append("\tprivate void ").append(methodName).append("() {\n");
 
 			if (!row.when().isEmpty()) {
+				// First, generate let statements as local variable declarations
+				sb.append(generateLetStatements(row.when(), "\t\t"));
+
 				sb.append("\t\tif (");
 				sb.append(generateCondition(row.when()));
 				sb.append(") {\n");
@@ -148,11 +157,29 @@ public final class RuleGenerator {
 				sb.append(expressionGenerator.generate(es.expression()));
 				first = false;
 			}
+			// LetStatements are handled separately by generateLetStatements
 		}
 
 		if (first) {
 			// No expression statements, default to true
 			return "true";
+		}
+
+		return sb.toString();
+	}
+
+	/**
+	 * Generates local variable declarations for let statements in the when section.
+	 * These need to be generated before the condition so they are in scope.
+	 */
+	private String generateLetStatements(List<Statement> statements, String indent) {
+		StringBuilder sb = new StringBuilder();
+
+		for (Statement stmt : statements) {
+			if (stmt instanceof Statement.LetStatement ls) {
+				sb.append(indent).append("var ").append(ls.name()).append(" = ");
+				sb.append(expressionGenerator.generate(ls.expression())).append(";\n");
+			}
 		}
 
 		return sb.toString();

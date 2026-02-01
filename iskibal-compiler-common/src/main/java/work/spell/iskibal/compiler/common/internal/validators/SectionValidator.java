@@ -2,15 +2,23 @@ package work.spell.iskibal.compiler.common.internal.validators;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import work.spell.iskibal.compiler.common.api.SemanticDiagnostic;
+import work.spell.iskibal.model.Expression;
+import work.spell.iskibal.model.Expression.Binary;
 import work.spell.iskibal.model.Rule;
 import work.spell.iskibal.model.RuleModule;
+import work.spell.iskibal.model.Statement;
 
 /**
  * Validates rule section constraints - ensures rules have required sections.
  */
 public final class SectionValidator {
+
+	private static final Set<Binary.Operator> COMPARISON_OPERATORS = Set.of(Binary.Operator.EQUALS,
+			Binary.Operator.NOT_EQUALS, Binary.Operator.GREATER_THAN, Binary.Operator.GREATER_EQUALS,
+			Binary.Operator.LESS_THAN, Binary.Operator.LESS_EQUALS);
 
 	private final List<SemanticDiagnostic> diagnostics = new ArrayList<>();
 
@@ -44,6 +52,9 @@ public final class SectionValidator {
 		if (rule.when().isEmpty() && rule.then().isEmpty()) {
 			diagnostics.add(SemanticDiagnostic.warning("Rule has no when or then section", rule.id()));
 		}
+
+		// Validate disconnected boolean expressions in when section
+		validateWhenSection(rule.when(), rule.id());
 	}
 
 	private void validateTemplateRule(Rule.TemplateRule rule) {
@@ -58,6 +69,9 @@ public final class SectionValidator {
 		if (rule.when().isEmpty() && rule.then().isEmpty()) {
 			diagnostics.add(SemanticDiagnostic.warning("Template rule has no when or then section", rule.id()));
 		}
+
+		// Validate disconnected boolean expressions in when section
+		validateWhenSection(rule.when(), rule.id());
 	}
 
 	private void validateDecisionTableRule(Rule.DecisionTableRule rule) {
@@ -71,6 +85,46 @@ public final class SectionValidator {
 			if (row.when().isEmpty() && row.then().isEmpty()) {
 				diagnostics.add(SemanticDiagnostic.warning("Decision table row has no when or then section", row.id()));
 			}
+			// Note: We do NOT validate disconnected boolean expressions in decision table
+			// rows
+			// because multiple WHEN columns are by design combined with AND
 		}
+	}
+
+	/**
+	 * Validates that boolean expressions in when sections are not disconnected.
+	 * According to the Iskara spec, boolean expressions that aren't the last
+	 * statement, aren't in a comma expression, and aren't local variable
+	 * assignments should be rejected.
+	 */
+	private void validateWhenSection(List<Statement> statements, String ruleId) {
+		if (statements.size() <= 1) {
+			return; // Single statement or empty - nothing to validate
+		}
+
+		// Check all statements except the last one
+		for (int i = 0; i < statements.size() - 1; i++) {
+			Statement stmt = statements.get(i);
+			if (stmt instanceof Statement.ExpressionStatement exprStmt) {
+				if (isBooleanExpression(exprStmt.expression())) {
+					diagnostics.add(SemanticDiagnostic.error(
+							"Disconnected boolean expression in when section; use comma (,) to combine conditions",
+							ruleId));
+				}
+			}
+			// LetStatements are allowed to have boolean expressions
+		}
+	}
+
+	/**
+	 * Checks if an expression is likely to evaluate to a boolean. This includes
+	 * comparison operators and boolean literals.
+	 */
+	private boolean isBooleanExpression(Expression expr) {
+		return switch (expr) {
+			case Binary bin -> COMPARISON_OPERATORS.contains(bin.operator());
+			case Expression.Literal.BooleanLiteral _ -> true;
+			default -> false;
+		};
 	}
 }

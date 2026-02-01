@@ -443,11 +443,13 @@ If the rule matches, its consequences are executed; whether this happens immedia
 The last statement of a conditional must be an expression that evaluates to a boolean.
 It will be the evaluation result of the conditional, or in other words, the rule's matching condition.
 
+It is only allowed to assign to local variables in `when`.
+
 [source,iskara]
 ----
 rule WIG1 "Wiggly dolls are exempt from discounts"
 when
-  let itemType = item.type
+  let itemType := item.type
   itemType = WigglyDoll
 ----
 

@@ -229,9 +229,9 @@ public class RuleModuleVisitor extends IskaraParserBaseVisitor<RuleModule> {
 					Block aliasBlock = aliases.get(aliasName);
 					List<Statement> aliasStatements = aliasBlock.statements();
 
-					// Check if first statement is a block parameter: LetStatement(name, Identifier("param"))
-					if (!aliasStatements.isEmpty()
-							&& aliasStatements.getFirst() instanceof Statement.LetStatement ls
+					// Check if first statement is a block parameter: LetStatement(name,
+					// Identifier("param"))
+					if (!aliasStatements.isEmpty() && aliasStatements.getFirst() instanceof Statement.LetStatement ls
 							&& ls.expression() instanceof Expression.Identifier id && "param".equals(id.name())) {
 						// [:paramName | ...] - substitute the cell value for the parameter
 						Expression cellExpr = parseCellAsExpression(cellValue);

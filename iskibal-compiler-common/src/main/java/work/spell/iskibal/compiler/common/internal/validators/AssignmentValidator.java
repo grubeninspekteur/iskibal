@@ -205,10 +205,15 @@ public final class AssignmentValidator {
 					diagnostics.add(SemanticDiagnostic.error("Output can only be assigned in then/else section", name));
 				}
 			}
-			case Navigation _ -> {
-				// Navigation assignments are allowed (e.g., customer.category := "VIP")
-				// This translates to setter calls (customer.setCategory("VIP"))
-				// Only direct assignment to facts is disallowed, not property assignments
+			case Navigation nav -> {
+				// Navigation assignments (e.g., customer.name := "VIP") are only allowed
+				// in action sections (then/else). In when sections, only local variable
+				// assignments are allowed.
+				if (!inActionSection) {
+					diagnostics.add(SemanticDiagnostic.error(
+							"Navigation assignment not allowed in when section; only local variables can be assigned",
+							nav.toString()));
+				}
 			}
 			default -> {
 				// Other assignment targets (like message sends) are handled by validation

@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import work.spell.iskibal.testing.CompiledRuleTemplate;
+import work.spell.iskibal.testing.CompiledRuleTemplate.Success;
 import work.spell.iskibal.testing.RuleTestBuilder;
 import work.spell.iskibal.testing.RuleTestResult;
 
@@ -43,9 +44,7 @@ class SimpleRuleE2ETest {
 
 		@BeforeAll
 		static void compileOnce() {
-			var compiled = RuleTestBuilder.forSource(WIGGLY_DOLL_SOURCE).compile();
-			assertThat(compiled.isSuccess()).isTrue();
-			template = (CompiledRuleTemplate.Success) compiled;
+			template = compileSourceSuccessfully(WIGGLY_DOLL_SOURCE);
 		}
 
 		@Test
@@ -306,4 +305,95 @@ class SimpleRuleE2ETest {
 			throw new AssertionError(errorMessage);
 		}
 	}
+
+	@Nested
+	@DisplayName("when clauses")
+	class WhenClauses {
+		@Test
+		@DisplayName("with commas")
+		void withCommas() throws Exception {
+			String source = """
+					facts {
+					    firstName: String
+					    lastName: String
+					}
+					outputs {
+					    result: String := ""
+					}
+
+					rule RULE1 "When with comma"
+					when
+					    firstName = "John",
+					    lastName = "Doe"
+					then
+					    result := "We got him"
+					end
+					""";
+
+			var rule = compileSourceSuccessfully(source);
+
+			var resultWithJohn = rule.instantiate("John", "Doe");
+			var resultWithJane = rule.instantiate("Jane", "Doe");
+
+			assertResultSuccess(resultWithJohn);
+			assertResultSuccess(resultWithJane);
+
+			var rulesWithJohn = resultWithJohn.rules().orElseThrow();
+			var rulesWithJane = resultWithJane.rules().orElseThrow();
+
+			rulesWithJohn.evaluate();
+			rulesWithJane.evaluate();
+
+			assertThat(rulesWithJohn.<String>getOutput("result")).isEqualTo("We got him");
+			assertThat(rulesWithJane.<String>getOutput("result")).isEmpty();
+		}
+
+		@Test
+		@DisplayName("allow local variable assignment")
+		void allowLocalVariableAssignment() throws Exception {
+			String source = """
+							facts {
+							  name: String
+							}
+							outputs {
+							  result: String
+							}
+
+							rule RULE1 "When with let"
+							when
+							    let thisWillHaveNoEffect := true
+							    let fullName := name concat: " Doe"
+							    fullName = "John Doe"
+							then
+							    result := "Got him"
+							else
+							   result := "Not our guy"
+							end
+					""";
+
+			var rule = compileSourceSuccessfully(source);
+
+			var resultWithJohn = rule.instantiate("John");
+			var resultWithJane = rule.instantiate("Jane");
+
+			assertResultSuccess(resultWithJohn);
+			assertResultSuccess(resultWithJane);
+
+			var rulesWithJohn = resultWithJohn.rules().orElseThrow();
+			var rulesWithJane = resultWithJane.rules().orElseThrow();
+
+			rulesWithJohn.evaluate();
+			rulesWithJane.evaluate();
+
+			assertThat(rulesWithJohn.<String>getOutput("result")).isEqualTo("Got him");
+			assertThat(rulesWithJane.<String>getOutput("result")).isEqualTo("Not our guy");
+		}
+	}
+
+	private static Success compileSourceSuccessfully(String source) {
+		var compiled = RuleTestBuilder.forSource(source).compile();
+		assertThat(compiled).isInstanceOf(CompiledRuleTemplate.Success.class);
+		return (CompiledRuleTemplate.Success) compiled;
+	}
+
 }
