@@ -5,15 +5,15 @@ package work.spell.iskibal.model;
  */
 public sealed interface Import permits Import.Definition {
 
-	/** alias used inside rules */
-	String alias();
+    /** alias used inside rules */
+    String alias();
 
-	/** fully qualified class name */
-	String type();
+    /** fully qualified class name */
+    String type();
 
-	/**
-	 * Default implementation of an {@link Import} definition.
-	 */
-	record Definition(String alias, String type) implements Import {
-	}
+    /**
+     * Default implementation of an {@link Import} definition.
+     */
+    record Definition(String alias, String type) implements Import {
+    }
 }

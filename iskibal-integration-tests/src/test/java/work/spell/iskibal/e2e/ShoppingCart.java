@@ -7,13 +7,13 @@ import java.util.List;
  */
 public class ShoppingCart {
 
-	private final List<CartItem> items;
+    private final List<CartItem> items;
 
-	public ShoppingCart(List<CartItem> items) {
-		this.items = items;
-	}
+    public ShoppingCart(List<CartItem> items) {
+        this.items = items;
+    }
 
-	public List<CartItem> getItems() {
-		return items;
-	}
+    public List<CartItem> getItems() {
+        return items;
+    }
 }

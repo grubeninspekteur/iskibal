@@ -5,19 +5,19 @@ package work.spell.iskibal.e2e;
  */
 public class Passenger {
 
-	private final String name;
-	private final Passport passport;
+    private final String name;
+    private final Passport passport;
 
-	public Passenger(String name, Passport passport) {
-		this.name = name;
-		this.passport = passport;
-	}
+    public Passenger(String name, Passport passport) {
+        this.name = name;
+        this.passport = passport;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public Passport getPassport() {
-		return passport;
-	}
+    public Passport getPassport() {
+        return passport;
+    }
 }

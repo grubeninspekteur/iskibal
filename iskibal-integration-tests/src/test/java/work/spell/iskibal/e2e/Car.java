@@ -7,13 +7,13 @@ import java.util.List;
  */
 public class Car {
 
-	private final List<Passenger> passengers;
+    private final List<Passenger> passengers;
 
-	public Car(List<Passenger> passengers) {
-		this.passengers = passengers;
-	}
+    public Car(List<Passenger> passengers) {
+        this.passengers = passengers;
+    }
 
-	public List<Passenger> getPassengers() {
-		return passengers;
-	}
+    public List<Passenger> getPassengers() {
+        return passengers;
+    }
 }

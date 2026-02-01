@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<profiles version="1">
+  <profile kind="CodeFormatterProfile" id="iskibal" name="iskibal">
+    <!-- Indentation: 4 spaces, no tabs -->
+    <setting id="org.eclipse.jdt.core.formatter.tabulation.char" value="space"/>
+    <setting id="org.eclipse.jdt.core.formatter.tabulation.size" value="4"/>
+    <setting id="org.eclipse.jdt.core.formatter.indentation.size" value="4"/>
+    <setting id="org.eclipse.jdt.core.formatter.use_tabs_only_for_leading_indentation" value="false"/>
+
+    <!-- Line wrapping -->
+    <setting id="org.eclipse.jdt.core.formatter.lineSplit" value="120"/>
+
+    <!-- Blank lines -->
+    <setting id="org.eclipse.jdt.core.formatter.number_of_empty_lines_before_class_declaration" value="1"/>
+    <setting id="org.eclipse.jdt.core.formatter.number_of_empty_lines_after_class_declaration" value="0"/>
+    <setting id="org.eclipse.jdt.core.formatter.number_of_empty_lines_before_first_class_body_declaration" value="0"/>
+    <setting id="org.eclipse.jdt.core.formatter.number_of_empty_lines_before_type_declaration" value="1"/>
+    <setting id="org.eclipse.jdt.core.formatter.number_of_empty_lines_at_beginning_of_method_body" value="0"/>
+    <setting id="org.eclipse.jdt.core.formatter.number_of_empty_lines_at_end_of_method_body" value="0"/>
+  </profile>
+</profiles>

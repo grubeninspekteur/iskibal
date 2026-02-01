@@ -45,6 +45,7 @@
             <java>
               <eclipse>
                 <version>4.34</version>
+                <file>config/eclipse_formatter.xml</file>
               </eclipse>
               <formatAnnotations/>
             </java>

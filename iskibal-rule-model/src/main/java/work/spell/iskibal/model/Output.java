@@ -5,21 +5,21 @@ package work.spell.iskibal.model;
  */
 public sealed interface Output permits Output.Definition {
 
-	/** name of the output */
-	String name();
+    /** name of the output */
+    String name();
 
-	/** fully qualified type */
-	String type();
+    /** fully qualified type */
+    String type();
 
-	/** initial value assigned before rule execution */
-	Expression initialValue();
+    /** initial value assigned before rule execution */
+    Expression initialValue();
 
-	/** optional description */
-	String description();
+    /** optional description */
+    String description();
 
-	/**
-	 * Default output declaration.
-	 */
-	record Definition(String name, String type, Expression initialValue, String description) implements Output {
-	}
+    /**
+     * Default output declaration.
+     */
+    record Definition(String name, String type, Expression initialValue, String description) implements Output {
+    }
 }

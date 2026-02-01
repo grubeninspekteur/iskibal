@@ -18,40 +18,40 @@ import work.spell.iskibal.model.RuleModule;
  */
 public final class JavaCompilerImpl implements JavaCompiler {
 
-	private final SemanticAnalyzer analyzer;
+    private final SemanticAnalyzer analyzer;
 
-	/**
-	 * Creates a compiler with the default semantic analyzer loaded via
-	 * ServiceLoader.
-	 */
-	public JavaCompilerImpl() {
-		this(SemanticAnalyzer.load());
-	}
+    /**
+     * Creates a compiler with the default semantic analyzer loaded via
+     * ServiceLoader.
+     */
+    public JavaCompilerImpl() {
+        this(SemanticAnalyzer.load());
+    }
 
-	/**
-	 * Creates a compiler with a specific semantic analyzer (for testing).
-	 */
-	public JavaCompilerImpl(SemanticAnalyzer analyzer) {
-		this.analyzer = analyzer;
-	}
+    /**
+     * Creates a compiler with a specific semantic analyzer (for testing).
+     */
+    public JavaCompilerImpl(SemanticAnalyzer analyzer) {
+        this.analyzer = analyzer;
+    }
 
-	@Override
-	public CompilationResult compile(RuleModule module, JavaCompilerOptions options) {
-		// First, run semantic analysis
-		AnalysisResult analysisResult = analyzer.analyze(module);
+    @Override
+    public CompilationResult compile(RuleModule module, JavaCompilerOptions options) {
+        // First, run semantic analysis
+        AnalysisResult analysisResult = analyzer.analyze(module);
 
-		if (!analysisResult.isSuccess()) {
-			// Convert semantic errors to compilation errors
-			List<String> errors = analysisResult.getErrors().stream().map(SemanticDiagnostic::toString).toList();
-			return new CompilationResult.Failure(errors);
-		}
+        if (!analysisResult.isSuccess()) {
+            // Convert semantic errors to compilation errors
+            List<String> errors = analysisResult.getErrors().stream().map(SemanticDiagnostic::toString).toList();
+            return new CompilationResult.Failure(errors);
+        }
 
-		// Generate Java source code
-		ModuleGenerator generator = new ModuleGenerator(options);
-		String sourceCode = generator.generate(module);
+        // Generate Java source code
+        ModuleGenerator generator = new ModuleGenerator(options);
+        String sourceCode = generator.generate(module);
 
-		// Return the generated source
-		String filePath = options.filePath();
-		return new CompilationResult.Success(Map.of(filePath, sourceCode));
-	}
+        // Return the generated source
+        String filePath = options.filePath();
+        return new CompilationResult.Success(Map.of(filePath, sourceCode));
+    }
 }

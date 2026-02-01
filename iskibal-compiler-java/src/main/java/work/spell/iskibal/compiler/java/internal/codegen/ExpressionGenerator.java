@@ -28,603 +28,603 @@ import work.spell.iskibal.model.Statement;
  */
 public final class ExpressionGenerator {
 
-	private final JavaCompilerOptions options;
-	private final Set<String> globalNames;
-	private final Set<String> outputNames;
-	private final Map<String, String> outputTypes;
-	private final JavaTypeInferenceVisitor typeVisitor;
-
-	public ExpressionGenerator(JavaCompilerOptions options, Set<String> globalNames, Set<String> outputNames) {
-		this(options, globalNames, outputNames, Map.of(), null);
-	}
-
-	public ExpressionGenerator(JavaCompilerOptions options, Set<String> globalNames, Set<String> outputNames,
-			Map<String, String> outputTypes) {
-		this(options, globalNames, outputNames, outputTypes, null);
-	}
-
-	public ExpressionGenerator(JavaCompilerOptions options, Set<String> globalNames, Set<String> outputNames,
-			Map<String, String> outputTypes, JavaTypeInferenceVisitor typeVisitor) {
-		this.options = options;
-		this.globalNames = globalNames;
-		this.outputNames = outputNames;
-		this.outputTypes = outputTypes;
-		this.typeVisitor = typeVisitor;
-	}
-
-	/**
-	 * Returns true if type inference is enabled.
-	 */
-	private boolean hasTypeInfo() {
-		return typeVisitor != null;
-	}
-
-	/**
-	 * Gets the inferred type for an expression, or null if type inference is
-	 * disabled.
-	 */
-	private JavaType getType(Expression expr) {
-		if (typeVisitor == null) {
-			return null;
-		}
-		JavaTypedExpression typed = typeVisitor.infer(expr);
-		return typed.type();
-	}
-
-	/**
-	 * Registers a let variable's type in the type context. This must be called
-	 * before generating code for subsequent expressions that reference the
-	 * variable.
-	 */
-	public void registerLetVariable(String name, Expression value) {
-		if (typeVisitor != null) {
-			JavaType type = getType(value);
-			if (type != null) {
-				typeVisitor.context().declareLocal(name, type);
-			}
-		}
-	}
-
-	/**
-	 * Generates Java code for an expression.
-	 */
-	public String generate(Expression expr) {
-		return switch (expr) {
-			case Identifier id -> generateIdentifier(id);
-			case Literal lit -> generateLiteral(lit);
-			case MessageSend ms -> generateMessageSend(ms);
-			case Binary bin -> generateBinary(bin);
-			case Assignment assign -> generateAssignment(assign);
-			case Navigation nav -> generateNavigation(nav);
-			case Block block -> generateBlock(block);
-		};
-	}
-
-	private String generateIdentifier(Identifier id) {
-		String name = id.name();
-
-		// Handle @ prefix for globals
-		if (name.startsWith("@")) {
-			String globalName = name.substring(1);
-			return "this." + globalName;
-		}
-
-		// Outputs are accessed via this.
-		if (outputNames.contains(name)) {
-			return "this." + name;
-		}
-
-		return name;
-	}
-
-	private String generateLiteral(Literal lit) {
-		return switch (lit) {
-			case Literal.StringLiteral sl -> "\"" + escapeString(sl.value()) + "\"";
-			case Literal.NumberLiteral nl -> "new java.math.BigDecimal(\"" + nl.value().toPlainString() + "\")";
-			case Literal.BooleanLiteral bl -> String.valueOf(bl.value());
-			case Literal.NullLiteral _ -> "null";
-			case Literal.ListLiteral ll -> generateListLiteral(ll);
-			case Literal.SetLiteral sl -> generateSetLiteral(sl);
-			case Literal.MapLiteral ml -> generateMapLiteral(ml);
-		};
-	}
-
-	private String generateListLiteral(Literal.ListLiteral lit) {
-		if (lit.elements().isEmpty()) {
-			return "java.util.List.of()";
-		}
-		String elements = lit.elements().stream().map(this::generate).collect(Collectors.joining(", "));
-		return "java.util.List.of(" + elements + ")";
-	}
-
-	private String generateSetLiteral(Literal.SetLiteral lit) {
-		if (lit.elements().isEmpty()) {
-			return "java.util.Set.of()";
-		}
-		String elements = lit.elements().stream().map(this::generate).collect(Collectors.joining(", "));
-		return "java.util.Set.of(" + elements + ")";
-	}
-
-	private String generateMapLiteral(Literal.MapLiteral lit) {
-		if (lit.entries().isEmpty()) {
-			return "java.util.Map.of()";
-		}
-		// Use Map.ofEntries to support any number of entries (Map.of only supports up
-		// to 10)
-		String entries = lit.entries().entrySet().stream()
-				.map(e -> "java.util.Map.entry(" + generate(e.getKey()) + ", " + generate(e.getValue()) + ")")
-				.collect(Collectors.joining(", "));
-		return "java.util.Map.ofEntries(" + entries + ")";
-	}
-
-	private String generateMessageSend(MessageSend ms) {
-		String receiver = generate(ms.receiver());
-
-		return switch (ms) {
-			case UnaryMessage um -> generateUnaryMessage(receiver, um.selector(), ms.receiver());
-			case KeywordMessage km -> generateKeywordMessage(receiver, km, ms.receiver());
-			case DefaultMessage _ -> {
-				// Default message: receiver! -> receiver.apply() or similar
-				yield receiver + ".apply()";
-			}
-		};
-	}
-
-	private String generateUnaryMessage(String receiver, String selector, Expression receiverExpr) {
-		// Check if receiver is a collection when type info is available
-		JavaType receiverType = getType(receiverExpr);
-		boolean isCollection = receiverType != null && receiverType.isCollection();
-
-		// Handle special collection unary messages
-		return switch (selector) {
-			case "exists", "notEmpty" -> {
-				if (hasTypeInfo() && !isCollection) {
-					// Not a collection - treat as regular method call
-					yield receiver + "." + selector + "()";
-				}
-				yield "!" + receiver + ".isEmpty()";
-			}
-			case "doesNotExist", "empty" -> {
-				if (hasTypeInfo() && !isCollection) {
-					yield receiver + "." + selector + "()";
-				}
-				yield receiver + ".isEmpty()";
-			}
-			case "sum" -> {
-				if (hasTypeInfo() && !isCollection) {
-					yield receiver + ".sum()";
-				}
-				yield receiver + ".stream().reduce(java.math.BigDecimal.ZERO, (a, b) -> a.add(toBigDecimal(b)))";
-			}
-			default -> receiver + "." + selector + "()";
-		};
-	}
-
-	private String generateKeywordMessage(String receiver, KeywordMessage km, Expression receiverExpr) {
-		if (km.parts().size() == 1) {
-			KeywordMessage.KeywordPart part = km.parts().getFirst();
-			String keyword = part.keyword();
-			String arg = generate(part.argument());
-
-			// Check if receiver is a collection when type info is available
-			JavaType receiverType = getType(receiverExpr);
-			boolean isCollection = receiverType != null && receiverType.isCollection();
-			boolean isMap = receiverType != null && receiverType.isMap();
-
-			// Handle special keyword messages based on type
-			return switch (keyword) {
-				case "all" -> {
-					if (hasTypeInfo() && !isCollection) {
-						// Not a collection - treat as regular method call
-						yield receiver + ".all(" + arg + ")";
-					}
-					yield receiver + ".stream().allMatch(" + arg + ")";
-				}
-				case "each" -> {
-					if (hasTypeInfo() && !isCollection) {
-						yield receiver + ".each(" + arg + ")";
-					}
-					yield receiver + ".forEach(" + arg + ")";
-				}
-				case "where" -> {
-					if (hasTypeInfo() && !isCollection) {
-						yield receiver + ".where(" + arg + ")";
-					}
-					yield receiver + ".stream().filter(" + arg + ").toList()";
-				}
-				case "at" -> {
-					if (hasTypeInfo()) {
-						if (isCollection) {
-							yield receiver + ".get(" + arg + ".intValue())";
-						} else if (isMap) {
-							yield receiver + ".get(" + arg + ")";
-						}
-						// Not a collection/map - use runtime helper for backward compatibility
-					}
-					yield generateAtAccess(receiver, arg);
-				}
-				case "contains" -> {
-					if (hasTypeInfo()) {
-						JavaType rcvType = getType(receiverExpr);
-						if (rcvType != null && rcvType.isMap()) {
-							yield receiver + ".containsKey(" + arg + ")";
-						}
-					}
-					yield receiver + ".contains(" + arg + ")";
-				}
-				case "and" -> receiver + " && " + arg;
-				case "or" -> receiver + " || " + arg;
-				default -> receiver + "." + keyword + "(" + arg + ")";
-			};
-		}
-		// Multi-keyword message: receiver k1: a1 k2: a2 -> receiver.k1K2(a1, a2)
-		StringBuilder methodName = new StringBuilder();
-		StringBuilder args = new StringBuilder();
-		boolean first = true;
-		for (KeywordMessage.KeywordPart part : km.parts()) {
-			if (first) {
-				methodName.append(part.keyword());
-				first = false;
-			} else {
-				methodName.append(capitalize(part.keyword()));
-				args.append(", ");
-			}
-			args.append(generate(part.argument()));
-		}
-		return receiver + "." + methodName + "(" + args + ")";
-	}
-
-	private String generateAtAccess(String receiver, String indexOrKey) {
-		// The at: message is used for both list index access and map key access.
-		// Use runtime helper that handles both cases.
-		return "at(" + receiver + ", " + indexOrKey + ")";
-	}
-
-	private String generateBinary(Binary bin) {
-		String left = generate(bin.left());
-		String right = generate(bin.right());
-
-		// Use helper methods for type-safe numeric operations
-		// This handles both BigDecimal and primitive int/long values
-		return switch (bin.operator()) {
-			case EQUALS -> "equalsNumericAware(" + left + ", " + right + ")";
-			case NOT_EQUALS -> "!equalsNumericAware(" + left + ", " + right + ")";
-			case PLUS -> "addNumeric(" + left + ", " + right + ")";
-			case MINUS -> "subtractNumeric(" + left + ", " + right + ")";
-			case MULTIPLY -> "multiplyNumeric(" + left + ", " + right + ")";
-			case DIVIDE -> "divideNumeric(" + left + ", " + right + ")";
-			case GREATER_THAN -> "compareNumeric(" + left + ", " + right + ") > 0";
-			case GREATER_EQUALS -> "compareNumeric(" + left + ", " + right + ") >= 0";
-			case LESS_THAN -> "compareNumeric(" + left + ", " + right + ") < 0";
-			case LESS_EQUALS -> "compareNumeric(" + left + ", " + right + ") <= 0";
-		};
-	}
-
-	private String generateAssignment(Assignment assign) {
-		// Handle navigation assignment specially - generates setter call
-		if (assign.target() instanceof Navigation nav) {
-			return generateNavigationAssignment(nav, assign.value());
-		}
-
-		String target = generateAssignmentTarget(assign.target());
-		String value = generate(assign.value());
-
-		// Apply type coercion for output assignments
-		if (assign.target() instanceof Identifier id) {
-			String outputName = id.name();
-			if (outputNames.contains(outputName)) {
-				String targetType = outputTypes.get(outputName);
-				value = applyTypeCoercion(value, targetType);
-			}
-		}
-
-		return target + " = " + value;
-	}
-
-	private String applyTypeCoercion(String value, String targetType) {
-		if (targetType == null) {
-			return value;
-		}
-		return switch (targetType) {
-			case "int", "Integer", "java.lang.Integer" -> "toInt(" + value + ")";
-			case "long", "Long", "java.lang.Long" -> "toLong(" + value + ")";
-			case "float", "Float", "java.lang.Float" -> "toFloat(" + value + ")";
-			case "double", "Double", "java.lang.Double" -> "toDouble(" + value + ")";
-			case "BigInteger", "java.math.BigInteger" -> "toBigInteger(" + value + ")";
-			case "BigDecimal", "java.math.BigDecimal" -> "toBigDecimal(" + value + ")";
-			default -> value;
-		};
-	}
-
-	private String generateNavigationAssignment(Navigation nav, Expression value) {
-		String receiver = generate(nav.receiver());
-		String valueCode = generate(value);
-
-		// Build the navigation path, using getters for all but the last property
-		StringBuilder sb = new StringBuilder();
-		sb.append(receiver);
-		for (int i = 0; i < nav.names().size() - 1; i++) {
-			String name = nav.names().get(i);
-			sb.append(".get").append(capitalize(name)).append("()");
-		}
-
-		// Use setter for the last property
-		String lastName = nav.names().getLast();
-		sb.append(".set").append(capitalize(lastName)).append("(").append(valueCode).append(")");
-
-		return sb.toString();
-	}
-
-	private String generateAssignmentTarget(Expression target) {
-		return switch (target) {
-			case Identifier id -> {
-				String name = id.name();
-				if (name.startsWith("@")) {
-					yield "this." + name.substring(1);
-				}
-				if (outputNames.contains(name)) {
-					yield "this." + name;
-				}
-				yield name;
-			}
-			case Navigation nav -> generateNavigation(nav);
-			default -> generate(target);
-		};
-	}
-
-	private String generateNavigation(Navigation nav) {
-		String receiver = generate(nav.receiver());
-
-		// Get type information if available
-		JavaType receiverType = getType(nav.receiver());
-
-		if (hasTypeInfo() && receiverType != null && receiverType.isCollection()) {
-			// Collection navigation - use flatMap pattern
-			return generateCollectionNavigation(nav, receiver, receiverType);
-		}
-
-		if (options.generateNullChecks() && nav.names().size() > 1) {
-			// Generate null-safe navigation using Optional for chains
-			return generateNullSafeNavigation(nav, receiver, receiverType);
-		} else {
-			// Simple navigation without null checks
-			return generateSimpleNavigation(nav, receiver, receiverType);
-		}
-	}
-
-	private String generateCollectionNavigation(Navigation nav, String receiver, JavaType receiverType) {
-		StringBuilder sb = new StringBuilder();
-		sb.append(receiver).append(".stream()");
-
-		JavaType currentElementType = receiverType.elementType();
-
-		for (int i = 0; i < nav.names().size(); i++) {
-			String name = nav.names().get(i);
-			String accessor = generatePropertyAccessor(name, currentElementType);
-
-			// Check if the property is itself a collection (nested flatMap)
-			JavaType propertyType = null;
-			if (hasTypeInfo() && typeVisitor != null) {
-				propertyType = typeVisitor.context().resolver().resolveProperty(currentElementType, name);
-			}
-
-			if (propertyType != null && propertyType.isCollection()) {
-				// Nested collection - use flatMap
-				sb.append(".flatMap(v -> v.").append(accessor).append(".stream())");
-				currentElementType = propertyType.elementType();
-			} else {
-				// Regular property - use map
-				sb.append(".map(v -> v.").append(accessor).append(")");
-				if (propertyType != null) {
-					currentElementType = propertyType;
-				}
-			}
-		}
-
-		sb.append(".toList()");
-		return sb.toString();
-	}
-
-	private String generateNullSafeNavigation(Navigation nav, String receiver, JavaType receiverType) {
-		JavaType currentType = receiverType;
-
-		// Check if any intermediate property returns a collection
-		for (int i = 0; i < nav.names().size(); i++) {
-			String name = nav.names().get(i);
-
-			if (hasTypeInfo() && currentType != null && typeVisitor != null) {
-				currentType = typeVisitor.context().resolver().resolveProperty(currentType, name);
-
-				// If we hit a collection, switch to collection navigation for the rest
-				if (currentType != null && currentType.isCollection() && i < nav.names().size() - 1) {
-					// Build the path up to and including the collection property
-					StringBuilder pathToCollection = new StringBuilder();
-					pathToCollection.append(receiver);
-					JavaType pathType = receiverType;
-					for (int j = 0; j <= i; j++) {
-						String propName = nav.names().get(j);
-						String accessor = generatePropertyAccessor(propName, pathType);
-						pathToCollection.append(".").append(accessor);
-						if (hasTypeInfo() && pathType != null && typeVisitor != null) {
-							pathType = typeVisitor.context().resolver().resolveProperty(pathType, propName);
-						}
-					}
-
-					// Generate collection navigation for remaining properties
-					List<String> remainingNames = nav.names().subList(i + 1, nav.names().size());
-					return generateMidChainCollectionNavigation(pathToCollection.toString(), currentType,
-							remainingNames);
-				}
-			}
-		}
-
-		// No collection in chain - use standard null-safe navigation
-		StringBuilder sb = new StringBuilder();
-		sb.append("java.util.Optional.ofNullable(").append(receiver).append(")");
-
-		currentType = receiverType;
-
-		// Add .map() for each intermediate step (all but the last)
-		for (int i = 0; i < nav.names().size() - 1; i++) {
-			String name = nav.names().get(i);
-			String accessor = generatePropertyAccessor(name, currentType);
-			sb.append(".map(v -> v.").append(accessor).append(")");
-
-			// Update current type for next iteration
-			if (hasTypeInfo() && currentType != null && typeVisitor != null) {
-				currentType = typeVisitor.context().resolver().resolveProperty(currentType, name);
-			}
-		}
-
-		// Add final .map() and .orElse(null) for the last property
-		String lastName = nav.names().getLast();
-		String lastAccessor = generatePropertyAccessor(lastName, currentType);
-		sb.append(".map(v -> v.").append(lastAccessor).append(")");
-		sb.append(".orElse(null)");
-
-		return sb.toString();
-	}
-
-	private String generateSimpleNavigation(Navigation nav, String receiver, JavaType receiverType) {
-		StringBuilder sb = new StringBuilder();
-		sb.append(receiver);
-
-		JavaType currentType = receiverType;
-		boolean inCollectionMode = false;
-
-		for (int i = 0; i < nav.names().size(); i++) {
-			String name = nav.names().get(i);
-
-			// Check if we're now navigating on a collection (mid-chain collection)
-			if (hasTypeInfo() && currentType != null && currentType.isCollection() && !inCollectionMode) {
-				// Switch to collection navigation for remaining properties
-				List<String> remainingNames = nav.names().subList(i, nav.names().size());
-				return generateMidChainCollectionNavigation(sb.toString(), currentType, remainingNames);
-			}
-
-			String accessor = generatePropertyAccessor(name, currentType);
-			sb.append(".").append(accessor);
-
-			// Update current type for next iteration
-			if (hasTypeInfo() && currentType != null && typeVisitor != null) {
-				currentType = typeVisitor.context().resolver().resolveProperty(currentType, name);
-			}
-		}
-		return sb.toString();
-	}
-
-	/**
-	 * Generates code for navigating through a collection that appears mid-chain.
-	 * For example: cart.items.name where items is a List
-	 */
-	private String generateMidChainCollectionNavigation(String collectionExpr, JavaType collectionType,
-			List<String> propertyNames) {
-		StringBuilder sb = new StringBuilder();
-		sb.append(collectionExpr).append(".stream()");
-
-		JavaType currentElementType = collectionType.elementType();
-
-		for (int i = 0; i < propertyNames.size(); i++) {
-			String name = propertyNames.get(i);
-			String accessor = generatePropertyAccessor(name, currentElementType);
-
-			// Check if this property returns a collection (nested flatMap)
-			JavaType propertyType = null;
-			if (hasTypeInfo() && typeVisitor != null) {
-				propertyType = typeVisitor.context().resolver().resolveProperty(currentElementType, name);
-			}
-
-			if (propertyType != null && propertyType.isCollection()) {
-				// Nested collection - use flatMap
-				sb.append(".flatMap(v -> v.").append(accessor).append(".stream())");
-				currentElementType = propertyType.elementType();
-			} else {
-				// Regular property - use map
-				sb.append(".map(v -> v.").append(accessor).append(")");
-				if (propertyType != null) {
-					currentElementType = propertyType;
-				}
-			}
-		}
-
-		sb.append(".toList()");
-		return sb.toString();
-	}
-
-	/**
-	 * Generates the property accessor call for a given property name. Uses
-	 * record-style accessor (name()) for records, bean-style (getName()) for
-	 * others.
-	 */
-	private String generatePropertyAccessor(String name, JavaType ownerType) {
-		if (hasTypeInfo() && ownerType != null && ownerType.isRecord()) {
-			// Record accessor: name()
-			return name + "()";
-		}
-		// Bean accessor: getName()
-		return "get" + capitalize(name) + "()";
-	}
-
-	private String generateBlock(Block block) {
-		// Pre-infer the block to populate the type cache for all expressions
-		// This ensures that let statement types are available during code generation
-		if (hasTypeInfo()) {
-			typeVisitor.infer(block);
-		}
-
-		// Extract block parameters (represented as LetStatement with
-		// Identifier("param"))
-		List<String> params = new ArrayList<>();
-		List<Statement> bodyStatements = new ArrayList<>();
-
-		for (Statement stmt : block.statements()) {
-			if (stmt instanceof Statement.LetStatement ls && ls.expression() instanceof Identifier id
-					&& "param".equals(id.name())) {
-				// This is a block parameter placeholder
-				params.add(ls.name());
-			} else {
-				bodyStatements.add(stmt);
-			}
-		}
-
-		// Build lambda parameter list
-		String paramList = params.isEmpty()
-				? "()"
-				: params.size() == 1 ? params.getFirst() : "(" + String.join(", ", params) + ")";
-
-		// For simple single-expression blocks, generate inline
-		if (bodyStatements.size() == 1 && bodyStatements.getFirst() instanceof Statement.ExpressionStatement es) {
-			return paramList + " -> " + generate(es.expression());
-		}
-
-		// Multi-statement blocks generate a Supplier or Runnable
-		StringBuilder sb = new StringBuilder();
-		sb.append(paramList).append(" -> {\n");
-		for (Statement stmt : bodyStatements) {
-			sb.append("    ");
-			if (stmt instanceof Statement.ExpressionStatement es) {
-				if (stmt == bodyStatements.getLast()) {
-					sb.append("return ").append(generate(es.expression())).append(";\n");
-				} else {
-					sb.append(generate(es.expression())).append(";\n");
-				}
-			} else if (stmt instanceof Statement.LetStatement ls) {
-				sb.append("var ").append(ls.name()).append(" = ").append(generate(ls.expression())).append(";\n");
-			}
-		}
-		sb.append("}");
-		return sb.toString();
-	}
-
-	private static String escapeString(String s) {
-		return s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r").replace("\t",
-				"\\t");
-	}
-
-	private static String capitalize(String s) {
-		if (s == null || s.isEmpty()) {
-			return s;
-		}
-		return Character.toUpperCase(s.charAt(0)) + s.substring(1);
-	}
+    private final JavaCompilerOptions options;
+    private final Set<String> globalNames;
+    private final Set<String> outputNames;
+    private final Map<String, String> outputTypes;
+    private final JavaTypeInferenceVisitor typeVisitor;
+
+    public ExpressionGenerator(JavaCompilerOptions options, Set<String> globalNames, Set<String> outputNames) {
+        this(options, globalNames, outputNames, Map.of(), null);
+    }
+
+    public ExpressionGenerator(JavaCompilerOptions options, Set<String> globalNames, Set<String> outputNames,
+            Map<String, String> outputTypes) {
+        this(options, globalNames, outputNames, outputTypes, null);
+    }
+
+    public ExpressionGenerator(JavaCompilerOptions options, Set<String> globalNames, Set<String> outputNames,
+            Map<String, String> outputTypes, JavaTypeInferenceVisitor typeVisitor) {
+        this.options = options;
+        this.globalNames = globalNames;
+        this.outputNames = outputNames;
+        this.outputTypes = outputTypes;
+        this.typeVisitor = typeVisitor;
+    }
+
+    /**
+     * Returns true if type inference is enabled.
+     */
+    private boolean hasTypeInfo() {
+        return typeVisitor != null;
+    }
+
+    /**
+     * Gets the inferred type for an expression, or null if type inference is
+     * disabled.
+     */
+    private JavaType getType(Expression expr) {
+        if (typeVisitor == null) {
+            return null;
+        }
+        JavaTypedExpression typed = typeVisitor.infer(expr);
+        return typed.type();
+    }
+
+    /**
+     * Registers a let variable's type in the type context. This must be called
+     * before generating code for subsequent expressions that reference the
+     * variable.
+     */
+    public void registerLetVariable(String name, Expression value) {
+        if (typeVisitor != null) {
+            JavaType type = getType(value);
+            if (type != null) {
+                typeVisitor.context().declareLocal(name, type);
+            }
+        }
+    }
+
+    /**
+     * Generates Java code for an expression.
+     */
+    public String generate(Expression expr) {
+        return switch (expr) {
+            case Identifier id -> generateIdentifier(id);
+            case Literal lit -> generateLiteral(lit);
+            case MessageSend ms -> generateMessageSend(ms);
+            case Binary bin -> generateBinary(bin);
+            case Assignment assign -> generateAssignment(assign);
+            case Navigation nav -> generateNavigation(nav);
+            case Block block -> generateBlock(block);
+        };
+    }
+
+    private String generateIdentifier(Identifier id) {
+        String name = id.name();
+
+        // Handle @ prefix for globals
+        if (name.startsWith("@")) {
+            String globalName = name.substring(1);
+            return "this." + globalName;
+        }
+
+        // Outputs are accessed via this.
+        if (outputNames.contains(name)) {
+            return "this." + name;
+        }
+
+        return name;
+    }
+
+    private String generateLiteral(Literal lit) {
+        return switch (lit) {
+            case Literal.StringLiteral sl -> "\"" + escapeString(sl.value()) + "\"";
+            case Literal.NumberLiteral nl -> "new java.math.BigDecimal(\"" + nl.value().toPlainString() + "\")";
+            case Literal.BooleanLiteral bl -> String.valueOf(bl.value());
+            case Literal.NullLiteral _ -> "null";
+            case Literal.ListLiteral ll -> generateListLiteral(ll);
+            case Literal.SetLiteral sl -> generateSetLiteral(sl);
+            case Literal.MapLiteral ml -> generateMapLiteral(ml);
+        };
+    }
+
+    private String generateListLiteral(Literal.ListLiteral lit) {
+        if (lit.elements().isEmpty()) {
+            return "java.util.List.of()";
+        }
+        String elements = lit.elements().stream().map(this::generate).collect(Collectors.joining(", "));
+        return "java.util.List.of(" + elements + ")";
+    }
+
+    private String generateSetLiteral(Literal.SetLiteral lit) {
+        if (lit.elements().isEmpty()) {
+            return "java.util.Set.of()";
+        }
+        String elements = lit.elements().stream().map(this::generate).collect(Collectors.joining(", "));
+        return "java.util.Set.of(" + elements + ")";
+    }
+
+    private String generateMapLiteral(Literal.MapLiteral lit) {
+        if (lit.entries().isEmpty()) {
+            return "java.util.Map.of()";
+        }
+        // Use Map.ofEntries to support any number of entries (Map.of only supports up
+        // to 10)
+        String entries = lit.entries().entrySet().stream()
+                .map(e -> "java.util.Map.entry(" + generate(e.getKey()) + ", " + generate(e.getValue()) + ")")
+                .collect(Collectors.joining(", "));
+        return "java.util.Map.ofEntries(" + entries + ")";
+    }
+
+    private String generateMessageSend(MessageSend ms) {
+        String receiver = generate(ms.receiver());
+
+        return switch (ms) {
+            case UnaryMessage um -> generateUnaryMessage(receiver, um.selector(), ms.receiver());
+            case KeywordMessage km -> generateKeywordMessage(receiver, km, ms.receiver());
+            case DefaultMessage _ -> {
+                // Default message: receiver! -> receiver.apply() or similar
+                yield receiver + ".apply()";
+            }
+        };
+    }
+
+    private String generateUnaryMessage(String receiver, String selector, Expression receiverExpr) {
+        // Check if receiver is a collection when type info is available
+        JavaType receiverType = getType(receiverExpr);
+        boolean isCollection = receiverType != null && receiverType.isCollection();
+
+        // Handle special collection unary messages
+        return switch (selector) {
+            case "exists", "notEmpty" -> {
+                if (hasTypeInfo() && !isCollection) {
+                    // Not a collection - treat as regular method call
+                    yield receiver + "." + selector + "()";
+                }
+                yield "!" + receiver + ".isEmpty()";
+            }
+            case "doesNotExist", "empty" -> {
+                if (hasTypeInfo() && !isCollection) {
+                    yield receiver + "." + selector + "()";
+                }
+                yield receiver + ".isEmpty()";
+            }
+            case "sum" -> {
+                if (hasTypeInfo() && !isCollection) {
+                    yield receiver + ".sum()";
+                }
+                yield receiver + ".stream().reduce(java.math.BigDecimal.ZERO, (a, b) -> a.add(toBigDecimal(b)))";
+            }
+            default -> receiver + "." + selector + "()";
+        };
+    }
+
+    private String generateKeywordMessage(String receiver, KeywordMessage km, Expression receiverExpr) {
+        if (km.parts().size() == 1) {
+            KeywordMessage.KeywordPart part = km.parts().getFirst();
+            String keyword = part.keyword();
+            String arg = generate(part.argument());
+
+            // Check if receiver is a collection when type info is available
+            JavaType receiverType = getType(receiverExpr);
+            boolean isCollection = receiverType != null && receiverType.isCollection();
+            boolean isMap = receiverType != null && receiverType.isMap();
+
+            // Handle special keyword messages based on type
+            return switch (keyword) {
+                case "all" -> {
+                    if (hasTypeInfo() && !isCollection) {
+                        // Not a collection - treat as regular method call
+                        yield receiver + ".all(" + arg + ")";
+                    }
+                    yield receiver + ".stream().allMatch(" + arg + ")";
+                }
+                case "each" -> {
+                    if (hasTypeInfo() && !isCollection) {
+                        yield receiver + ".each(" + arg + ")";
+                    }
+                    yield receiver + ".forEach(" + arg + ")";
+                }
+                case "where" -> {
+                    if (hasTypeInfo() && !isCollection) {
+                        yield receiver + ".where(" + arg + ")";
+                    }
+                    yield receiver + ".stream().filter(" + arg + ").toList()";
+                }
+                case "at" -> {
+                    if (hasTypeInfo()) {
+                        if (isCollection) {
+                            yield receiver + ".get(" + arg + ".intValue())";
+                        } else if (isMap) {
+                            yield receiver + ".get(" + arg + ")";
+                        }
+                        // Not a collection/map - use runtime helper for backward compatibility
+                    }
+                    yield generateAtAccess(receiver, arg);
+                }
+                case "contains" -> {
+                    if (hasTypeInfo()) {
+                        JavaType rcvType = getType(receiverExpr);
+                        if (rcvType != null && rcvType.isMap()) {
+                            yield receiver + ".containsKey(" + arg + ")";
+                        }
+                    }
+                    yield receiver + ".contains(" + arg + ")";
+                }
+                case "and" -> receiver + " && " + arg;
+                case "or" -> receiver + " || " + arg;
+                default -> receiver + "." + keyword + "(" + arg + ")";
+            };
+        }
+        // Multi-keyword message: receiver k1: a1 k2: a2 -> receiver.k1K2(a1, a2)
+        StringBuilder methodName = new StringBuilder();
+        StringBuilder args = new StringBuilder();
+        boolean first = true;
+        for (KeywordMessage.KeywordPart part : km.parts()) {
+            if (first) {
+                methodName.append(part.keyword());
+                first = false;
+            } else {
+                methodName.append(capitalize(part.keyword()));
+                args.append(", ");
+            }
+            args.append(generate(part.argument()));
+        }
+        return receiver + "." + methodName + "(" + args + ")";
+    }
+
+    private String generateAtAccess(String receiver, String indexOrKey) {
+        // The at: message is used for both list index access and map key access.
+        // Use runtime helper that handles both cases.
+        return "at(" + receiver + ", " + indexOrKey + ")";
+    }
+
+    private String generateBinary(Binary bin) {
+        String left = generate(bin.left());
+        String right = generate(bin.right());
+
+        // Use helper methods for type-safe numeric operations
+        // This handles both BigDecimal and primitive int/long values
+        return switch (bin.operator()) {
+            case EQUALS -> "equalsNumericAware(" + left + ", " + right + ")";
+            case NOT_EQUALS -> "!equalsNumericAware(" + left + ", " + right + ")";
+            case PLUS -> "addNumeric(" + left + ", " + right + ")";
+            case MINUS -> "subtractNumeric(" + left + ", " + right + ")";
+            case MULTIPLY -> "multiplyNumeric(" + left + ", " + right + ")";
+            case DIVIDE -> "divideNumeric(" + left + ", " + right + ")";
+            case GREATER_THAN -> "compareNumeric(" + left + ", " + right + ") > 0";
+            case GREATER_EQUALS -> "compareNumeric(" + left + ", " + right + ") >= 0";
+            case LESS_THAN -> "compareNumeric(" + left + ", " + right + ") < 0";
+            case LESS_EQUALS -> "compareNumeric(" + left + ", " + right + ") <= 0";
+        };
+    }
+
+    private String generateAssignment(Assignment assign) {
+        // Handle navigation assignment specially - generates setter call
+        if (assign.target() instanceof Navigation nav) {
+            return generateNavigationAssignment(nav, assign.value());
+        }
+
+        String target = generateAssignmentTarget(assign.target());
+        String value = generate(assign.value());
+
+        // Apply type coercion for output assignments
+        if (assign.target() instanceof Identifier id) {
+            String outputName = id.name();
+            if (outputNames.contains(outputName)) {
+                String targetType = outputTypes.get(outputName);
+                value = applyTypeCoercion(value, targetType);
+            }
+        }
+
+        return target + " = " + value;
+    }
+
+    private String applyTypeCoercion(String value, String targetType) {
+        if (targetType == null) {
+            return value;
+        }
+        return switch (targetType) {
+            case "int", "Integer", "java.lang.Integer" -> "toInt(" + value + ")";
+            case "long", "Long", "java.lang.Long" -> "toLong(" + value + ")";
+            case "float", "Float", "java.lang.Float" -> "toFloat(" + value + ")";
+            case "double", "Double", "java.lang.Double" -> "toDouble(" + value + ")";
+            case "BigInteger", "java.math.BigInteger" -> "toBigInteger(" + value + ")";
+            case "BigDecimal", "java.math.BigDecimal" -> "toBigDecimal(" + value + ")";
+            default -> value;
+        };
+    }
+
+    private String generateNavigationAssignment(Navigation nav, Expression value) {
+        String receiver = generate(nav.receiver());
+        String valueCode = generate(value);
+
+        // Build the navigation path, using getters for all but the last property
+        StringBuilder sb = new StringBuilder();
+        sb.append(receiver);
+        for (int i = 0; i < nav.names().size() - 1; i++) {
+            String name = nav.names().get(i);
+            sb.append(".get").append(capitalize(name)).append("()");
+        }
+
+        // Use setter for the last property
+        String lastName = nav.names().getLast();
+        sb.append(".set").append(capitalize(lastName)).append("(").append(valueCode).append(")");
+
+        return sb.toString();
+    }
+
+    private String generateAssignmentTarget(Expression target) {
+        return switch (target) {
+            case Identifier id -> {
+                String name = id.name();
+                if (name.startsWith("@")) {
+                    yield "this." + name.substring(1);
+                }
+                if (outputNames.contains(name)) {
+                    yield "this." + name;
+                }
+                yield name;
+            }
+            case Navigation nav -> generateNavigation(nav);
+            default -> generate(target);
+        };
+    }
+
+    private String generateNavigation(Navigation nav) {
+        String receiver = generate(nav.receiver());
+
+        // Get type information if available
+        JavaType receiverType = getType(nav.receiver());
+
+        if (hasTypeInfo() && receiverType != null && receiverType.isCollection()) {
+            // Collection navigation - use flatMap pattern
+            return generateCollectionNavigation(nav, receiver, receiverType);
+        }
+
+        if (options.generateNullChecks() && nav.names().size() > 1) {
+            // Generate null-safe navigation using Optional for chains
+            return generateNullSafeNavigation(nav, receiver, receiverType);
+        } else {
+            // Simple navigation without null checks
+            return generateSimpleNavigation(nav, receiver, receiverType);
+        }
+    }
+
+    private String generateCollectionNavigation(Navigation nav, String receiver, JavaType receiverType) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(receiver).append(".stream()");
+
+        JavaType currentElementType = receiverType.elementType();
+
+        for (int i = 0; i < nav.names().size(); i++) {
+            String name = nav.names().get(i);
+            String accessor = generatePropertyAccessor(name, currentElementType);
+
+            // Check if the property is itself a collection (nested flatMap)
+            JavaType propertyType = null;
+            if (hasTypeInfo() && typeVisitor != null) {
+                propertyType = typeVisitor.context().resolver().resolveProperty(currentElementType, name);
+            }
+
+            if (propertyType != null && propertyType.isCollection()) {
+                // Nested collection - use flatMap
+                sb.append(".flatMap(v -> v.").append(accessor).append(".stream())");
+                currentElementType = propertyType.elementType();
+            } else {
+                // Regular property - use map
+                sb.append(".map(v -> v.").append(accessor).append(")");
+                if (propertyType != null) {
+                    currentElementType = propertyType;
+                }
+            }
+        }
+
+        sb.append(".toList()");
+        return sb.toString();
+    }
+
+    private String generateNullSafeNavigation(Navigation nav, String receiver, JavaType receiverType) {
+        JavaType currentType = receiverType;
+
+        // Check if any intermediate property returns a collection
+        for (int i = 0; i < nav.names().size(); i++) {
+            String name = nav.names().get(i);
+
+            if (hasTypeInfo() && currentType != null && typeVisitor != null) {
+                currentType = typeVisitor.context().resolver().resolveProperty(currentType, name);
+
+                // If we hit a collection, switch to collection navigation for the rest
+                if (currentType != null && currentType.isCollection() && i < nav.names().size() - 1) {
+                    // Build the path up to and including the collection property
+                    StringBuilder pathToCollection = new StringBuilder();
+                    pathToCollection.append(receiver);
+                    JavaType pathType = receiverType;
+                    for (int j = 0; j <= i; j++) {
+                        String propName = nav.names().get(j);
+                        String accessor = generatePropertyAccessor(propName, pathType);
+                        pathToCollection.append(".").append(accessor);
+                        if (hasTypeInfo() && pathType != null && typeVisitor != null) {
+                            pathType = typeVisitor.context().resolver().resolveProperty(pathType, propName);
+                        }
+                    }
+
+                    // Generate collection navigation for remaining properties
+                    List<String> remainingNames = nav.names().subList(i + 1, nav.names().size());
+                    return generateMidChainCollectionNavigation(pathToCollection.toString(), currentType,
+                            remainingNames);
+                }
+            }
+        }
+
+        // No collection in chain - use standard null-safe navigation
+        StringBuilder sb = new StringBuilder();
+        sb.append("java.util.Optional.ofNullable(").append(receiver).append(")");
+
+        currentType = receiverType;
+
+        // Add .map() for each intermediate step (all but the last)
+        for (int i = 0; i < nav.names().size() - 1; i++) {
+            String name = nav.names().get(i);
+            String accessor = generatePropertyAccessor(name, currentType);
+            sb.append(".map(v -> v.").append(accessor).append(")");
+
+            // Update current type for next iteration
+            if (hasTypeInfo() && currentType != null && typeVisitor != null) {
+                currentType = typeVisitor.context().resolver().resolveProperty(currentType, name);
+            }
+        }
+
+        // Add final .map() and .orElse(null) for the last property
+        String lastName = nav.names().getLast();
+        String lastAccessor = generatePropertyAccessor(lastName, currentType);
+        sb.append(".map(v -> v.").append(lastAccessor).append(")");
+        sb.append(".orElse(null)");
+
+        return sb.toString();
+    }
+
+    private String generateSimpleNavigation(Navigation nav, String receiver, JavaType receiverType) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(receiver);
+
+        JavaType currentType = receiverType;
+        boolean inCollectionMode = false;
+
+        for (int i = 0; i < nav.names().size(); i++) {
+            String name = nav.names().get(i);
+
+            // Check if we're now navigating on a collection (mid-chain collection)
+            if (hasTypeInfo() && currentType != null && currentType.isCollection() && !inCollectionMode) {
+                // Switch to collection navigation for remaining properties
+                List<String> remainingNames = nav.names().subList(i, nav.names().size());
+                return generateMidChainCollectionNavigation(sb.toString(), currentType, remainingNames);
+            }
+
+            String accessor = generatePropertyAccessor(name, currentType);
+            sb.append(".").append(accessor);
+
+            // Update current type for next iteration
+            if (hasTypeInfo() && currentType != null && typeVisitor != null) {
+                currentType = typeVisitor.context().resolver().resolveProperty(currentType, name);
+            }
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Generates code for navigating through a collection that appears mid-chain.
+     * For example: cart.items.name where items is a List
+     */
+    private String generateMidChainCollectionNavigation(String collectionExpr, JavaType collectionType,
+            List<String> propertyNames) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(collectionExpr).append(".stream()");
+
+        JavaType currentElementType = collectionType.elementType();
+
+        for (int i = 0; i < propertyNames.size(); i++) {
+            String name = propertyNames.get(i);
+            String accessor = generatePropertyAccessor(name, currentElementType);
+
+            // Check if this property returns a collection (nested flatMap)
+            JavaType propertyType = null;
+            if (hasTypeInfo() && typeVisitor != null) {
+                propertyType = typeVisitor.context().resolver().resolveProperty(currentElementType, name);
+            }
+
+            if (propertyType != null && propertyType.isCollection()) {
+                // Nested collection - use flatMap
+                sb.append(".flatMap(v -> v.").append(accessor).append(".stream())");
+                currentElementType = propertyType.elementType();
+            } else {
+                // Regular property - use map
+                sb.append(".map(v -> v.").append(accessor).append(")");
+                if (propertyType != null) {
+                    currentElementType = propertyType;
+                }
+            }
+        }
+
+        sb.append(".toList()");
+        return sb.toString();
+    }
+
+    /**
+     * Generates the property accessor call for a given property name. Uses
+     * record-style accessor (name()) for records, bean-style (getName()) for
+     * others.
+     */
+    private String generatePropertyAccessor(String name, JavaType ownerType) {
+        if (hasTypeInfo() && ownerType != null && ownerType.isRecord()) {
+            // Record accessor: name()
+            return name + "()";
+        }
+        // Bean accessor: getName()
+        return "get" + capitalize(name) + "()";
+    }
+
+    private String generateBlock(Block block) {
+        // Pre-infer the block to populate the type cache for all expressions
+        // This ensures that let statement types are available during code generation
+        if (hasTypeInfo()) {
+            typeVisitor.infer(block);
+        }
+
+        // Extract block parameters (represented as LetStatement with
+        // Identifier("param"))
+        List<String> params = new ArrayList<>();
+        List<Statement> bodyStatements = new ArrayList<>();
+
+        for (Statement stmt : block.statements()) {
+            if (stmt instanceof Statement.LetStatement ls && ls.expression() instanceof Identifier id
+                    && "param".equals(id.name())) {
+                // This is a block parameter placeholder
+                params.add(ls.name());
+            } else {
+                bodyStatements.add(stmt);
+            }
+        }
+
+        // Build lambda parameter list
+        String paramList = params.isEmpty()
+                ? "()"
+                : params.size() == 1 ? params.getFirst() : "(" + String.join(", ", params) + ")";
+
+        // For simple single-expression blocks, generate inline
+        if (bodyStatements.size() == 1 && bodyStatements.getFirst() instanceof Statement.ExpressionStatement es) {
+            return paramList + " -> " + generate(es.expression());
+        }
+
+        // Multi-statement blocks generate a Supplier or Runnable
+        StringBuilder sb = new StringBuilder();
+        sb.append(paramList).append(" -> {\n");
+        for (Statement stmt : bodyStatements) {
+            sb.append("    ");
+            if (stmt instanceof Statement.ExpressionStatement es) {
+                if (stmt == bodyStatements.getLast()) {
+                    sb.append("return ").append(generate(es.expression())).append(";\n");
+                } else {
+                    sb.append(generate(es.expression())).append(";\n");
+                }
+            } else if (stmt instanceof Statement.LetStatement ls) {
+                sb.append("var ").append(ls.name()).append(" = ").append(generate(ls.expression())).append(";\n");
+            }
+        }
+        sb.append("}");
+        return sb.toString();
+    }
+
+    private static String escapeString(String s) {
+        return s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r").replace("\t",
+                "\\t");
+    }
+
+    private static String capitalize(String s) {
+        if (s == null || s.isEmpty()) {
+            return s;
+        }
+        return Character.toUpperCase(s.charAt(0)) + s.substring(1);
+    }
 }

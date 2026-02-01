@@ -5,13 +5,13 @@ package work.spell.iskibal.e2e;
  */
 public class Item {
 
-	private final String type;
+    private final String type;
 
-	public Item(String type) {
-		this.type = type;
-	}
+    public Item(String type) {
+        this.type = type;
+    }
 
-	public String getType() {
-		return type;
-	}
+    public String getType() {
+        return type;
+    }
 }

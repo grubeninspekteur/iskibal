@@ -1,14 +1,14 @@
 module iskibal.compiler.java {
-	requires iskibal.rule.model;
-	requires iskibal.compiler.common;
+    requires iskibal.rule.model;
+    requires iskibal.compiler.common;
 
-	exports work.spell.iskibal.compiler.java.api;
-	exports work.spell.iskibal.compiler.java.runtime;
-	exports work.spell.iskibal.compiler.java.types;
-	exports work.spell.iskibal.compiler.java.internal to iskibal.integration.tests;
+    exports work.spell.iskibal.compiler.java.api;
+    exports work.spell.iskibal.compiler.java.runtime;
+    exports work.spell.iskibal.compiler.java.types;
+    exports work.spell.iskibal.compiler.java.internal to iskibal.integration.tests;
 
-	uses work.spell.iskibal.compiler.common.api.SemanticAnalyzer;
+    uses work.spell.iskibal.compiler.common.api.SemanticAnalyzer;
 
-	provides work.spell.iskibal.compiler.java.api.JavaCompiler
-			with work.spell.iskibal.compiler.java.internal.JavaCompilerImpl;
+    provides work.spell.iskibal.compiler.java.api.JavaCompiler
+            with work.spell.iskibal.compiler.java.internal.JavaCompilerImpl;
 }

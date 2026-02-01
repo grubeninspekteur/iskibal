@@ -5,18 +5,18 @@ package work.spell.iskibal.model;
  */
 public sealed interface Global permits Global.Definition {
 
-	/** name of the global */
-	String name();
+    /** name of the global */
+    String name();
 
-	/** fully qualified type */
-	String type();
+    /** fully qualified type */
+    String type();
 
-	/** optional description */
-	String description();
+    /** optional description */
+    String description();
 
-	/**
-	 * Default global declaration.
-	 */
-	record Definition(String name, String type, String description) implements Global {
-	}
+    /**
+     * Default global declaration.
+     */
+    record Definition(String name, String type, String description) implements Global {
+    }
 }
