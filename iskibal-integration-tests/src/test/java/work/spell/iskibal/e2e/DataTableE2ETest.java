@@ -132,6 +132,199 @@ class DataTableE2ETest {
 		}
 	}
 
+	@Nested
+	@DisplayName("Decision Tables")
+	class DecisionTables {
+
+		@Test
+		@DisplayName("with parameterized alias")
+		void decisionTableWithParameterizedAlias() throws Exception {
+			String source = """
+					facts {
+					    customer: work.spell.iskibal.e2e.Customer
+					}
+					outputs {
+					    title: String := ""
+					}
+					decision table GREETINGS "Greet customers" {
+					| ID    | WHEN         | THEN      |
+					|       | customer.age | #greeting |
+					| ----- | ------------ | --------- |
+					| ADULT | >= 18        | "Sir"     |
+					| CHILD | < 18         | "Young"   |
+					} where greeting := [:t |
+					    title := t
+					]
+					""";
+
+			var result = RuleTestBuilder.forSource(source).withFact(new Customer("Alice", 25)).build();
+
+			assertResultSuccess(result);
+
+			var rules = result.rules().orElseThrow();
+			rules.evaluate();
+
+			assertThat(rules.<String>getOutput("title")).isEqualTo("Sir");
+		}
+
+		@Test
+		@DisplayName("with parameterized alias - child")
+		void decisionTableWithParameterizedAliasChild() throws Exception {
+			String source = """
+					facts {
+					    customer: work.spell.iskibal.e2e.Customer
+					}
+					outputs {
+					    title: String := ""
+					}
+					decision table GREETINGS "Greet customers" {
+					| ID    | WHEN         | THEN      |
+					|       | customer.age | #greeting |
+					| ----- | ------------ | --------- |
+					| ADULT | >= 18        | "Sir"     |
+					| CHILD | < 18         | "Young"   |
+					} where greeting := [:t |
+					    title := t
+					]
+					""";
+
+			var result = RuleTestBuilder.forSource(source).withFact(new Customer("Bob", 10)).build();
+
+			assertResultSuccess(result);
+
+			var rules = result.rules().orElseThrow();
+			rules.evaluate();
+
+			assertThat(rules.<String>getOutput("title")).isEqualTo("Young");
+		}
+
+		@Test
+		@DisplayName("with parameterless alias")
+		void decisionTableWithParameterlessAlias() throws Exception {
+			// Use curly braces { } for parameterless blocks (no implicit param)
+			String source = """
+					facts {
+					    customer: work.spell.iskibal.e2e.Customer
+					}
+					outputs {
+					    discount: BigDecimal := 0
+					}
+					decision table DISCOUNTS "Apply discounts" {
+					| ID       | WHEN       | THEN       |
+					|          | #isAdult   | #addBonus  |
+					| -------- | ---------- | ---------- |
+					| ADULT_20 | *          | *          |
+					} where isAdult := {
+					    customer.age >= 18
+					},
+					addBonus := {
+					    discount := 20
+					}
+					""";
+
+			var result = RuleTestBuilder.forSource(source).withFact(new Customer("Alice", 25)).build();
+
+			assertResultSuccess(result);
+
+			var rules = result.rules().orElseThrow();
+			rules.evaluate();
+
+			assertThat(rules.<BigDecimal>getOutput("discount")).isEqualByComparingTo(new BigDecimal("20"));
+		}
+
+		@Test
+		@DisplayName("should not allow assignment to outputs in when clause")
+		void decisionTableShouldNotAllowAssignmentToOutputsInWhenClause() throws Exception {
+			// Use curly braces { } for parameterless blocks (no implicit param)
+			String source = """
+					facts {
+					    customer: work.spell.iskibal.e2e.Customer
+					}
+					outputs {
+					    discount: BigDecimal := 0
+					}
+					decision table DISCOUNTS "Apply discounts" {
+					| ID       | WHEN       | THEN       |
+					|          | #addBonus  | #addBonus  |
+					| -------- | ---------- | ---------- |
+					| ADULT_20 | *          | *          |
+					} where addBonus := {
+					    discount := 20
+					    true
+					}
+					""";
+
+      RuleTestResult result = RuleTestBuilder.forSource(source).withFact(new Customer("Alice", 25)).build();
+
+			assertThat(result).isInstanceOf(RuleTestResult.AnalysisFailure.class);
+		}
+
+		@Test
+		@DisplayName("Decision table with multiple WHEN columns")
+		void decisionTableWithMultipleWhenColumns() throws Exception {
+			// VIP rule requires name = "Alice", REGULAR rule requires name = "Bob"
+			// So they are mutually exclusive
+			String source = """
+					facts {
+					    customer: work.spell.iskibal.e2e.Customer
+					}
+					outputs {
+					    category: String := "unknown"
+					}
+					decision table CATEGORIZE "Categorize customers" {
+					| ID        | WHEN         | WHEN                  | THEN        |
+					|           | customer.age | customer.name         | category := |
+					| --------- | ------------ | --------------------- | ----------- |
+					| VIP_ADULT | >= 18        | = "Alice"             | "VIP"       |
+					| REGULAR   | >= 18        | = "Bob"               | "regular"   |
+					}
+					""";
+
+			var result = RuleTestBuilder.forSource(source).withFact(new Customer("Alice", 25)).build();
+
+			assertResultSuccess(result);
+
+			var rules = result.rules().orElseThrow();
+			rules.evaluate();
+
+			assertThat(rules.<String>getOutput("category")).isEqualTo("VIP");
+		}
+
+		@Test
+		@DisplayName("Decision table with mixed direct expressions and aliases")
+		void decisionTableWithMixedExpressionsAndAliases() throws Exception {
+			// Use mutually exclusive age ranges: >= 65 for senior, < 65 for adult
+			String source = """
+					facts {
+					    customer: work.spell.iskibal.e2e.Customer
+					}
+					outputs {
+					    discount: BigDecimal := 0
+					    category: String := ""
+					}
+					decision table OFFERS "Special offers" {
+					| ID          | WHEN         | THEN        | THEN          |
+					|             | customer.age | discount := | #setCategory  |
+					| ----------- | ------------ | ----------- | ------------- |
+					| SENIOR_DISC | >= 65        | 25          | "Senior"      |
+					| ADULT_DISC  | < 65         | 10          | "Adult"       |
+					} where setCategory := [:cat |
+					    category := cat
+					]
+					""";
+
+			var result = RuleTestBuilder.forSource(source).withFact(new Customer("Bob", 70)).build();
+
+			assertResultSuccess(result);
+
+			var rules = result.rules().orElseThrow();
+			rules.evaluate();
+
+			assertThat(rules.<BigDecimal>getOutput("discount")).isEqualByComparingTo(new BigDecimal("25"));
+			assertThat(rules.<String>getOutput("category")).isEqualTo("Senior");
+		}
+	}
+
 	// TODO this doesn't belong into the data tables category
 	@Nested
 	@DisplayName("Multiple Rules")

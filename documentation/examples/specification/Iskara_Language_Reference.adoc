@@ -650,10 +650,9 @@ decision table BEST_OFFERS "Show best offers" {
 } where `has birthday` := {
     Customer.dateOfBirth = Today
   },
-  offerCar := {
-    let color := param
+  offerCar := [:color |
     messages add: $"Did you know you can get a birthday paint in ${color} for your car?"
-  }
+  ]
 }
 ----
 
@@ -683,7 +682,11 @@ Multiple WHEN columns read as conjunction, whereas multiple THEN columns are sim
 
 Rule cells can contain arbitrary expressions.
 
-Aliased conditionals/consequences are not concatenated with the cell, instead they receive a special `param` local variable holding the cell content as its first value.
+Aliases are blocks using standard block syntax: `{ ... }` for blocks without parameters, and `[:paramName | ...]` for blocks that receive the cell value as a parameter.
+When an alias has a parameter, the cell value is bound directly to that parameter name, making the code more readable.
+
+NOTE: The shorthand block syntax `[| ...]` is for blocks with an _implicit_ parameter (used with collection operations like `each:`).
+For decision table aliases that don't need the cell value, use curly braces `{ }` instead.
 
 The above decision table is equivalent to these rules:
 
@@ -702,8 +705,8 @@ when:
   Customer.dateOfBirth = today,
   Customer.age >= 18
 then:
-  param0 := "blue"
-  messages add: $"Did you know you can get a birthday paint in ${param0} for your car?"
+  let color := "blue"
+  messages add: $"Did you know you can get a birthday paint in ${color} for your car?"
 end
 ----
 

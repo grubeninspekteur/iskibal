@@ -29,6 +29,8 @@ Iskibal is a business rules compiler with a 3-tier architecture:
 
 Components are loaded using Java's `ServiceLoader` mechanism for pluggable implementations.
 
+The library is currently in the early development phase and not used by anyone. Breaking changes can be made.
+
 ## Architecture
 
 ### Multi-Module Maven Structure

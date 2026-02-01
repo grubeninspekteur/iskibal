@@ -210,10 +210,6 @@ public class RuleModuleVisitor extends IskaraParserBaseVisitor<RuleModule> {
 
 		for (int i = 0; i < columns.size() && i < cells.size(); i++) {
 			String cellValue = cells.get(i);
-			if (cellValue.isEmpty() || cellValue.equals("*")) {
-				continue; // Skip empty cells or wildcards
-			}
-
 			String columnExpr = columns.get(i).expression();
 
 			// Check if column references an alias
@@ -222,18 +218,41 @@ public class RuleModuleVisitor extends IskaraParserBaseVisitor<RuleModule> {
 				if (aliasName.startsWith("`") && aliasName.endsWith("`")) {
 					aliasName = aliasName.substring(1, aliasName.length() - 1);
 				}
-				// Alias reference - use the cell value as param
-				Expression cellExpr = parseCellAsExpression(cellValue);
-				// Create a statement that invokes the alias with the param
-				statements.add(new Statement.LetStatement("param", cellExpr));
-				// Add reference to alias block
+
+				// Skip empty cells for aliases, but wildcards mean "invoke with no param"
+				if (cellValue.isEmpty()) {
+					continue;
+				}
+
+				// Alias reference - inline the alias block with cell value
 				if (aliases.containsKey(aliasName)) {
-					for (var stmt : aliases.get(aliasName).statements()) {
-						statements.add(stmt);
+					Block aliasBlock = aliases.get(aliasName);
+					List<Statement> aliasStatements = aliasBlock.statements();
+
+					// Check if first statement is a block parameter: LetStatement(name, Identifier("param"))
+					if (!aliasStatements.isEmpty()
+							&& aliasStatements.getFirst() instanceof Statement.LetStatement ls
+							&& ls.expression() instanceof Expression.Identifier id && "param".equals(id.name())) {
+						// [:paramName | ...] - substitute the cell value for the parameter
+						Expression cellExpr = parseCellAsExpression(cellValue);
+						statements.add(new Statement.LetStatement(ls.name(), cellExpr));
+						// Add remaining statements (skip the parameter placeholder)
+						for (int j = 1; j < aliasStatements.size(); j++) {
+							statements.add(aliasStatements.get(j));
+						}
+					} else {
+						// { } - no parameter, just inline the statements (wildcards invoke too)
+						for (var stmt : aliasStatements) {
+							statements.add(stmt);
+						}
 					}
 				}
 			} else {
-				// Direct expression - combine column expression with cell value
+				// Direct expression - skip empty cells or wildcards
+				if (cellValue.isEmpty() || cellValue.equals("*")) {
+					continue;
+				}
+				// Combine column expression with cell value
 				String fullExpr = columnExpr + " " + cellValue;
 				Expression expr = parseCellAsExpression(fullExpr.trim());
 				statements.add(new Statement.ExpressionStatement(expr));
