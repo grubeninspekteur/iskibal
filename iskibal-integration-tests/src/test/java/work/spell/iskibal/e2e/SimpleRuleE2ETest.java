@@ -465,6 +465,23 @@ class SimpleRuleE2ETest {
             assertThat(rulesWithJohn.<String>getOutput("result")).isEqualTo("Got him");
             assertThat(rulesWithJane.<String>getOutput("result")).isEqualTo("Not our guy");
         }
+
+        @Nested
+        @DisplayName("Strings")
+        class Strings {
+            @Test
+            @DisplayName("can be enclosed in single and double quotes and escape these")
+            void canBeEnclosedInSingleAndDoubleQuotes() {
+                String source = """
+                        outputs {
+                          single: String
+                          double: String
+                        }
+                        
+                        rule QUOTES
+                """
+            }
+        }
     }
 
     private static Success compileSourceSuccessfully(String source) {

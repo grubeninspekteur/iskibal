@@ -200,6 +200,28 @@ class CompilationFailureE2ETest {
             assertThat(result.getErrors()).anyMatch(error -> error.toLowerCase().contains("undefined")
                     || error.toLowerCase().contains("unknown") || error.toLowerCase().contains("unknownoutput"));
         }
+
+        @Test
+        @DisplayName("Undefined identifier in template string is rejected")
+        void undefinedIdentifierInTemplateString() {
+            String source = """
+                    outputs {
+                        result: BigDecimal := 0
+                    }
+                    rule R1 "Rule"
+                    when true
+                    then
+                        result := $"hello ${world}"
+                    end
+                    """;
+
+            var result = RuleTestBuilder.forSource(source).build();
+
+            assertThat(result.isSuccess()).isFalse();
+            assertThat(result.getStage()).isEqualTo("analysis");
+            assertThat(result.getErrors()).anyMatch(error -> error.toLowerCase().contains("undefined")
+                || error.toLowerCase().contains("unknown") || error.toLowerCase().contains("unknownoutput"));
+        }
     }
 
     @Nested

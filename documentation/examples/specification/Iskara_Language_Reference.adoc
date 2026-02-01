@@ -530,7 +530,7 @@ A rule for that could be implemented using a dictionary:
 rule VEHICLE_OVERWEIGHT "Vehicle is over weight limit"
 when
   let weightByType := ["bicycle": 10, "car": 1000, "truck": 3000]
-  let maxWeight := weightByType[Vehicle.type]
+  let maxWeight := weightByType at: Vehicle.type
   Vehicle.weight > maxWeight
 then
   errors add: $"Your vehicle exceeds the maximum weight of ${maxWeight}."
@@ -562,7 +562,7 @@ Thus, the rule could be rewritten as:
 ----
 rule VEHICLE_OVERWEIGHT "Vehicle is over weight limit"
 when
-  let maxWeight := WeightLimits[Vehicle.type]
+  let maxWeight := WeightLimits at: Vehicle.type
   Vehicle.weight > maxWeight
 then
   errors add: $"Your vehicle exceeds the maximum weight of ${maxWeight}."
@@ -588,9 +588,9 @@ data table People {
 rule HAPPY_BIRTHDAY
 when:
   People where: [p |
-    Customer.givenName = p["Given Name"],
-    Customer.familyName = p["Family Name"],
-    Customer.dateOfBirth = p["Date of birth"]
+    Customer.givenName = p at: "Given Name",
+    Customer.familyName = p at: "Family Name",
+    Customer.dateOfBirth = p at: "Date of birth"
     ] exists
 then:
   Discounts add: "Birthday disocunt" withPercent: 15
