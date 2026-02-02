@@ -289,7 +289,13 @@ public final class ExpressionGenerator {
         return switch (bin.operator()) {
             case EQUALS -> "equalsNumericAware(" + left + ", " + right + ")";
             case NOT_EQUALS -> "!equalsNumericAware(" + left + ", " + right + ")";
-            case PLUS -> "addNumeric(" + left + ", " + right + ")";
+            case PLUS -> {
+                // Check if this is string concatenation (template expressions)
+                if (isStringExpression(bin.left()) || isStringExpression(bin.right())) {
+                    yield left + " + " + right;
+                }
+                yield "addNumeric(" + left + ", " + right + ")";
+            }
             case MINUS -> "subtractNumeric(" + left + ", " + right + ")";
             case MULTIPLY -> "multiplyNumeric(" + left + ", " + right + ")";
             case DIVIDE -> "divideNumeric(" + left + ", " + right + ")";
@@ -297,6 +303,27 @@ public final class ExpressionGenerator {
             case GREATER_EQUALS -> "compareNumeric(" + left + ", " + right + ") >= 0";
             case LESS_THAN -> "compareNumeric(" + left + ", " + right + ") < 0";
             case LESS_EQUALS -> "compareNumeric(" + left + ", " + right + ") <= 0";
+        };
+    }
+
+    /**
+     * Checks if an expression evaluates to a String type. This is used to
+     * determine if a PLUS operation should use string concatenation instead of
+     * numeric addition.
+     */
+    private boolean isStringExpression(Expression expr) {
+        return switch (expr) {
+            case Literal.StringLiteral _ -> true;
+            case Binary bin when bin.operator() == Binary.Operator.PLUS ->
+                isStringExpression(bin.left()) || isStringExpression(bin.right());
+            default -> {
+                // Check via type inference if available
+                if (hasTypeInfo()) {
+                    JavaType type = getType(expr);
+                    yield type != null && type.isString();
+                }
+                yield false;
+            }
         };
     }
 

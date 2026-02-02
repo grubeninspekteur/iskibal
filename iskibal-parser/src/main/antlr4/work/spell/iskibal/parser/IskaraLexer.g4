@@ -1,5 +1,11 @@
 lexer grammar IskaraLexer;
 
+// Tracks brace nesting depth inside each active template expression so that
+// the closing '}' can pop back to TEMPLATE_STRING_MODE at the right level.
+@members {
+    private final java.util.ArrayDeque<Integer> templateBraceDepths = new java.util.ArrayDeque<>();
+}
+
 // Keywords
 MODULE      : 'module' ;
 IMPORTS     : 'imports' ;
@@ -46,8 +52,17 @@ AT          : '@' ;
 HASH        : '#' ;
 
 // Delimiters
-LBRACE      : '{' ;
-RBRACE      : '}' ;
+LBRACE      : '{' { if (!templateBraceDepths.isEmpty()) templateBraceDepths.push(templateBraceDepths.pop() + 1); } ;
+RBRACE      : '}' {
+    if (!templateBraceDepths.isEmpty()) {
+        if (templateBraceDepths.peek() == 0) {
+            templateBraceDepths.pop();
+            popMode();
+        } else {
+            templateBraceDepths.push(templateBraceDepths.pop() - 1);
+        }
+    }
+} ;
 LBRACK      : '[' ;
 RBRACK      : ']' ;
 LPAREN      : '(' ;
@@ -126,7 +141,7 @@ TEMPLATE_TEXT
     ;
 
 TEMPLATE_EXPR_START
-    : '${' -> pushMode(DEFAULT_MODE)
+    : '${' { templateBraceDepths.push(0); } -> pushMode(DEFAULT_MODE)
     ;
 
 TEMPLATE_STRING_END

@@ -73,10 +73,34 @@ The locale can be set for the parser.
 Strings are enclosed by `""` or `''`.
 If you need to use a string literal inside a string, escape it with a backslash.
 
+[source,iskara]
+----
+let single := 'Single quotes work and \'do what they should\''
+let double := "Double quotes \"also\" work"
+----
+
+===== Template strings and string concatenation
+
 Template strings, marked by `$`, can reference variables from the context: `$"The car's weight of ${weight} kg is above the allowed maximum weight ${maximumWeight} kg."`
 
-The template placeholders can contain any expression.
-If the string is not preceded by `$`, any template placeholders are treated as literals.
+The template placeholders can contain any expression, including arithmetic operations:
+
+[source,iskara]
+----
+let price := 100
+let tax := 19
+message := $"Total: ${price + (price * tax / 100)} EUR (incl. ${tax}% tax)"
+----
+
+Non-string values inside template placeholders are automatically converted to their string representation.
+
+If the string is not preceded by `$`, any template placeholders are treated as literals:
+
+[source,iskara]
+----
+let notExpanded := "This ${variable} is not expanded"
+let expanded := $"This ${variable} is expanded"
+----
 
 ==== Booleans
 

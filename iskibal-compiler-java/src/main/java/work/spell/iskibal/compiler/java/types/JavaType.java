@@ -56,6 +56,13 @@ public sealed interface JavaType
     }
 
     /**
+     * Returns true if this type is a String.
+     */
+    default boolean isString() {
+        return false;
+    }
+
+    /**
      * Returns the element type if this is a collection or array, otherwise returns
      * this type.
      */
@@ -202,6 +209,11 @@ public sealed interface JavaType
         @Override
         public boolean isBoolean() {
             return kind == TypeKind.BOXED_PRIMITIVE && qualifiedName.equals("java.lang.Boolean");
+        }
+
+        @Override
+        public boolean isString() {
+            return kind == TypeKind.STRING;
         }
 
         @Override

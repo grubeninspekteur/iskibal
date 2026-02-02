@@ -466,21 +466,65 @@ class SimpleRuleE2ETest {
             assertThat(rulesWithJane.<String>getOutput("result")).isEqualTo("Not our guy");
         }
 
-        @Nested
-        @DisplayName("Strings")
-        class Strings {
-            @Test
-            @DisplayName("can be enclosed in single and double quotes and escape these")
-            void canBeEnclosedInSingleAndDoubleQuotes() {
-                String source = """
+    }
+
+    @Nested
+    @DisplayName("Strings")
+    class Strings {
+        @Test
+        @DisplayName("can be enclosed in single and double quotes and escape these")
+        void canBeEnclosedInSingleAndDoubleQuotes() throws Exception {
+            String source = """
                         outputs {
                           single: String
-                          double: String
+                          doubleQuoted: String
                         }
-                        
-                        rule QUOTES
-                """
-            }
+
+                        rule QUOTES "quotes work"
+                        when
+                          true
+                        then
+                          single := 'Single quotes work and \\'do what they should\\''
+                          doubleQuoted := "double quotes \\"also\\" work"
+                        end
+                """;
+
+            var result = RuleTestBuilder.forSource(source).build();
+
+            assertResultSuccess(result);
+
+            var rules = result.rules().orElseThrow();
+            rules.evaluate();
+
+            assertThat(rules.<String>getOutput("single")).isEqualTo("Single quotes work and 'do what they should'");
+            assertThat(rules.<String>getOutput("doubleQuoted")).isEqualTo("double quotes \"also\" work");
+        }
+
+        @Test
+        @DisplayName("can be expanded using template expressions")
+        void canBeExpandedUsingTemplateExpressions() throws Exception {
+            String source = """
+                        outputs {
+                          result: String
+                        }
+                
+                        rule TEMPLATE "using template expressions"
+                        when
+                          true
+                        then
+                          let notATemplateExpression := "a ${bar}"
+                          result := $"For ${notATemplateExpression} we calculated ${5 + 10}"
+                        end
+                """;
+
+            var result = RuleTestBuilder.forSource(source).build();
+
+            assertResultSuccess(result);
+
+            var rules = result.rules().orElseThrow();
+            rules.evaluate();
+
+            assertThat(rules.<String>getOutput("result")).isEqualTo("For a ${bar} we calculated 15");
         }
     }
 
