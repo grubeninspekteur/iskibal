@@ -99,7 +99,11 @@ public class ExpressionVisitor extends IskaraParserBaseVisitor<Expression> {
     @Override
     public Expression visitMessageSendExpr(IskaraParser.MessageSendExprContext ctx) {
         Expression receiver = visit(ctx.navigationExpr());
-        return processMessagePart(receiver, ctx.messagePart());
+        // Process all message parts in sequence, each result becoming the next receiver
+        for (var part : ctx.messagePart()) {
+            receiver = processMessagePart(receiver, part);
+        }
+        return receiver;
     }
 
     private Expression processMessagePart(Expression receiver, IskaraParser.MessagePartContext part) {

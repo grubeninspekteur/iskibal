@@ -196,9 +196,9 @@ multiplicativeOp
     ;
 
 // Smalltalk-style message sending
-// Non-left-recursive version for better ANTLR compatibility
+// Supports chaining: receiver unaryMsg keywordMsg: arg anotherUnary
 messageSendExpr
-    : navigationExpr messagePart
+    : navigationExpr messagePart+
     ;
 
 messagePart
