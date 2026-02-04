@@ -106,15 +106,16 @@ public final class ExpressionGenerator {
         // Handle @ prefix for globals
         if (name.startsWith("@")) {
             String globalName = name.substring(1);
-            return "this." + globalName;
+            return "this." + JavaIdentifiers.sanitize(globalName);
         }
 
         // Outputs are accessed via this.
         if (outputNames.contains(name)) {
-            return "this." + name;
+            return "this." + JavaIdentifiers.sanitize(name);
         }
 
-        return name;
+        // Local variables and other identifiers
+        return JavaIdentifiers.sanitize(name);
     }
 
     private String generateLiteral(Literal lit) {
@@ -141,8 +142,38 @@ public final class ExpressionGenerator {
         if (lit.elements().isEmpty()) {
             return "java.util.Set.of()";
         }
-        String elements = lit.elements().stream().map(this::generate).collect(Collectors.joining(", "));
-        return "java.util.Set.of(" + elements + ")";
+
+        // Separate ranges from regular elements
+        List<Expression> ranges = new ArrayList<>();
+        List<Expression> regularElements = new ArrayList<>();
+        for (Expression elem : lit.elements()) {
+            if (elem instanceof KeywordMessage km && km.parts().size() == 1
+                    && "to".equals(km.parts().getFirst().keyword())) {
+                ranges.add(elem);
+            } else {
+                regularElements.add(elem);
+            }
+        }
+
+        // If only ranges, generate ranges directly
+        if (regularElements.isEmpty()) {
+            if (ranges.size() == 1) {
+                return generate(ranges.getFirst());
+            }
+            // Multiple ranges: union them
+            return "unionSets(" + ranges.stream().map(this::generate).collect(Collectors.joining(", ")) + ")";
+        }
+
+        // If only regular elements, use Set.of
+        if (ranges.isEmpty()) {
+            String elements = regularElements.stream().map(this::generate).collect(Collectors.joining(", "));
+            return "java.util.Set.of(" + elements + ")";
+        }
+
+        // Mixed: union ranges with Set.of elements
+        String rangesStr = ranges.stream().map(this::generate).collect(Collectors.joining(", "));
+        String elementsStr = regularElements.stream().map(this::generate).collect(Collectors.joining(", "));
+        return "unionSets(" + rangesStr + ", java.util.Set.of(" + elementsStr + "))";
     }
 
     private String generateMapLiteral(Literal.MapLiteral lit) {
@@ -163,9 +194,24 @@ public final class ExpressionGenerator {
         return switch (ms) {
             case UnaryMessage um -> generateUnaryMessage(receiver, um.selector(), ms.receiver());
             case KeywordMessage km -> generateKeywordMessage(receiver, km, ms.receiver());
-            case DefaultMessage _ -> {
-                // Default message: receiver! -> receiver.apply() or similar
-                yield receiver + ".apply()";
+            case DefaultMessage dm -> {
+                // Default message: receiver! -> invoke the functional interface method
+                // Detect type to call correct method
+                JavaType receiverType = getType(dm.receiver());
+                if (receiverType != null) {
+                    String typeName = receiverType.qualifiedName();
+                    if (typeName != null) {
+                        if (typeName.startsWith("java.util.function.Supplier")) {
+                            yield receiver + ".get()";
+                        } else if (typeName.equals("java.lang.Runnable")) {
+                            yield receiver + ".run()";
+                        } else if (typeName.startsWith("java.util.concurrent.Callable")) {
+                            yield receiver + ".call()";
+                        }
+                    }
+                }
+                // Default to .get() for Supplier-like interfaces
+                yield receiver + ".get()";
             }
         };
     }
@@ -254,6 +300,21 @@ public final class ExpressionGenerator {
                 }
                 case "and" -> receiver + " && " + arg;
                 case "or" -> receiver + " || " + arg;
+                case "to" -> "range(" + receiver + ", " + arg + ")";
+                case "ifTrue" -> {
+                    // ifTrue: block -> if (condition) { block body }
+                    if (part.argument() instanceof Block block) {
+                        yield "{ if (" + receiver + ") { " + generateBlockBody(block) + " } }";
+                    }
+                    yield "{ if (" + receiver + ") ((Runnable)" + arg + ").run(); }";
+                }
+                case "ifFalse" -> {
+                    // ifFalse: block -> if (!condition) { block body }
+                    if (part.argument() instanceof Block block) {
+                        yield "{ if (!(" + receiver + ")) { " + generateBlockBody(block) + " } }";
+                    }
+                    yield "{ if (!(" + receiver + ")) ((Runnable)" + arg + ").run(); }";
+                }
                 default -> receiver + "." + keyword + "(" + arg + ")";
             };
         }
@@ -387,12 +448,12 @@ public final class ExpressionGenerator {
             case Identifier id -> {
                 String name = id.name();
                 if (name.startsWith("@")) {
-                    yield "this." + name.substring(1);
+                    yield "this." + JavaIdentifiers.sanitize(name.substring(1));
                 }
                 if (outputNames.contains(name)) {
-                    yield "this." + name;
+                    yield "this." + JavaIdentifiers.sanitize(name);
                 }
-                yield name;
+                yield JavaIdentifiers.sanitize(name);
             }
             case Navigation nav -> generateNavigation(nav);
             default -> generate(target);
@@ -599,20 +660,9 @@ public final class ExpressionGenerator {
             typeVisitor.infer(block);
         }
 
-        // Extract block parameters (represented as LetStatement with
-        // Identifier("param"))
-        List<String> params = new ArrayList<>();
-        List<Statement> bodyStatements = new ArrayList<>();
-
-        for (Statement stmt : block.statements()) {
-            if (stmt instanceof Statement.LetStatement ls && ls.expression() instanceof Identifier id
-                    && "param".equals(id.name())) {
-                // This is a block parameter placeholder
-                params.add(ls.name());
-            } else {
-                bodyStatements.add(stmt);
-            }
-        }
+        // Use explicit parameters from the Block record
+        List<String> params = new ArrayList<>(block.parameters());
+        List<Statement> bodyStatements = block.statements();
 
         // Build lambda parameter list
         String paramList = params.isEmpty()
@@ -621,7 +671,12 @@ public final class ExpressionGenerator {
 
         // For simple single-expression blocks, generate inline
         if (bodyStatements.size() == 1 && bodyStatements.getFirst() instanceof Statement.ExpressionStatement es) {
-            return paramList + " -> " + generate(es.expression());
+            String body = generate(es.expression());
+            // For implicit parameter blocks, transform the expression
+            if (block.hasImplicitParameter()) {
+                body = transformImplicitItExpression(es.expression());
+            }
+            return paramList + " -> " + body;
         }
 
         // Multi-statement blocks generate a Supplier or Runnable
@@ -630,10 +685,13 @@ public final class ExpressionGenerator {
         for (Statement stmt : bodyStatements) {
             sb.append("    ");
             if (stmt instanceof Statement.ExpressionStatement es) {
+                String exprCode = block.hasImplicitParameter()
+                        ? transformImplicitItExpression(es.expression())
+                        : generate(es.expression());
                 if (stmt == bodyStatements.getLast()) {
-                    sb.append("return ").append(generate(es.expression())).append(";\n");
+                    sb.append("return ").append(exprCode).append(";\n");
                 } else {
-                    sb.append(generate(es.expression())).append(";\n");
+                    sb.append(exprCode).append(";\n");
                 }
             } else if (stmt instanceof Statement.LetStatement ls) {
                 sb.append("var ").append(ls.name()).append(" = ").append(generate(ls.expression())).append(";\n");
@@ -641,6 +699,55 @@ public final class ExpressionGenerator {
         }
         sb.append("}");
         return sb.toString();
+    }
+
+    /**
+     * Transforms an expression in an implicit parameter block.
+     * For [| expr], the first identifier in the expression becomes a message send to 'it'.
+     * For example: [| active] -> it.active(), [| price > 10] -> it.price() > 10
+     */
+    private String transformImplicitItExpression(Expression expr) {
+        return switch (expr) {
+            case Identifier id -> "it." + id.name() + "()";
+            case Binary bin -> {
+                String left = transformImplicitItExpression(bin.left());
+                String right = generate(bin.right());
+                yield switch (bin.operator()) {
+                    case EQUALS -> "equalsNumericAware(" + left + ", " + right + ")";
+                    case NOT_EQUALS -> "!equalsNumericAware(" + left + ", " + right + ")";
+                    case PLUS -> "addNumeric(" + left + ", " + right + ")";
+                    case MINUS -> "subtractNumeric(" + left + ", " + right + ")";
+                    case MULTIPLY -> "multiplyNumeric(" + left + ", " + right + ")";
+                    case DIVIDE -> "divideNumeric(" + left + ", " + right + ")";
+                    case GREATER_THAN -> "compareNumeric(" + left + ", " + right + ") > 0";
+                    case GREATER_EQUALS -> "compareNumeric(" + left + ", " + right + ") >= 0";
+                    case LESS_THAN -> "compareNumeric(" + left + ", " + right + ") < 0";
+                    case LESS_EQUALS -> "compareNumeric(" + left + ", " + right + ") <= 0";
+                };
+            }
+            case UnaryMessage um -> {
+                // The receiver becomes it.receiver(), then send the selector
+                String receiver = transformImplicitItExpression(um.receiver());
+                yield receiver + "." + um.selector() + "()";
+            }
+            default -> generate(expr);
+        };
+    }
+
+    /**
+     * Generates the body of a block as statements (without lambda wrapper).
+     * Used for inlining blocks in control flow constructs like ifTrue:/ifFalse:.
+     */
+    private String generateBlockBody(Block block) {
+        StringBuilder sb = new StringBuilder();
+        for (Statement stmt : block.statements()) {
+            if (stmt instanceof Statement.ExpressionStatement es) {
+                sb.append(generate(es.expression())).append("; ");
+            } else if (stmt instanceof Statement.LetStatement ls) {
+                sb.append("var ").append(ls.name()).append(" = ").append(generate(ls.expression())).append("; ");
+            }
+        }
+        return sb.toString().trim();
     }
 
     private static String escapeString(String s) {

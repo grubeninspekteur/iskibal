@@ -136,7 +136,7 @@ class FullParseTest {
         void parsesOutputWithEmptyListInitialValue() {
             String input = """
                     outputs {
-                        Errors: String[] := []
+                        Errors: String[] := #()
                     }
                     """;
 
@@ -470,7 +470,7 @@ class FullParseTest {
             String input = """
                     rule TEST
                     when
-                        items = [1, 2, 3]
+                        items = #(1, 2, 3)
                     then
                         Valid := true
                     end
@@ -493,7 +493,7 @@ class FullParseTest {
             String input = """
                     rule TEST
                     when
-                        items = {1, 2, 3}
+                        items = #{1, 2, 3}
                     then
                         Valid := true
                     end
@@ -513,7 +513,7 @@ class FullParseTest {
             String input = """
                     rule TEST
                     when
-                        map = ["a": 1, "b": 2]
+                        map = #["a": 1, "b": 2]
                     then
                         Valid := true
                     end

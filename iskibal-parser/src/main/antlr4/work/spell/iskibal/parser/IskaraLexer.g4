@@ -49,6 +49,11 @@ DOTDOT      : '..' ;
 BANG        : '!' ;
 COLON       : ':' ;
 AT          : '@' ;
+
+// Composite collection literal delimiters (must come before single HASH)
+HASH_LPAREN : '#(' ;
+HASH_LBRACE : '#{' ;
+HASH_LBRACK : '#[' ;
 HASH        : '#' ;
 
 // Delimiters

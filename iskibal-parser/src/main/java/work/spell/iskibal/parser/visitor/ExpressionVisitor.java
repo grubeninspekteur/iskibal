@@ -190,44 +190,45 @@ public class ExpressionVisitor extends IskaraParserBaseVisitor<Expression> {
         return visit(ctx.expression());
     }
 
-    @Override
-    public Expression visitIndexExpr(IskaraParser.IndexExprContext ctx) {
-        Expression receiver = visit(ctx.primaryExpr());
-        Expression index = visit(ctx.expression());
-        // Index access is represented as a keyword message with "at" keyword
-        return new KeywordMessage(receiver, List.of(new KeywordPart("at", index)));
-    }
-
     // =========================================================================
     // Block expressions
     // =========================================================================
 
     @Override
-    public Expression visitBlock(IskaraParser.BlockContext ctx) {
-        List<Statement> statements = new ArrayList<>();
-
-        // Handle block parameters if present
-        if (ctx.blockParams() != null) {
-            // Parameters become identifiers available in the block
-            // For now, we'll represent them as let statements at the start
-            for (var paramId : ctx.blockParams().identifier()) {
-                String paramName = extractIdentifier(paramId);
-                // Create a placeholder for the parameter
-                statements.add(new Statement.LetStatement(paramName, new Identifier("param")));
-            }
+    public Expression visitExplicitParamBlock(IskaraParser.ExplicitParamBlockContext ctx) {
+        List<String> parameters = new ArrayList<>();
+        for (var paramId : ctx.blockParams().identifier()) {
+            parameters.add(extractIdentifier(paramId));
         }
+        List<Statement> statements = collectStatements(ctx.statementList());
+        return new Block(parameters, statements, false);
+    }
 
-        // Visit statements
-        if (ctx.statementList() != null) {
-            for (var stmtCtx : ctx.statementList().statement()) {
+    @Override
+    public Expression visitImplicitParamBlock(IskaraParser.ImplicitParamBlockContext ctx) {
+        // [| expression] - implicit 'it' parameter
+        Expression bodyExpr = visit(ctx.expression());
+        List<Statement> statements = List.of(new Statement.ExpressionStatement(bodyExpr));
+        return new Block(List.of("it"), statements, true);
+    }
+
+    @Override
+    public Expression visitStatementBlock(IskaraParser.StatementBlockContext ctx) {
+        List<Statement> statements = collectStatements(ctx.statementList());
+        return new Block(List.of(), statements, false);
+    }
+
+    private List<Statement> collectStatements(IskaraParser.StatementListContext ctx) {
+        List<Statement> statements = new ArrayList<>();
+        if (ctx != null) {
+            for (var stmtCtx : ctx.statement()) {
                 Statement stmt = statementVisitor.visit(stmtCtx);
                 if (stmt != null) {
                     statements.add(stmt);
                 }
             }
         }
-
-        return new Block(statements);
+        return statements;
     }
 
     // =========================================================================

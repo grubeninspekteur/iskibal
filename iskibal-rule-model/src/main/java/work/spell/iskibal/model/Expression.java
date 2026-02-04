@@ -98,7 +98,20 @@ public sealed interface Expression permits Expression.Identifier, Expression.Lit
 
     /**
      * Block of statements evaluated in order.
+     *
+     * @param parameters          explicit parameter names for the block
+     * @param statements          the statements in the block body
+     * @param hasImplicitParameter true if this block uses the shorthand [| expr]
+     *                            syntax with implicit 'it' parameter
      */
-    record Block(List<Statement> statements) implements Expression {
+    record Block(List<String> parameters, List<Statement> statements, boolean hasImplicitParameter)
+            implements Expression {
+
+        /**
+         * Convenience constructor for blocks without explicit parameters.
+         */
+        public Block(List<Statement> statements) {
+            this(List.of(), statements, false);
+        }
     }
 }

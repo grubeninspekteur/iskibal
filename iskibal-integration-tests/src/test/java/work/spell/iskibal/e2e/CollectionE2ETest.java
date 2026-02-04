@@ -36,7 +36,7 @@ class CollectionE2ETest {
                     rule LIST1 "Create list"
                     when true
                     then
-                        result := ["hello", "world", 42]
+                        result := #("hello", "world", 42)
                     end
                     """;
 
@@ -65,7 +65,7 @@ class CollectionE2ETest {
                     rule SET1 "Create set"
                     when true
                     then
-                        result := {"Match", "my", "style", "style", "baby!"}
+                        result := #{"Match", "my", "style", "style", "baby!"}
                     end
                     """;
 
@@ -94,7 +94,7 @@ class CollectionE2ETest {
                     rule MAP1 "Create map"
                     when true
                     then
-                        result := ["hello": "world", "number": 42]
+                        result := #["hello": "world", "number": 42]
                     end
                     """;
 
@@ -124,7 +124,7 @@ class CollectionE2ETest {
                     rule MAP1 "Create map"
                     when true
                     then
-                        result := [
+                        result := #[
                         1: 1,
                         2: 2,
                         3: 3,
@@ -215,7 +215,7 @@ class CollectionE2ETest {
         @DisplayName("Access map by key with `at:`")
         void accessMapByKey() throws Exception {
             String source = createShoppingCartRule("boolean", """
-                    result := ["foo": "bar", "gold": "silver"] at: "gold" = "silver"
+                    result := #["foo": "bar", "gold": "silver"] at: "gold" = "silver"
                     """);
             assertThat(getResult(source, Boolean.class)).isEqualTo(true);
         }
@@ -233,7 +233,7 @@ class CollectionE2ETest {
         @DisplayName("Get set size")
         void getSizeOfSet() throws Exception {
             String source = createShoppingCartRule("int", """
-                    result := {1, 2, 3, 4, 5} size
+                    result := #{1, 2, 3, 4, 5} size
                     """);
             assertThat(getResult(source, Integer.class)).isEqualTo(5);
         }
@@ -242,7 +242,7 @@ class CollectionE2ETest {
         @DisplayName("Get map size")
         void getSizeOfMap() throws Exception {
             String source = createShoppingCartRule("int", """
-                    result := ["Han": "Solo"] size
+                    result := #["Han": "Solo"] size
                     """);
             assertThat(getResult(source, Integer.class)).isEqualTo(1);
         }
@@ -259,16 +259,16 @@ class CollectionE2ETest {
         void existsOperation() throws Exception {
             String source = createShoppingCartRule("java.util.List", """
                      let items := cart.items
-                     result := [
+                     result := #(
                        items exists,
                        items notEmpty,
                        items doesNotExist,
                        items empty,
-                       [] exists,
-                       [] notEmpty,
-                       [] doesNotExist,
-                       [] empty
-                     ]
+                       #() exists,
+                       #() notEmpty,
+                       #() doesNotExist,
+                       #() empty
+                     )
                     """);
             assertThat(getResult(source, List.class))
                     .isEqualTo(List.of(true, true, false, false, false, false, true, true));
@@ -279,12 +279,12 @@ class CollectionE2ETest {
         void containsOperation() throws Exception {
             String source = createShoppingCartRule("java.util.Map", """
                     let itemNames := cart.items.name
-                    result := [
+                    result := #[
                       "hasItemsWithBanana": (itemNames contains: "Banana"),
                       "hasItemsWithGold": (itemNames contains: "Gold"),
-                      "emptyListContains": ([] contains: "Foo"),
-                      "mapContainsKeyExists": (["Foo": "Bar"] contains: "Foo"),
-                      "mapContainsKeyDoesNotExist": (["Foo": "Bar"] contains: "Bar")
+                      "emptyListContains": (#() contains: "Foo"),
+                      "mapContainsKeyExists": (#["Foo": "Bar"] contains: "Foo"),
+                      "mapContainsKeyDoesNotExist": (#["Foo": "Bar"] contains: "Bar")
                     ]
                     """);
             assertThat(getResult(source, Map.class))
@@ -310,6 +310,127 @@ class CollectionE2ETest {
                     """);
             assertThat(getResult(source, Boolean.class)).isTrue();
             assertThat(cart.getItems()).extracting(CartItem::getName).hasSize(3).containsOnly("Foo");
+        }
+
+        @Test
+        @DisplayName("sum returns total of numeric list")
+        void sumOfNumericList() throws Exception {
+            String source = """
+                    outputs {
+                        result: BigDecimal
+                    }
+                    rule SUM "Sum numbers"
+                    when true
+                    then
+                        result := #(1, 2, 3, 4, 5) sum
+                    end
+                    """;
+
+            var result = RuleTestBuilder.forSource(source).build();
+            assertResultSuccess(result);
+
+            var rules = result.rules().orElseThrow();
+            rules.evaluate();
+
+            assertThat(rules.<BigDecimal>getOutput("result")).isEqualByComparingTo(new BigDecimal("15"));
+        }
+
+        @Test
+        @DisplayName("sum of extracted prices")
+        void sumOfExtractedPrices() throws Exception {
+            String source = createShoppingCartRule("BigDecimal", "result := cart.items.price sum");
+            assertThat(getResult(source, BigDecimal.class)).isEqualByComparingTo(new BigDecimal("5.25"));
+        }
+    }
+
+    @Nested
+    @DisplayName("Range Literals")
+    class RangeLiterals {
+
+        @Test
+        @DisplayName("Range literal #{1..5} creates set of integers")
+        void rangeLiteralCreatesSet() throws Exception {
+            String source = """
+                    outputs {
+                        result: java.util.Set
+                    }
+                    rule RANGE "Create range"
+                    when true
+                    then
+                        result := #{1..5}
+                    end
+                    """;
+
+            var result = RuleTestBuilder.forSource(source).build();
+            assertResultSuccess(result);
+
+            var rules = result.rules().orElseThrow();
+            rules.evaluate();
+
+            Set<BigDecimal> rangeSet = rules.getOutput("result");
+            assertThat(rangeSet).hasSize(5);
+            assertThat(rangeSet).containsExactlyInAnyOrder(
+                    new BigDecimal("1"),
+                    new BigDecimal("2"),
+                    new BigDecimal("3"),
+                    new BigDecimal("4"),
+                    new BigDecimal("5"));
+        }
+
+        @Test
+        @DisplayName("Mixed range and elements #{1..3, 7, 9..10}")
+        void mixedRangeAndElements() throws Exception {
+            String source = """
+                    outputs {
+                        result: java.util.Set
+                    }
+                    rule RANGE "Mixed range"
+                    when true
+                    then
+                        result := #{1..3, 7, 9..10}
+                    end
+                    """;
+
+            var result = RuleTestBuilder.forSource(source).build();
+            assertResultSuccess(result);
+
+            var rules = result.rules().orElseThrow();
+            rules.evaluate();
+
+            Set<BigDecimal> rangeSet = rules.getOutput("result");
+            assertThat(rangeSet).containsExactlyInAnyOrder(
+                    new BigDecimal("1"),
+                    new BigDecimal("2"),
+                    new BigDecimal("3"),
+                    new BigDecimal("7"),
+                    new BigDecimal("9"),
+                    new BigDecimal("10"));
+        }
+
+        @Test
+        @DisplayName("Range contains check")
+        void rangeContainsCheck() throws Exception {
+            String source = """
+                    outputs {
+                        inRange: boolean
+                        outOfRange: boolean
+                    }
+                    rule RANGE "Check range contains"
+                    when true
+                    then
+                        inRange := #{1..10} contains: 5
+                        outOfRange := #{1..10} contains: 15
+                    end
+                    """;
+
+            var result = RuleTestBuilder.forSource(source).build();
+            assertResultSuccess(result);
+
+            var rules = result.rules().orElseThrow();
+            rules.evaluate();
+
+            assertThat(rules.<Boolean>getOutput("inRange")).isTrue();
+            assertThat(rules.<Boolean>getOutput("outOfRange")).isFalse();
         }
     }
 

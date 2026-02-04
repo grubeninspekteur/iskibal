@@ -100,17 +100,20 @@ public final class ModuleGenerator {
     private void generateFields(StringBuilder sb, RuleModule module) {
         // Facts (final fields)
         for (Fact fact : module.facts()) {
-            sb.append("\tprivate final ").append(fact.type()).append(" ").append(fact.name()).append(";\n");
+            sb.append("\tprivate final ").append(fact.type()).append(" ")
+                    .append(JavaIdentifiers.sanitize(fact.name())).append(";\n");
         }
 
         // Globals (final fields)
         for (Global global : module.globals()) {
-            sb.append("\tprivate final ").append(global.type()).append(" ").append(global.name()).append(";\n");
+            sb.append("\tprivate final ").append(global.type()).append(" ")
+                    .append(JavaIdentifiers.sanitize(global.name())).append(";\n");
         }
 
         // Outputs (mutable fields with initial values)
         for (Output output : module.outputs()) {
-            sb.append("\tprivate ").append(output.type()).append(" ").append(output.name()).append(";\n");
+            sb.append("\tprivate ").append(output.type()).append(" ")
+                    .append(JavaIdentifiers.sanitize(output.name())).append(";\n");
         }
 
         // Data tables (final fields initialized inline from literal values)
@@ -192,10 +195,10 @@ public final class ModuleGenerator {
         // Constructor parameters: facts + globals
         List<String> params = new ArrayList<>();
         for (Fact fact : module.facts()) {
-            params.add(fact.type() + " " + fact.name());
+            params.add(fact.type() + " " + JavaIdentifiers.sanitize(fact.name()));
         }
         for (Global global : module.globals()) {
-            params.add(global.type() + " " + global.name());
+            params.add(global.type() + " " + JavaIdentifiers.sanitize(global.name()));
         }
 
         sb.append("\tpublic ").append(options.className()).append("(");
@@ -204,18 +207,20 @@ public final class ModuleGenerator {
 
         // Assign facts
         for (Fact fact : module.facts()) {
-            sb.append("\t\tthis.").append(fact.name()).append(" = ").append(fact.name()).append(";\n");
+            String sanitized = JavaIdentifiers.sanitize(fact.name());
+            sb.append("\t\tthis.").append(sanitized).append(" = ").append(sanitized).append(";\n");
         }
 
         // Assign globals
         for (Global global : module.globals()) {
-            sb.append("\t\tthis.").append(global.name()).append(" = ").append(global.name()).append(";\n");
+            String sanitized = JavaIdentifiers.sanitize(global.name());
+            sb.append("\t\tthis.").append(sanitized).append(" = ").append(sanitized).append(";\n");
         }
 
         // Initialize outputs
         for (Output output : module.outputs()) {
             if (output.initialValue() != null) {
-                sb.append("\t\tthis.").append(output.name()).append(" = ");
+                sb.append("\t\tthis.").append(JavaIdentifiers.sanitize(output.name())).append(" = ");
                 sb.append(exprGen.generate(output.initialValue())).append(";\n");
             }
         }
@@ -240,17 +245,11 @@ public final class ModuleGenerator {
 
     private void generateOutputGetters(StringBuilder sb, RuleModule module) {
         for (Output output : module.outputs()) {
-            String capitalizedName = capitalize(output.name());
+            String sanitized = JavaIdentifiers.sanitize(output.name());
+            String capitalizedName = JavaIdentifiers.capitalize(sanitized);
             sb.append("\tpublic ").append(output.type()).append(" get").append(capitalizedName).append("() {\n");
-            sb.append("\t\treturn this.").append(output.name()).append(";\n");
+            sb.append("\t\treturn this.").append(sanitized).append(";\n");
             sb.append("\t}\n\n");
         }
-    }
-
-    private static String capitalize(String s) {
-        if (s == null || s.isEmpty()) {
-            return s;
-        }
-        return Character.toUpperCase(s.charAt(0)) + s.substring(1);
     }
 }

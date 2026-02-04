@@ -142,10 +142,18 @@ public final class ReferenceValidator {
             }
         }
 
-        // Validate aliases
+        // Validate aliases - block parameters are registered when validating the Block expression
         for (Map.Entry<String, Block> entry : rule.aliases().entrySet()) {
             Scope aliasScope = moduleScope.createChild();
-            validateExpression(entry.getValue(), aliasScope);
+            Block block = entry.getValue();
+            // Register block parameters first
+            for (String param : block.parameters()) {
+                aliasScope.define(Symbol.local(param));
+            }
+            // Then validate block statements
+            for (Statement stmt : block.statements()) {
+                validateStatement(stmt, aliasScope);
+            }
         }
     }
 
@@ -196,6 +204,10 @@ public final class ReferenceValidator {
             case Navigation nav -> validateExpression(nav.receiver(), scope);
             case Block block -> {
                 Scope blockScope = scope.createChild();
+                // Register explicit block parameters
+                for (String param : block.parameters()) {
+                    blockScope.define(Symbol.local(param));
+                }
                 for (Statement stmt : block.statements()) {
                     validateStatement(stmt, blockScope);
                 }

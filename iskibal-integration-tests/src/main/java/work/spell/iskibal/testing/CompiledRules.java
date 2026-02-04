@@ -4,6 +4,8 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+import work.spell.iskibal.compiler.java.internal.codegen.JavaIdentifiers;
+
 /**
  * Wraps a compiled rules class for reflection-based execution.
  * <p>
@@ -91,7 +93,7 @@ public class CompiledRules {
      */
     @SuppressWarnings("unchecked")
     public <T> T getOutput(String outputName) throws ReflectiveOperationException {
-        String getterName = "get" + capitalize(outputName);
+        String getterName = "get" + JavaIdentifiers.sanitizeAndCapitalize(outputName);
         Method getter = rulesClass.getMethod(getterName);
         return (T) getter.invoke(instance);
     }
@@ -114,10 +116,4 @@ public class CompiledRules {
         return rulesClass;
     }
 
-    private static String capitalize(String name) {
-        if (name == null || name.isEmpty()) {
-            return name;
-        }
-        return Character.toUpperCase(name.charAt(0)) + name.substring(1);
-    }
 }

@@ -247,16 +247,16 @@ class BlockE2ETest {
     class BlockSyntaxVariations {
 
         @Test
-        @DisplayName("Block without parameters uses empty parameter list")
-        void blockWithoutParameters() throws Exception {
+        @DisplayName("List literal can be created")
+        void listLiteralCanBeCreated() throws Exception {
             String source = """
                     outputs {
                         result: java.util.List
                     }
-                    rule SUPPLY "Create list with supplier"
+                    rule SUPPLY "Create list"
                     when true
                     then
-                        result := [1, 2, 3]
+                        result := #(1, 2, 3)
                     end
                     """;
 
@@ -330,6 +330,42 @@ class BlockE2ETest {
 
             // Apple: 1.50 * 2 = 3.00 > 2 (true)
             // Banana: 0.75 * 2 = 1.50 > 2 (false)
+            assertThat(rules.<List<?>>getOutput("result")).hasSize(1);
+        }
+    }
+
+    @Nested
+    @DisplayName("Shorthand Block Syntax")
+    class ShorthandBlockSyntax {
+
+        @Test
+        @DisplayName("Shorthand block [| expr] uses implicit parameter")
+        @org.junit.jupiter.api.Disabled("Requires implicit parameter resolution for shorthand blocks")
+        void shorthandBlockWithImplicitParameter() throws Exception {
+            String source = """
+                    facts {
+                        items: java.util.List
+                    }
+                    outputs {
+                        result: java.util.List
+                    }
+                    rule SHORT "Use shorthand block"
+                    when true
+                    then
+                        result := items where: [| active]
+                    end
+                    """;
+
+            var items = List.of(
+                    new CartItem("Apple", new BigDecimal("1.50"), true),
+                    new CartItem("Banana", new BigDecimal("0.75"), false));
+
+            var result = RuleTestBuilder.forSource(source).withFact(items).build();
+            assertResultSuccess(result);
+
+            var rules = result.rules().orElseThrow();
+            rules.evaluate();
+
             assertThat(rules.<List<?>>getOutput("result")).hasSize(1);
         }
     }

@@ -214,9 +214,7 @@ class DataTableE2ETest {
                     | ----- | ------------ | --------- |
                     | ADULT | >= 18        | "Sir"     |
                     | CHILD | < 18         | "Young"   |
-                    } where greeting := [:t |
-                        title := t
-                    ]
+                    } where greeting := [:t | title := t]
                     """;
 
             var result = RuleTestBuilder.forSource(source).withFact(new Customer("Alice", 25)).build();
@@ -245,9 +243,7 @@ class DataTableE2ETest {
                     | ----- | ------------ | --------- |
                     | ADULT | >= 18        | "Sir"     |
                     | CHILD | < 18         | "Young"   |
-                    } where greeting := [:t |
-                        title := t
-                    ]
+                    } where greeting := [:t | title := t]
                     """;
 
             var result = RuleTestBuilder.forSource(source).withFact(new Customer("Bob", 10)).build();
@@ -263,7 +259,7 @@ class DataTableE2ETest {
         @Test
         @DisplayName("with parameterless alias")
         void decisionTableWithParameterlessAlias() throws Exception {
-            // Use curly braces { } for parameterless blocks (no implicit param)
+            // Use square brackets [ ] for parameterless blocks
             String source = """
                     facts {
                         customer: work.spell.iskibal.e2e.Customer
@@ -276,12 +272,8 @@ class DataTableE2ETest {
                     |          | #isAdult   | #addBonus  |
                     | -------- | ---------- | ---------- |
                     | ADULT_20 | *          | *          |
-                    } where isAdult := {
-                        customer.age >= 18
-                    },
-                    addBonus := {
-                        discount := 20
-                    }
+                    } where isAdult := [customer.age >= 18],
+                    addBonus := [discount := 20]
                     """;
 
             var result = RuleTestBuilder.forSource(source).withFact(new Customer("Alice", 25)).build();
@@ -310,10 +302,10 @@ class DataTableE2ETest {
                     |          | #addBonus  | #addBonus  |
                     | -------- | ---------- | ---------- |
                     | ADULT_20 | *          | *          |
-                    } where addBonus := {
+                    } where addBonus := [
                         discount := 20
                         true
-                    }
+                    ]
                     """;
 
             RuleTestResult result = RuleTestBuilder.forSource(source).withFact(new Customer("Alice", 25)).build();
@@ -370,9 +362,7 @@ class DataTableE2ETest {
                     | ----------- | ------------ | ----------- | ------------- |
                     | SENIOR_DISC | >= 65        | 25          | "Senior"      |
                     | ADULT_DISC  | < 65         | 10          | "Adult"       |
-                    } where setCategory := [:cat |
-                        category := cat
-                    ]
+                    } where setCategory := [:cat | category := cat]
                     """;
 
             var result = RuleTestBuilder.forSource(source).withFact(new Customer("Bob", 70)).build();
@@ -384,6 +374,40 @@ class DataTableE2ETest {
 
             assertThat(rules.<BigDecimal>getOutput("discount")).isEqualByComparingTo(new BigDecimal("25"));
             assertThat(rules.<String>getOutput("category")).isEqualTo("Senior");
+        }
+    }
+
+    @Nested
+    @DisplayName("Local Data Tables")
+    class LocalDataTables {
+
+        @Test
+        @DisplayName("Local data table within a rule")
+        void localDataTableInRule() throws Exception {
+            String source = """
+                    outputs {
+                        result: BigDecimal
+                    }
+                    rule LOCAL "Use local data table"
+                    data table Limits {
+                      | Type      | Max Weight |
+                      | --------- | ---------- |
+                      | "bicycle" | 10         |
+                      | "car"     | 1000       |
+                    }
+                    when true
+                    then
+                        result := Limits at: "car"
+                    end
+                    """;
+
+            var result = RuleTestBuilder.forSource(source).build();
+            assertResultSuccess(result);
+
+            var rules = result.rules().orElseThrow();
+            rules.evaluate();
+
+            assertThat(rules.<BigDecimal>getOutput("result")).isEqualByComparingTo(new BigDecimal("1000"));
         }
     }
 

@@ -228,20 +228,17 @@ public class RuleModuleVisitor extends IskaraParserBaseVisitor<RuleModule> {
                 if (aliases.containsKey(aliasName)) {
                     Block aliasBlock = aliases.get(aliasName);
                     List<Statement> aliasStatements = aliasBlock.statements();
+                    List<String> parameters = aliasBlock.parameters();
 
-                    // Check if first statement is a block parameter: LetStatement(name,
-                    // Identifier("param"))
-                    if (!aliasStatements.isEmpty() && aliasStatements.getFirst() instanceof Statement.LetStatement ls
-                            && ls.expression() instanceof Expression.Identifier id && "param".equals(id.name())) {
-                        // [:paramName | ...] - substitute the cell value for the parameter
+                    // Check if block has explicit parameters (new style [:paramName | ...])
+                    if (!parameters.isEmpty()) {
+                        // Substitute the cell value for the first parameter
                         Expression cellExpr = parseCellAsExpression(cellValue);
-                        statements.add(new Statement.LetStatement(ls.name(), cellExpr));
-                        // Add remaining statements (skip the parameter placeholder)
-                        for (int j = 1; j < aliasStatements.size(); j++) {
-                            statements.add(aliasStatements.get(j));
-                        }
+                        statements.add(new Statement.LetStatement(parameters.getFirst(), cellExpr));
+                        // Add all the block statements
+                        statements.addAll(aliasStatements);
                     } else {
-                        // { } - no parameter, just inline the statements (wildcards invoke too)
+                        // [ ] or { } - no parameter, just inline the statements (wildcards invoke too)
                         for (var stmt : aliasStatements) {
                             statements.add(stmt);
                         }

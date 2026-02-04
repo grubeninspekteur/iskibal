@@ -339,13 +339,13 @@ class ParserTest {
 
         @Test
         void parsesCollectionLiterals() {
-            assertExpressionParses("[]");
-            assertExpressionParses("[1, 2, 3]");
-            assertExpressionParses("[:]");
-            assertExpressionParses("[\"a\": 1]");
-            assertExpressionParses("{}");
-            assertExpressionParses("{1, 2, 3}");
-            assertExpressionParses("{1..10}");
+            assertExpressionParses("#()");
+            assertExpressionParses("#(1, 2, 3)");
+            assertExpressionParses("#[]");
+            assertExpressionParses("#[\"a\": 1]");
+            assertExpressionParses("#{}");
+            assertExpressionParses("#{1, 2, 3}");
+            assertExpressionParses("#{1..10}");
         }
 
         @Test
@@ -376,7 +376,7 @@ class ParserTest {
 
         @Test
         void parsesSetBuilder() {
-            assertExpressionParses("{x + 1}");
+            assertExpressionParses("#{x + 1}");
         }
 
         @Test

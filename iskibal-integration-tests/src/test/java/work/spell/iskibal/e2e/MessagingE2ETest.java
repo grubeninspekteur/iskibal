@@ -136,6 +136,179 @@ class MessagingE2ETest {
         }
     }
 
+    @Nested
+    @DisplayName("Default Messages")
+    class DefaultMessages {
+
+        @Test
+        @DisplayName("Default message with ! invokes get()")
+        void defaultMessageInvokesApply() throws Exception {
+            String source = """
+                    facts {
+                        supplier: java.util.function.Supplier
+                    }
+                    outputs {
+                        result: Object
+                    }
+                    rule DEFAULT "Invoke default message"
+                    when true
+                    then
+                        result := supplier!
+                    end
+                    """;
+
+            java.util.function.Supplier<String> supplier = () -> "Hello from supplier";
+
+            var result = RuleTestBuilder.forSource(source).withFact(supplier).build();
+            assertResultSuccess(result);
+
+            var rules = result.rules().orElseThrow();
+            rules.evaluate();
+
+            assertThat(rules.<Object>getOutput("result")).isEqualTo("Hello from supplier");
+        }
+
+        @Test
+        @DisplayName("Default message followed by another message")
+        void defaultMessageThenAnotherMessage() throws Exception {
+            String source = """
+                    facts {
+                        supplier: java.util.function.Supplier
+                    }
+                    outputs {
+                        result: Object
+                        matches: boolean
+                    }
+                    rule DEFAULT "Default message then comparison"
+                    when true
+                    then
+                        result := supplier!
+                        matches := result = "Hello World"
+                    end
+                    """;
+
+            java.util.function.Supplier<String> supplier = () -> "Hello World";
+
+            var result = RuleTestBuilder.forSource(source).withFact(supplier).build();
+            assertResultSuccess(result);
+
+            var rules = result.rules().orElseThrow();
+            rules.evaluate();
+
+            assertThat(rules.<Object>getOutput("result")).isEqualTo("Hello World");
+            assertThat(rules.<Boolean>getOutput("matches")).isTrue();
+        }
+    }
+
+    @Nested
+    @DisplayName("Boolean Messages")
+    class BooleanMessages {
+
+        @Test
+        @DisplayName("ifTrue: executes block when true")
+        void ifTrueExecutesBlock() throws Exception {
+            String source = """
+                    outputs {
+                        result: String := "not set"
+                    }
+                    rule IFTRUE "Test ifTrue:"
+                    when true
+                    then
+                        true ifTrue: [result := "it was true"]
+                    end
+                    """;
+
+            var result = RuleTestBuilder.forSource(source).build();
+            assertResultSuccess(result);
+
+            var rules = result.rules().orElseThrow();
+            rules.evaluate();
+
+            assertThat(rules.<String>getOutput("result")).isEqualTo("it was true");
+        }
+
+        @Test
+        @DisplayName("ifFalse: executes block when false")
+        void ifFalseExecutesBlock() throws Exception {
+            String source = """
+                    outputs {
+                        result: String := "not set"
+                    }
+                    rule IFFALSE "Test ifFalse:"
+                    when true
+                    then
+                        false ifFalse: [result := "it was false"]
+                    end
+                    """;
+
+            var result = RuleTestBuilder.forSource(source).build();
+            assertResultSuccess(result);
+
+            var rules = result.rules().orElseThrow();
+            rules.evaluate();
+
+            assertThat(rules.<String>getOutput("result")).isEqualTo("it was false");
+        }
+
+        @Test
+        @DisplayName("or: returns true if either is true")
+        void orMessage() throws Exception {
+            String source = """
+                    outputs {
+                        bothFalse: boolean
+                        oneTrue: boolean
+                        bothTrue: boolean
+                    }
+                    rule OR "Test or:"
+                    when true
+                    then
+                        bothFalse := false or: false
+                        oneTrue := false or: true
+                        bothTrue := true or: true
+                    end
+                    """;
+
+            var result = RuleTestBuilder.forSource(source).build();
+            assertResultSuccess(result);
+
+            var rules = result.rules().orElseThrow();
+            rules.evaluate();
+
+            assertThat(rules.<Boolean>getOutput("bothFalse")).isFalse();
+            assertThat(rules.<Boolean>getOutput("oneTrue")).isTrue();
+            assertThat(rules.<Boolean>getOutput("bothTrue")).isTrue();
+        }
+
+        @Test
+        @DisplayName("and: returns true only if both are true")
+        void andMessage() throws Exception {
+            String source = """
+                    outputs {
+                        bothFalse: boolean
+                        oneTrue: boolean
+                        bothTrue: boolean
+                    }
+                    rule AND "Test and:"
+                    when true
+                    then
+                        bothFalse := false and: false
+                        oneTrue := false and: true
+                        bothTrue := true and: true
+                    end
+                    """;
+
+            var result = RuleTestBuilder.forSource(source).build();
+            assertResultSuccess(result);
+
+            var rules = result.rules().orElseThrow();
+            rules.evaluate();
+
+            assertThat(rules.<Boolean>getOutput("bothFalse")).isFalse();
+            assertThat(rules.<Boolean>getOutput("oneTrue")).isFalse();
+            assertThat(rules.<Boolean>getOutput("bothTrue")).isTrue();
+        }
+    }
+
     private void assertResultSuccess(RuleTestResult result) {
         if (!result.isSuccess()) {
             String errorMessage = String.format("Expected success at stage '%s' but got errors: %s", result.getStage(),

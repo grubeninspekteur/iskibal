@@ -134,7 +134,8 @@ Absent values are denoted by `null`.
 
 ==== Collections
 
-Iskara has lists `[]`, dictionaries `[:]`, and sets `{}`.
+Iskara has lists `#()`, maps `#[]`, and sets `#{}`.
+The `#` prefix distinguishes collection literals from block expressions.
 
 Elements of a list and dictionary can be accessed using the `at:` message.
 
@@ -176,8 +177,8 @@ Returns the sum of its elements
 ===== Range literals
 
 Set literals support range literals for integers.
-For example, `{1..10}` is a set of the numbers 1 to 10, inclusively.
-Sets can contain multiple range literals as well as individual elements: `{1..10, 12, 15, 19..21}`.
+For example, `#{1..10}` is a set of the numbers 1 to 10, inclusively.
+Sets can contain multiple range literals as well as individual elements: `#{1..10, 12, 15, 19..21}`.
 
 NOTE: Rule compilers are advised to optimize range contain queries by not expanding a range to an actual list of all elements eagerly.
 
@@ -187,22 +188,52 @@ Whether types are coerced (converted to match the type of the other side of an e
 
 === Blocks
 
-Blocks are parametrized expressions and work just like in Smalltalk:
-// TODO we can't expect people to know Smalltalk, explain it in more detail
+Blocks are parametrized expressions similar to lambdas or closures in other languages.
+They are delimited by square brackets `[]` and can have explicit parameters or use an implicit parameter.
+
+==== Explicit parameter blocks
+
+When a block needs to name its parameters explicitly, use the colon-prefixed parameter syntax:
 
 [source,iskara]
 ----
 items each: [:item | item discard]
+items where: [:item | item.active]
 ----
 
-==== Shorthand block syntax
-
-If the block has exactly one parameter, you can use the shorthand block syntax by omitting the parameter:
+Multiple parameters are supported:
 
 [source,iskara]
 ----
-items each: [| discard]
+pairs each: [:key :value | log: $"${key} = ${value}"]
 ----
+
+==== Implicit parameter blocks (shorthand)
+
+When a block has exactly one parameter, you can omit the parameter declaration and use `it` implicitly.
+The `[| expression]` syntax makes the expression's receiver the implicit `it` parameter:
+
+[source,iskara]
+----
+items where: [| active]           // equivalent to: [:it | it active]
+items where: [| price > 10]       // equivalent to: [:it | it price > 10]
+----
+
+The shorthand syntax works by treating the first identifier as a unary message sent to `it`:
+
+- `[| active]` sends the `active` message to `it`
+- `[| price > 10]` sends the `price` message to `it`, then compares with 10
+
+==== Statement blocks
+
+For blocks without parameters that contain multiple statements, just omit the parameters:
+
+[source,iskara]
+----
+condition ifTrue: [ result := "yes" ]
+----
+
+This is useful in decision table aliases where no cell value is passed.
 
 === Messages
 
@@ -391,7 +422,7 @@ Facts can only be read, never written to.
 However, it is possible to modify facts using navigational operations and messages; this should only happen in the outcome of a rule.
 
 Each fact needs a type specified for it.
-You can use `[]` for "list of", `{}` for "set of", and `[<key type>:<value type>]` for "dictionary of".
+You can use `[]` for "list of", `{}` for "set of", and `[<key type>:<value type>]` for "map of".
 
 [source,iskara]
 ----
@@ -547,13 +578,13 @@ NOTE: Rule compilers that do not support alternatives natively should create a s
 
 Consider the following example:
 A vehicle may not exceed a certain weight limit, but the limits depend on the vehicle type, whether it's a bicycle, car, or truck.
-A rule for that could be implemented using a dictionary:
+A rule for that could be implemented using a map:
 
 [source,iskara]
 ----
 rule VEHICLE_OVERWEIGHT "Vehicle is over weight limit"
 when
-  let weightByType := ["bicycle": 10, "car": 1000, "truck": 3000]
+  let weightByType := #["bicycle": 10, "car": 1000, "truck": 3000]
   let maxWeight := weightByType at: Vehicle.type
   Vehicle.weight > maxWeight
 then
@@ -611,7 +642,7 @@ data table People {
 
 rule HAPPY_BIRTHDAY
 when:
-  People where: [p |
+  People where: [:p |
     Customer.givenName = p at: "Given Name",
     Customer.familyName = p at: "Family Name",
     Customer.dateOfBirth = p at: "Date of birth"
@@ -673,13 +704,12 @@ decision table BEST_OFFERS "Show best offers" {
 | ----------------- | ------------    | ------------ | ------------------------------------- | --------- |
 | BIRTHDAY_DISCOUNT | *               |              | 15                                    |           |
 | BD_CAR_OFFER      | *               | >= 18        |                                       | "blue"    |
-} where `has birthday` := {
+} where `has birthday` := [
     Customer.dateOfBirth = Today
-  },
+  ],
   offerCar := [:color |
     messages add: $"Did you know you can get a birthday paint in ${color} for your car?"
   ]
-}
 ----
 
 A decision table consists of the following parts:
@@ -708,11 +738,11 @@ Multiple WHEN columns read as conjunction, whereas multiple THEN columns are sim
 
 Rule cells can contain arbitrary expressions.
 
-Aliases are blocks using standard block syntax: `{ ... }` for blocks without parameters, and `[:paramName | ...]` for blocks that receive the cell value as a parameter.
+Aliases are blocks using standard block syntax: `[ ... ]` for blocks without parameters, and `[:paramName | ...]` for blocks that receive the cell value as a parameter.
 When an alias has a parameter, the cell value is bound directly to that parameter name, making the code more readable.
 
-NOTE: The shorthand block syntax `[| ...]` is for blocks with an _implicit_ parameter (used with collection operations like `each:`).
-For decision table aliases that don't need the cell value, use curly braces `{ }` instead.
+NOTE: The shorthand block syntax `[| ...]` is for blocks with an _implicit_ parameter named `it` (used with collection operations like `where:` and `each:`).
+For decision table aliases that don't need the cell value, use `[ ... ]` without the pipe.
 
 The above decision table is equivalent to these rules:
 

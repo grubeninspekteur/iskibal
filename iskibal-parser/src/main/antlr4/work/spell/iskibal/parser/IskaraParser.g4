@@ -228,7 +228,6 @@ primaryExpr
     | globalRef                                                # globalRefExpr
     | block                                                    # blockExpr
     | LPAREN expression RPAREN                                 # parenExpr
-    | primaryExpr LBRACK expression RBRACK                     # indexExpr
     ;
 
 // Identifiers (regular or quoted)
@@ -242,10 +241,15 @@ globalRef
     : AT identifier
     ;
 
-// Block expression [:param1 :param2 | statements]
+// Block expression
+// Supports:
+//   [:param1 :param2 | statements]  - explicit parameters
+//   [| expression]                   - implicit 'it' parameter (shorthand)
+//   [statements]                     - statement block (no parameters)
 block
-    : LBRACE nl statementList RBRACE
-    | LBRACK blockParams? PIPE? nl statementList RBRACK
+    : LBRACK blockParams PIPE nl statementList RBRACK          # explicitParamBlock
+    | LBRACK PIPE nl expression RBRACK                         # implicitParamBlock
+    | LBRACK nl statementList RBRACK                           # statementBlock
     ;
 
 blockParams
@@ -278,21 +282,21 @@ templatePart
     ;
 
 listLiteral
-    : LBRACK nl (expression (COMMA nl expression)*)? nl RBRACK
+    : HASH_LPAREN nl (expression (COMMA nl expression)*)? nl RPAREN
     ;
 
 setLiteral
-    : LBRACE nl setElement (COMMA nl setElement)* nl RBRACE
-    | LBRACE nl RBRACE
+    : HASH_LBRACE nl setElement (COMMA nl setElement)* nl RBRACE
+    | HASH_LBRACE RBRACE                                       // empty set #{}
     ;
 
 setElement
-    : expression (DOTDOT expression)?                          // range support: {1..10}
+    : expression (DOTDOT expression)?                          // range support: #{1..10}
     ;
 
 mapLiteral
-    : LBRACK nl mapEntry (COMMA nl mapEntry)* nl RBRACK
-    | LBRACK COLON RBRACK                                      // empty map [:]
+    : HASH_LBRACK nl mapEntry (COMMA nl mapEntry)* nl RBRACK
+    | HASH_LBRACK RBRACK                                       // empty map #[]
     ;
 
 mapEntry
