@@ -18,7 +18,13 @@ import java.util.regex.Pattern;
  * <li>Data tables: [.data-table]</li>
  * <li>Decision tables: [.decision-table]</li>
  * </ul>
+ *
+ * @deprecated Use {@code work.spell.iskibal.asciidoc.AsciiDocParser} from the
+ *             {@code iskibal-asciidoc} module instead. This regex-based
+ *             extractor does not handle include directives or complex AsciiDoc
+ *             structures properly.
  */
+@Deprecated(since = "0.2.0", forRemoval = true)
 public class AsciiDocExtractor {
 
     // Pattern for source blocks with iskara

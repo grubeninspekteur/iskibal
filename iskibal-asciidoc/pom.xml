@@ -1,0 +1,46 @@
+<project xmlns="http://maven.apache.org/POM/4.1.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.1.0 http://maven.apache.org/xsd/maven-4.1.0.xsd">
+
+  <parent>
+    <groupId>work.spell.iskibal</groupId>
+    <artifactId>iskibal-parent</artifactId>
+  </parent>
+
+  <artifactId>iskibal-asciidoc</artifactId>
+  <name>Iskibal AsciiDoc Parser</name>
+  <description>AsciiDoc parser for Iskara rule sources using AsciidoctorJ.</description>
+
+  <properties>
+    <asciidoctorj.version>3.0.0</asciidoctorj.version>
+    <junit.version>5.11.0</junit.version>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>work.spell.iskibal</groupId>
+      <artifactId>iskibal-rule-model</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>work.spell.iskibal</groupId>
+      <artifactId>iskibal-parser</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.asciidoctor</groupId>
+      <artifactId>asciidoctorj</artifactId>
+      <version>${asciidoctorj.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <version>3.26.3</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+</project>
