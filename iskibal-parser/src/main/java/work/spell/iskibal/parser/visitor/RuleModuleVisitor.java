@@ -18,6 +18,7 @@ public class RuleModuleVisitor extends IskaraParserBaseVisitor<RuleModule> {
     private final TableVisitor tableVisitor;
     private final IskaraDiagnosticListener diagnostics;
 
+    private final Map<String, String> importAliases = new HashMap<>();
     private final List<Import> imports = new ArrayList<>();
     private final List<Fact> facts = new ArrayList<>();
     private final List<Global> globals = new ArrayList<>();
@@ -73,6 +74,7 @@ public class RuleModuleVisitor extends IskaraParserBaseVisitor<RuleModule> {
         for (var importDecl : ctx.importDecl()) {
             String alias = expressionVisitor.extractIdentifier(importDecl.identifier());
             String type = importDecl.qualifiedName().getText();
+            importAliases.put(alias, type);
             imports.add(new Import.Definition(alias, type));
         }
     }
@@ -115,13 +117,20 @@ public class RuleModuleVisitor extends IskaraParserBaseVisitor<RuleModule> {
 
     private String processTypeRef(IskaraParser.TypeRefContext ctx) {
         return switch (ctx) {
-            case IskaraParser.ListTypeContext ltc -> ltc.qualifiedName().getText() + "[]";
-            case IskaraParser.SetTypeContext stc -> stc.qualifiedName().getText() + "{}";
+            case IskaraParser.ListTypeContext ltc -> resolveTypeName(ltc.qualifiedName().getText()) + "[]";
+            case IskaraParser.SetTypeContext stc -> resolveTypeName(stc.qualifiedName().getText()) + "{}";
             case IskaraParser.MapTypeContext mtc ->
                 "[" + processTypeRef(mtc.typeRef(0)) + ":" + processTypeRef(mtc.typeRef(1)) + "]";
-            case IskaraParser.SimpleTypeContext stc -> stc.qualifiedName().getText();
+            case IskaraParser.SimpleTypeContext stc -> resolveTypeName(stc.qualifiedName().getText());
             default -> ctx.getText();
         };
+    }
+
+    private String resolveTypeName(String typeName) {
+        if (!typeName.contains(".") && importAliases.containsKey(typeName)) {
+            return importAliases.get(typeName);
+        }
+        return typeName;
     }
 
     // =========================================================================

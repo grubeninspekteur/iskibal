@@ -79,7 +79,6 @@ class ModuleStructureE2ETest {
 
         @Test
         @DisplayName("Import creates type alias for facts")
-        @org.junit.jupiter.api.Disabled("Requires type alias resolution from imports section")
         void importCreatesTypeAlias() throws Exception {
             String source = """
                     imports {

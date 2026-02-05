@@ -671,11 +671,12 @@ public final class ExpressionGenerator {
 
         // For simple single-expression blocks, generate inline
         if (bodyStatements.size() == 1 && bodyStatements.getFirst() instanceof Statement.ExpressionStatement es) {
-            String body = generate(es.expression());
-            // For implicit parameter blocks, transform the expression
+            Expression bodyExpr = es.expression();
+            // For implicit parameter blocks, rewrite the expression AST to include 'it'
             if (block.hasImplicitParameter()) {
-                body = transformImplicitItExpression(es.expression());
+                bodyExpr = rewriteImplicitItExpression(bodyExpr);
             }
+            String body = generate(bodyExpr);
             return paramList + " -> " + body;
         }
 
@@ -685,9 +686,10 @@ public final class ExpressionGenerator {
         for (Statement stmt : bodyStatements) {
             sb.append("    ");
             if (stmt instanceof Statement.ExpressionStatement es) {
-                String exprCode = block.hasImplicitParameter()
-                        ? transformImplicitItExpression(es.expression())
-                        : generate(es.expression());
+                Expression exprToGenerate = block.hasImplicitParameter()
+                        ? rewriteImplicitItExpression(es.expression())
+                        : es.expression();
+                String exprCode = generate(exprToGenerate);
                 if (stmt == bodyStatements.getLast()) {
                     sb.append("return ").append(exprCode).append(";\n");
                 } else {
@@ -702,35 +704,27 @@ public final class ExpressionGenerator {
     }
 
     /**
-     * Transforms an expression in an implicit parameter block.
-     * For [| expr], the first identifier in the expression becomes a message send to 'it'.
-     * For example: [| active] -> it.active(), [| price > 10] -> it.price() > 10
+     * Rewrites an expression to include the implicit 'it' parameter.
+     * Transforms Identifier("x") to Navigation(Identifier("it"), ["x"])
+     * so that normal code generation produces proper property accessors.
      */
-    private String transformImplicitItExpression(Expression expr) {
+    private Expression rewriteImplicitItExpression(Expression expr) {
         return switch (expr) {
-            case Identifier id -> "it." + id.name() + "()";
-            case Binary bin -> {
-                String left = transformImplicitItExpression(bin.left());
-                String right = generate(bin.right());
-                yield switch (bin.operator()) {
-                    case EQUALS -> "equalsNumericAware(" + left + ", " + right + ")";
-                    case NOT_EQUALS -> "!equalsNumericAware(" + left + ", " + right + ")";
-                    case PLUS -> "addNumeric(" + left + ", " + right + ")";
-                    case MINUS -> "subtractNumeric(" + left + ", " + right + ")";
-                    case MULTIPLY -> "multiplyNumeric(" + left + ", " + right + ")";
-                    case DIVIDE -> "divideNumeric(" + left + ", " + right + ")";
-                    case GREATER_THAN -> "compareNumeric(" + left + ", " + right + ") > 0";
-                    case GREATER_EQUALS -> "compareNumeric(" + left + ", " + right + ") >= 0";
-                    case LESS_THAN -> "compareNumeric(" + left + ", " + right + ") < 0";
-                    case LESS_EQUALS -> "compareNumeric(" + left + ", " + right + ") <= 0";
-                };
-            }
-            case UnaryMessage um -> {
-                // The receiver becomes it.receiver(), then send the selector
-                String receiver = transformImplicitItExpression(um.receiver());
-                yield receiver + "." + um.selector() + "()";
-            }
-            default -> generate(expr);
+            case Identifier id -> new Navigation(new Identifier("it"), List.of(id.name()));
+            case Binary bin -> new Binary(
+                rewriteImplicitItExpression(bin.left()),
+                bin.operator(),
+                bin.right()
+            );
+            case UnaryMessage um -> new UnaryMessage(
+                rewriteImplicitItExpression(um.receiver()),
+                um.selector()
+            );
+            case Navigation nav -> new Navigation(
+                rewriteImplicitItExpression(nav.receiver()),
+                nav.names()
+            );
+            default -> expr;
         };
     }
 

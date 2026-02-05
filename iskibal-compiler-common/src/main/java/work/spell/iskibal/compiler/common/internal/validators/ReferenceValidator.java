@@ -158,15 +158,19 @@ public final class ReferenceValidator {
     }
 
     private void validateStatement(Statement stmt, Scope scope) {
+        validateStatement(stmt, scope, false);
+    }
+
+    private void validateStatement(Statement stmt, Scope scope, boolean inImplicitParameterBlock) {
         switch (stmt) {
-            case Statement.ExpressionStatement es -> validateExpression(es.expression(), scope);
+            case Statement.ExpressionStatement es -> validateExpression(es.expression(), scope, inImplicitParameterBlock);
             case Statement.LetStatement ls -> {
                 // Check if this is a block parameter placeholder (Identifier("param"))
                 // Block parameters are represented as LetStatement(name, Identifier("param"))
                 boolean isBlockParam = ls.expression() instanceof Identifier id && "param".equals(id.name());
                 if (!isBlockParam) {
                     // First validate the expression, then add the local to scope
-                    validateExpression(ls.expression(), scope);
+                    validateExpression(ls.expression(), scope, inImplicitParameterBlock);
                 }
                 scope.define(Symbol.local(ls.name()));
             }
@@ -174,18 +178,28 @@ public final class ReferenceValidator {
     }
 
     private void validateExpression(Expression expr, Scope scope) {
+        validateExpression(expr, scope, false);
+    }
+
+    private void validateExpression(Expression expr, Scope scope, boolean inImplicitParameterBlock) {
         switch (expr) {
-            case Identifier id -> validateIdentifier(id, scope);
+            case Identifier id -> {
+                // In implicit parameter blocks, bare identifiers are treated as property accesses on 'it'
+                // so they should not be validated as scoped variables
+                if (!inImplicitParameterBlock) {
+                    validateIdentifier(id, scope);
+                }
+            }
             case Literal lit -> validateLiteral(lit, scope);
             case MessageSend ms -> {
-                validateExpression(ms.receiver(), scope);
+                validateExpression(ms.receiver(), scope, inImplicitParameterBlock);
                 switch (ms) {
                     case UnaryMessage _ -> {
                         // No arguments to validate
                     }
                     case KeywordMessage km -> {
                         for (KeywordMessage.KeywordPart part : km.parts()) {
-                            validateExpression(part.argument(), scope);
+                            validateExpression(part.argument(), scope, inImplicitParameterBlock);
                         }
                     }
                     case DefaultMessage _ -> {
@@ -194,22 +208,28 @@ public final class ReferenceValidator {
                 }
             }
             case Binary bin -> {
-                validateExpression(bin.left(), scope);
-                validateExpression(bin.right(), scope);
+                // Only the left side of a binary in implicit block is transformed to it.property
+                // The right side should be validated normally (it could be a literal or another expression)
+                validateExpression(bin.left(), scope, inImplicitParameterBlock);
+                validateExpression(bin.right(), scope, false);
             }
             case Assignment assign -> {
-                validateExpression(assign.target(), scope);
-                validateExpression(assign.value(), scope);
+                validateExpression(assign.target(), scope, inImplicitParameterBlock);
+                validateExpression(assign.value(), scope, inImplicitParameterBlock);
             }
-            case Navigation nav -> validateExpression(nav.receiver(), scope);
+            case Navigation nav -> validateExpression(nav.receiver(), scope, inImplicitParameterBlock);
             case Block block -> {
                 Scope blockScope = scope.createChild();
                 // Register explicit block parameters
                 for (String param : block.parameters()) {
                     blockScope.define(Symbol.local(param));
                 }
+                // Register implicit 'it' parameter for shorthand blocks [| expr]
+                if (block.hasImplicitParameter()) {
+                    blockScope.define(Symbol.local("it"));
+                }
                 for (Statement stmt : block.statements()) {
-                    validateStatement(stmt, blockScope);
+                    validateStatement(stmt, blockScope, block.hasImplicitParameter());
                 }
             }
         }

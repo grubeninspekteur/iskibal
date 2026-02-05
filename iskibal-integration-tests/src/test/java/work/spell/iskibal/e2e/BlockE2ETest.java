@@ -340,11 +340,10 @@ class BlockE2ETest {
 
         @Test
         @DisplayName("Shorthand block [| expr] uses implicit parameter")
-        @org.junit.jupiter.api.Disabled("Requires implicit parameter resolution for shorthand blocks")
         void shorthandBlockWithImplicitParameter() throws Exception {
             String source = """
                     facts {
-                        items: java.util.List
+                        cart: work.spell.iskibal.e2e.ShoppingCart
                     }
                     outputs {
                         result: java.util.List
@@ -352,15 +351,16 @@ class BlockE2ETest {
                     rule SHORT "Use shorthand block"
                     when true
                     then
-                        result := items where: [| active]
+                        result := cart.items where: [| active]
                     end
                     """;
 
             var items = List.of(
                     new CartItem("Apple", new BigDecimal("1.50"), true),
                     new CartItem("Banana", new BigDecimal("0.75"), false));
+            var cart = new ShoppingCart(items);
 
-            var result = RuleTestBuilder.forSource(source).withFact(items).build();
+            var result = RuleTestBuilder.forSource(source).withFact(cart).build();
             assertResultSuccess(result);
 
             var rules = result.rules().orElseThrow();
