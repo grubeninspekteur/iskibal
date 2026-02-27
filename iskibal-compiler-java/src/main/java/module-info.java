@@ -9,6 +9,7 @@ module iskibal.compiler.java {
     exports work.spell.iskibal.compiler.java.internal.codegen to iskibal.integration.tests;
 
     uses work.spell.iskibal.compiler.common.api.SemanticAnalyzer;
+    uses work.spell.iskibal.compiler.java.api.JavaCompiler;
 
     provides work.spell.iskibal.compiler.java.api.JavaCompiler
             with work.spell.iskibal.compiler.java.internal.JavaCompilerImpl;

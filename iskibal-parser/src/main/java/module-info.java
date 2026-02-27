@@ -6,5 +6,6 @@ module iskibal.parser {
     exports work.spell.iskibal.parser.diagnostic;
     exports work.spell.iskibal.parser.internal to iskibal.integration.tests, iskibal.asciidoc;
 
+    uses work.spell.iskibal.parser.api.Parser;
     provides work.spell.iskibal.parser.api.Parser with work.spell.iskibal.parser.internal.IskaraParserImpl;
 }
