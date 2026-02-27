@@ -1,29 +1,27 @@
 package work.spell.iskibal.compiler.common.internal;
 
-/**
- * Represents a declared name in the symbol table.
- *
- * @param name
- *            the name of the symbol
- * @param kind
- *            the kind of symbol (fact, global, output, local, column)
- * @param type
- *            the type of the symbol (optional, may be null for columns)
- */
+/// Represents a declared name in the symbol table.
+///
+/// @param name
+///            the name of the symbol
+/// @param kind
+///            the kind of symbol (fact, global, output, local, column)
+/// @param type
+///            the type of the symbol (optional, may be null for columns)
 public record Symbol(String name, Kind kind, String type) {
 
     public enum Kind {
-        /** Input fact - read-only */
+        /// Input fact - read-only
         FACT,
-        /** Global variable - accessed with @ prefix */
+        /// Global variable - accessed with @ prefix
         GLOBAL,
-        /** Output variable - writable only in then/else sections */
+        /// Output variable - writable only in then/else sections
         OUTPUT,
-        /** Local variable declared with let */
+        /// Local variable declared with let
         LOCAL,
-        /** Data table column - accessible within template rules */
+        /// Data table column - accessible within template rules
         COLUMN,
-        /** Module-level data table - read-only */
+        /// Module-level data table - read-only
         DATATABLE
     }
 

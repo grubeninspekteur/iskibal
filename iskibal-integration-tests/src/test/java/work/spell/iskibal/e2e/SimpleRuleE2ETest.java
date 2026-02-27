@@ -14,11 +14,9 @@ import work.spell.iskibal.testing.CompiledRuleTemplate.Success;
 import work.spell.iskibal.testing.RuleTestBuilder;
 import work.spell.iskibal.testing.RuleTestResult;
 
-/**
- * End-to-end tests for simple rules. Exercises the complete pipeline: Iskara
- * source → Parser → Semantic Analysis → Java Generation → Java Compilation →
- * Execution
- */
+/// End-to-end tests for simple rules. Exercises the complete pipeline: Iskara
+/// source → Parser → Semantic Analysis → Java Generation → Java Compilation →
+/// Execution
 class SimpleRuleE2ETest {
 
     @Nested

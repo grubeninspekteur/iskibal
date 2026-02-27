@@ -12,9 +12,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
-/**
- * Tests for the Iskara lexer.
- */
+/// Tests for the Iskara lexer.
 class LexerTest {
 
     @Nested

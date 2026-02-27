@@ -2,9 +2,7 @@ package work.spell.iskibal.e2e;
 
 import java.math.BigDecimal;
 
-/**
- * Test fixture class representing a cart item for collection tests.
- */
+/// Test fixture class representing a cart item for collection tests.
 public class CartItem {
 
     private String name;
@@ -29,7 +27,7 @@ public class CartItem {
         return active;
     }
 
-    /** Alias for isActive() to support JavaBeans-style navigation */
+    /// Alias for isActive() to support JavaBeans-style navigation
     public boolean getActive() {
         return active;
     }

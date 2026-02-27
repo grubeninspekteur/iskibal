@@ -18,9 +18,7 @@ import work.spell.iskibal.parser.visitor.RuleModuleVisitor;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Implementation of the Iskara parser using ANTLR4.
- */
+/// Implementation of the Iskara parser using ANTLR4.
 public class IskaraParserImpl implements Parser {
 
     private static final Set<SourceType> SUPPORTED_SOURCE_TYPES = Set.of(SourceType.ISKARA, SourceType.ASCIIDOC);

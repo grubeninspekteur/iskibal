@@ -9,10 +9,8 @@ import org.junit.jupiter.api.Test;
 import work.spell.iskibal.testing.RuleTestBuilder;
 import work.spell.iskibal.testing.RuleTestResult;
 
-/**
- * End-to-end tests for general syntax features including comments and
- * special identifier quoting.
- */
+/// End-to-end tests for general syntax features including comments and
+/// special identifier quoting.
 class SyntaxE2ETest {
 
     @Nested

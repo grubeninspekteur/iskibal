@@ -25,21 +25,17 @@ import work.spell.iskibal.model.Rule;
 import work.spell.iskibal.model.RuleModule;
 import work.spell.iskibal.model.Statement;
 
-/**
- * Validates assignment expressions - ensures facts are not assigned to and
- * outputs are only assigned in then/else sections.
- */
+/// Validates assignment expressions - ensures facts are not assigned to and
+/// outputs are only assigned in then/else sections.
 public final class AssignmentValidator {
 
     private final List<SemanticDiagnostic> diagnostics = new ArrayList<>();
 
-    /**
-     * Validates assignment rules in the module.
-     *
-     * @param module
-     *            the rule module to validate
-     * @return list of diagnostics (empty if no errors)
-     */
+    /// Validates assignment rules in the module.
+    ///
+    /// @param module
+    ///            the rule module to validate
+    /// @return list of diagnostics (empty if no errors)
     public List<SemanticDiagnostic> validate(RuleModule module) {
         diagnostics.clear();
 

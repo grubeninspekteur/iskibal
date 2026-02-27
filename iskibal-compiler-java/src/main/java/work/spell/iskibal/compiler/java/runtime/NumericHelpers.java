@@ -3,28 +3,24 @@ package work.spell.iskibal.compiler.java.runtime;
 import java.math.BigDecimal;
 import java.util.Objects;
 
-/**
- * Runtime helper methods for type-safe numeric operations in generated rule
- * code.
- * <p>
- * These methods handle automatic type coercion between different numeric types
- * (int, long, double, BigDecimal) that may be returned from fact properties.
- */
+/// Runtime helper methods for type-safe numeric operations in generated rule
+/// code.
+///
+/// These methods handle automatic type coercion between different numeric types
+/// (int, long, double, BigDecimal) that may be returned from fact properties.
 public final class NumericHelpers {
 
     private NumericHelpers() {
         // Utility class
     }
 
-    /**
-     * Converts any numeric value to BigDecimal for consistent arithmetic.
-     *
-     * @param value
-     *            the value to convert
-     * @return the value as BigDecimal
-     * @throws IllegalArgumentException
-     *             if the value cannot be converted
-     */
+    /// Converts any numeric value to BigDecimal for consistent arithmetic.
+    ///
+    /// @param value
+    ///            the value to convert
+    /// @return the value as BigDecimal
+    /// @throws IllegalArgumentException
+    ///             if the value cannot be converted
     public static BigDecimal toBigDecimal(Object value) {
         if (value instanceof BigDecimal bd)
             return bd;
@@ -39,29 +35,25 @@ public final class NumericHelpers {
         throw new IllegalArgumentException("Cannot convert to BigDecimal: " + value);
     }
 
-    /**
-     * Checks if a value is numeric.
-     *
-     * @param value
-     *            the value to check
-     * @return true if the value is a Number
-     */
+    /// Checks if a value is numeric.
+    ///
+    /// @param value
+    ///            the value to check
+    /// @return true if the value is a Number
     public static boolean isNumeric(Object value) {
         return value instanceof Number;
     }
 
-    /**
-     * Performs numeric-aware equality comparison.
-     * <p>
-     * If both values are numeric, they are compared as BigDecimal values.
-     * Otherwise, standard equals comparison is used.
-     *
-     * @param left
-     *            the left operand
-     * @param right
-     *            the right operand
-     * @return true if the values are equal
-     */
+    /// Performs numeric-aware equality comparison.
+    ///
+    /// If both values are numeric, they are compared as BigDecimal values.
+    /// Otherwise, standard equals comparison is used.
+    ///
+    /// @param left
+    ///            the left operand
+    /// @param right
+    ///            the right operand
+    /// @return true if the values are equal
     public static boolean equalsNumericAware(Object left, Object right) {
         if (isNumeric(left) && isNumeric(right)) {
             return compareNumeric(left, right) == 0;
@@ -69,81 +61,69 @@ public final class NumericHelpers {
         return Objects.equals(left, right);
     }
 
-    /**
-     * Compares two numeric values.
-     *
-     * @param left
-     *            the left operand
-     * @param right
-     *            the right operand
-     * @return negative if left &lt; right, zero if equal, positive if left &gt;
-     *         right
-     */
+    /// Compares two numeric values.
+    ///
+    /// @param left
+    ///            the left operand
+    /// @param right
+    ///            the right operand
+    /// @return negative if left < right, zero if equal, positive if left >
+    ///         right
     public static int compareNumeric(Object left, Object right) {
         return toBigDecimal(left).compareTo(toBigDecimal(right));
     }
 
-    /**
-     * Adds two numeric values.
-     *
-     * @param left
-     *            the left operand
-     * @param right
-     *            the right operand
-     * @return the sum as BigDecimal
-     */
+    /// Adds two numeric values.
+    ///
+    /// @param left
+    ///            the left operand
+    /// @param right
+    ///            the right operand
+    /// @return the sum as BigDecimal
     public static BigDecimal addNumeric(Object left, Object right) {
         return toBigDecimal(left).add(toBigDecimal(right));
     }
 
-    /**
-     * Subtracts two numeric values.
-     *
-     * @param left
-     *            the left operand
-     * @param right
-     *            the right operand
-     * @return the difference as BigDecimal
-     */
+    /// Subtracts two numeric values.
+    ///
+    /// @param left
+    ///            the left operand
+    /// @param right
+    ///            the right operand
+    /// @return the difference as BigDecimal
     public static BigDecimal subtractNumeric(Object left, Object right) {
         return toBigDecimal(left).subtract(toBigDecimal(right));
     }
 
-    /**
-     * Multiplies two numeric values.
-     *
-     * @param left
-     *            the left operand
-     * @param right
-     *            the right operand
-     * @return the product as BigDecimal
-     */
+    /// Multiplies two numeric values.
+    ///
+    /// @param left
+    ///            the left operand
+    /// @param right
+    ///            the right operand
+    /// @return the product as BigDecimal
     public static BigDecimal multiplyNumeric(Object left, Object right) {
         return toBigDecimal(left).multiply(toBigDecimal(right));
     }
 
-    /**
-     * Divides two numeric values.
-     *
-     * @param left
-     *            the left operand
-     * @param right
-     *            the right operand
-     * @return the quotient as BigDecimal
-     */
+    /// Divides two numeric values.
+    ///
+    /// @param left
+    ///            the left operand
+    /// @param right
+    ///            the right operand
+    /// @return the quotient as BigDecimal
     public static BigDecimal divideNumeric(Object left, Object right) {
         return toBigDecimal(left).divide(toBigDecimal(right));
     }
 
-    /**
-     * Converts a numeric value to int. Uses exact conversion for BigDecimal.
-     *
-     * @param value
-     *            the value to convert
-     * @return the value as int
-     * @throws ArithmeticException
-     *             if the value cannot be represented exactly as int
-     */
+    /// Converts a numeric value to int. Uses exact conversion for BigDecimal.
+    ///
+    /// @param value
+    ///            the value to convert
+    /// @return the value as int
+    /// @throws ArithmeticException
+    ///             if the value cannot be represented exactly as int
     public static int toInt(Object value) {
         if (value instanceof Integer i)
             return i;
@@ -154,15 +134,13 @@ public final class NumericHelpers {
         throw new IllegalArgumentException("Cannot convert to int: " + value);
     }
 
-    /**
-     * Converts a numeric value to long. Uses exact conversion for BigDecimal.
-     *
-     * @param value
-     *            the value to convert
-     * @return the value as long
-     * @throws ArithmeticException
-     *             if the value cannot be represented exactly as long
-     */
+    /// Converts a numeric value to long. Uses exact conversion for BigDecimal.
+    ///
+    /// @param value
+    ///            the value to convert
+    /// @return the value as long
+    /// @throws ArithmeticException
+    ///             if the value cannot be represented exactly as long
     public static long toLong(Object value) {
         if (value instanceof Long l)
             return l;
@@ -175,13 +153,11 @@ public final class NumericHelpers {
         throw new IllegalArgumentException("Cannot convert to long: " + value);
     }
 
-    /**
-     * Converts a numeric value to float.
-     *
-     * @param value
-     *            the value to convert
-     * @return the value as float
-     */
+    /// Converts a numeric value to float.
+    ///
+    /// @param value
+    ///            the value to convert
+    /// @return the value as float
     public static float toFloat(Object value) {
         if (value instanceof Float f)
             return f;
@@ -192,13 +168,11 @@ public final class NumericHelpers {
         throw new IllegalArgumentException("Cannot convert to float: " + value);
     }
 
-    /**
-     * Converts a numeric value to double.
-     *
-     * @param value
-     *            the value to convert
-     * @return the value as double
-     */
+    /// Converts a numeric value to double.
+    ///
+    /// @param value
+    ///            the value to convert
+    /// @return the value as double
     public static double toDouble(Object value) {
         if (value instanceof Double d)
             return d;
@@ -209,13 +183,11 @@ public final class NumericHelpers {
         throw new IllegalArgumentException("Cannot convert to double: " + value);
     }
 
-    /**
-     * Converts a numeric value to BigInteger.
-     *
-     * @param value
-     *            the value to convert
-     * @return the value as BigInteger
-     */
+    /// Converts a numeric value to BigInteger.
+    ///
+    /// @param value
+    ///            the value to convert
+    /// @return the value as BigInteger
     public static java.math.BigInteger toBigInteger(Object value) {
         if (value instanceof java.math.BigInteger bi)
             return bi;

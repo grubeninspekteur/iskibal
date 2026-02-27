@@ -4,10 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * Represents a scope in the symbol table. Scopes can be nested with parent
- * lookups.
- */
+/// Represents a scope in the symbol table. Scopes can be nested with parent
+/// lookups.
 public final class Scope {
 
     private final Scope parent;
@@ -21,14 +19,12 @@ public final class Scope {
         this.parent = parent;
     }
 
-    /**
-     * Defines a symbol in this scope.
-     *
-     * @param symbol
-     *            the symbol to define
-     * @return true if the symbol was added, false if it already exists in this
-     *         scope
-     */
+    /// Defines a symbol in this scope.
+    ///
+    /// @param symbol
+    ///            the symbol to define
+    /// @return true if the symbol was added, false if it already exists in this
+    ///         scope
     public boolean define(Symbol symbol) {
         if (symbols.containsKey(symbol.name())) {
             return false;
@@ -37,13 +33,11 @@ public final class Scope {
         return true;
     }
 
-    /**
-     * Looks up a symbol by name, searching parent scopes if not found locally.
-     *
-     * @param name
-     *            the name to look up
-     * @return the symbol if found
-     */
+    /// Looks up a symbol by name, searching parent scopes if not found locally.
+    ///
+    /// @param name
+    ///            the name to look up
+    /// @return the symbol if found
     public Optional<Symbol> lookup(String name) {
         Symbol symbol = symbols.get(name);
         if (symbol != null) {
@@ -55,29 +49,23 @@ public final class Scope {
         return Optional.empty();
     }
 
-    /**
-     * Checks if a symbol exists in this scope only (not parent scopes).
-     *
-     * @param name
-     *            the name to check
-     * @return true if the symbol exists in this scope
-     */
+    /// Checks if a symbol exists in this scope only (not parent scopes).
+    ///
+    /// @param name
+    ///            the name to check
+    /// @return true if the symbol exists in this scope
     public boolean existsLocally(String name) {
         return symbols.containsKey(name);
     }
 
-    /**
-     * Creates a new child scope with this scope as parent.
-     *
-     * @return the new child scope
-     */
+    /// Creates a new child scope with this scope as parent.
+    ///
+    /// @return the new child scope
     public Scope createChild() {
         return new Scope(this);
     }
 
-    /**
-     * Returns the parent scope, or null if this is the root scope.
-     */
+    /// Returns the parent scope, or null if this is the root scope.
     public Scope getParent() {
         return parent;
     }

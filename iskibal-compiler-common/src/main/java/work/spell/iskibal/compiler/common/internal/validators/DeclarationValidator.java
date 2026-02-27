@@ -13,20 +13,16 @@ import work.spell.iskibal.model.Output;
 import work.spell.iskibal.model.Rule;
 import work.spell.iskibal.model.RuleModule;
 
-/**
- * Validates uniqueness of declarations within a rule module.
- */
+/// Validates uniqueness of declarations within a rule module.
 public final class DeclarationValidator {
 
     private final List<SemanticDiagnostic> diagnostics = new ArrayList<>();
 
-    /**
-     * Validates declaration uniqueness in the module.
-     *
-     * @param module
-     *            the rule module to validate
-     * @return list of diagnostics (empty if no errors)
-     */
+    /// Validates declaration uniqueness in the module.
+    ///
+    /// @param module
+    ///            the rule module to validate
+    /// @return list of diagnostics (empty if no errors)
     public List<SemanticDiagnostic> validate(RuleModule module) {
         diagnostics.clear();
 

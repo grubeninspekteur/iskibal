@@ -5,25 +5,21 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Extracts Iskara code blocks from AsciiDoc documents.
- * <p>
- * Supports extraction of:
- * <ul>
- * <li>Rule blocks: [source,iskara,.rule]</li>
- * <li>Import definition lists: [.imports]</li>
- * <li>Fact tables: [.facts]</li>
- * <li>Output tables: [.outputs]</li>
- * <li>Global tables: [.globals]</li>
- * <li>Data tables: [.data-table]</li>
- * <li>Decision tables: [.decision-table]</li>
- * </ul>
- *
- * @deprecated Use {@code work.spell.iskibal.asciidoc.AsciiDocParser} from the
- *             {@code iskibal-asciidoc} module instead. This regex-based
- *             extractor does not handle include directives or complex AsciiDoc
- *             structures properly.
- */
+/// Extracts Iskara code blocks from AsciiDoc documents.
+///
+/// Supports extraction of:
+/// - Rule blocks: [source,iskara,.rule]
+/// - Import definition lists: [.imports]
+/// - Fact tables: [.facts]
+/// - Output tables: [.outputs]
+/// - Global tables: [.globals]
+/// - Data tables: [.data-table]
+/// - Decision tables: [.decision-table]
+///
+/// @deprecated Use `work.spell.iskibal.asciidoc.AsciiDocParser` from the
+///             `iskibal-asciidoc` module instead. This regex-based
+///             extractor does not handle include directives or complex AsciiDoc
+///             structures properly.
 @Deprecated(since = "0.2.0", forRemoval = true)
 public class AsciiDocExtractor {
 
@@ -46,10 +42,8 @@ public class AsciiDocExtractor {
     private static final String EXAMPLE_DELIMITER = "====";
     private static final String TABLE_DELIMITER = "|===";
 
-    /**
-     * Extracts all Iskara content from an AsciiDoc document and combines it into a
-     * single Iskara source string.
-     */
+    /// Extracts all Iskara content from an AsciiDoc document and combines it into a
+    /// single Iskara source string.
     public String extractIskara(String asciidoc) {
         StringBuilder result = new StringBuilder();
         List<ExtractedBlock> blocks = new ArrayList<>();
@@ -95,9 +89,7 @@ public class AsciiDocExtractor {
         };
     }
 
-    /**
-     * Extracts [source,iskara] blocks from the document.
-     */
+    /// Extracts [source,iskara] blocks from the document.
     private List<ExtractedBlock> extractSourceBlocks(String asciidoc) {
         List<ExtractedBlock> blocks = new ArrayList<>();
         String[] lines = asciidoc.split("\n");
@@ -144,9 +136,7 @@ public class AsciiDocExtractor {
         return blocks;
     }
 
-    /**
-     * Extracts definition lists ([.imports], etc.) from the document.
-     */
+    /// Extracts definition lists ([.imports], etc.) from the document.
     private List<ExtractedBlock> extractDefinitionLists(String asciidoc) {
         List<ExtractedBlock> blocks = new ArrayList<>();
         String[] lines = asciidoc.split("\n");
@@ -177,10 +167,8 @@ public class AsciiDocExtractor {
         return blocks;
     }
 
-    /**
-     * Extracts tables ([.facts], [.outputs], [.globals], [.data-table],
-     * [.decision-table]).
-     */
+    /// Extracts tables ([.facts], [.outputs], [.globals], [.data-table],
+    /// [.decision-table]).
     private List<ExtractedBlock> extractTables(String asciidoc) {
         List<ExtractedBlock> blocks = new ArrayList<>();
         String[] lines = asciidoc.split("\n");
@@ -236,9 +224,7 @@ public class AsciiDocExtractor {
         return blocks;
     }
 
-    /**
-     * Converts an extracted block to Iskara syntax.
-     */
+    /// Converts an extracted block to Iskara syntax.
     private String convertToIskara(ExtractedBlock block) {
         return switch (block.type()) {
             case "imports" -> convertImports(block);
@@ -387,9 +373,7 @@ public class AsciiDocExtractor {
         return sb.toString();
     }
 
-    /**
-     * Represents an extracted block from the AsciiDoc document.
-     */
+    /// Represents an extracted block from the AsciiDoc document.
     private record ExtractedBlock(String type, String id, String description, String content) {
     }
 }

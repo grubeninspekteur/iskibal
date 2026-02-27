@@ -12,25 +12,19 @@ import work.spell.iskibal.compiler.java.api.JavaCompilerOptions;
 import work.spell.iskibal.compiler.java.internal.codegen.ModuleGenerator;
 import work.spell.iskibal.model.RuleModule;
 
-/**
- * Implementation of the Java compiler that generates Java source code from a
- * RuleModule.
- */
+/// Implementation of the Java compiler that generates Java source code from a
+/// RuleModule.
 public final class JavaCompilerImpl implements JavaCompiler {
 
     private final SemanticAnalyzer analyzer;
 
-    /**
-     * Creates a compiler with the default semantic analyzer loaded via
-     * ServiceLoader.
-     */
+    /// Creates a compiler with the default semantic analyzer loaded via
+    /// ServiceLoader.
     public JavaCompilerImpl() {
         this(SemanticAnalyzer.load());
     }
 
-    /**
-     * Creates a compiler with a specific semantic analyzer (for testing).
-     */
+    /// Creates a compiler with a specific semantic analyzer (for testing).
     public JavaCompilerImpl(SemanticAnalyzer analyzer) {
         this.analyzer = analyzer;
     }

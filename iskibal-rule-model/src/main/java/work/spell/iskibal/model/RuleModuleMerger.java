@@ -2,28 +2,24 @@ package work.spell.iskibal.model;
 
 import java.util.*;
 
-/**
- * Merges multiple {@link RuleModule} instances into a single module.
- * <p>
- * This is useful when parsing AsciiDoc documents with include directives,
- * where each included file may produce its own partial RuleModule.
- */
+/// Merges multiple [RuleModule] instances into a single module.
+///
+/// This is useful when parsing AsciiDoc documents with include directives,
+/// where each included file may produce its own partial RuleModule.
 public class RuleModuleMerger {
 
-    /**
-     * Merges multiple RuleModule instances into one.
-     * <p>
-     * Imports are deduplicated by alias. Facts, globals, and outputs are
-     * deduplicated by name. Data tables and rules are deduplicated by ID.
-     * Conflicting definitions (same name/ID with different values) cause an
-     * exception.
-     *
-     * @param modules
-     *            the modules to merge
-     * @return a merged RuleModule containing all unique elements
-     * @throws IllegalArgumentException
-     *             if conflicting definitions are found
-     */
+    /// Merges multiple RuleModule instances into one.
+    ///
+    /// Imports are deduplicated by alias. Facts, globals, and outputs are
+    /// deduplicated by name. Data tables and rules are deduplicated by ID.
+    /// Conflicting definitions (same name/ID with different values) cause an
+    /// exception.
+    ///
+    /// @param modules
+    ///            the modules to merge
+    /// @return a merged RuleModule containing all unique elements
+    /// @throws IllegalArgumentException
+    ///             if conflicting definitions are found
     public RuleModule merge(List<RuleModule> modules) {
         if (modules.isEmpty()) {
             return new RuleModule.Default(List.of(), List.of(), List.of(), List.of(), List.of(), List.of());
@@ -53,9 +49,7 @@ public class RuleModuleMerger {
                 new ArrayList<>(dataTables.values()), new ArrayList<>(rules.values()));
     }
 
-    /**
-     * Convenience method to merge two modules.
-     */
+    /// Convenience method to merge two modules.
     public RuleModule merge(RuleModule first, RuleModule second) {
         return merge(List.of(first, second));
     }

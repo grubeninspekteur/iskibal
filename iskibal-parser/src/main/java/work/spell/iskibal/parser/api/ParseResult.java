@@ -6,18 +6,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
-/**
- * Result of a parse operation, either success with a value and optional
- * warnings, or failure with a list of errors.
- *
- * @param <T>
- *            the type of the parsed value
- */
+/// Result of a parse operation, either success with a value and optional
+/// warnings, or failure with a list of errors.
+///
+/// @param <T>
+///            the type of the parsed value
 public sealed interface ParseResult<T> permits ParseResult.Success, ParseResult.Failure {
 
-    /**
-     * Successful parse result containing the parsed value and any warnings.
-     */
+    /// Successful parse result containing the parsed value and any warnings.
     record Success<T>(T value, List<Diagnostic> warnings) implements ParseResult<T> {
         public Success(T value) {
             this(value, List.of());
@@ -39,9 +35,7 @@ public sealed interface ParseResult<T> permits ParseResult.Success, ParseResult.
         }
     }
 
-    /**
-     * Failed parse result containing the list of errors.
-     */
+    /// Failed parse result containing the list of errors.
     record Failure<T>(List<Diagnostic> errors) implements ParseResult<T> {
         @Override
         public boolean isSuccess() {
@@ -59,24 +53,16 @@ public sealed interface ParseResult<T> permits ParseResult.Success, ParseResult.
         }
     }
 
-    /**
-     * Returns true if the parse was successful.
-     */
+    /// Returns true if the parse was successful.
     boolean isSuccess();
 
-    /**
-     * Returns the parsed value if successful, empty otherwise.
-     */
+    /// Returns the parsed value if successful, empty otherwise.
     Optional<T> getValue();
 
-    /**
-     * Returns all diagnostics (warnings for success, errors for failure).
-     */
+    /// Returns all diagnostics (warnings for success, errors for failure).
     List<Diagnostic> getDiagnostics();
 
-    /**
-     * Maps the value if successful, preserving warnings.
-     */
+    /// Maps the value if successful, preserving warnings.
     default <U> ParseResult<U> map(Function<T, U> mapper) {
         return switch (this) {
             case Success<T>(var value, var warnings) -> new Success<>(mapper.apply(value), warnings);
@@ -84,9 +70,7 @@ public sealed interface ParseResult<T> permits ParseResult.Success, ParseResult.
         };
     }
 
-    /**
-     * Flat maps the value if successful.
-     */
+    /// Flat maps the value if successful.
     default <U> ParseResult<U> flatMap(Function<T, ParseResult<U>> mapper) {
         return switch (this) {
             case Success<T>(var value, var warnings) -> {

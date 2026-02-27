@@ -55,6 +55,24 @@ Supporting types: `Fact`, `Global`, `Output`, `Import`, `DataTable` - all sealed
 - **Smalltalk-style Messaging**: `MessageSend` expression supports keyword-based method calls
 - **Java Module System**: Uses JPMS with explicit exports (`module iskibal.rule.model`)
 
+## Documentation Comments
+
+Use JEP 467 Markdown documentation comments (`///`) instead of traditional Javadoc (`/** */`):
+
+```java
+/// Short description.
+///
+/// Longer description with **Markdown** formatting.
+///
+/// @param foo the foo parameter
+/// @return the result
+```
+
+- Reference Java elements with `[ClassName]` or `[ClassName#method()]`
+- Use backtick code spans instead of `{@code ...}`
+- Use fenced code blocks (` ``` `) instead of `<pre>`
+- Use Markdown lists (`-`) instead of `<ul>`/`<li>`
+
 ## Code Formatting
 
 The project uses Spotless with Eclipse JDT formatter. Code is automatically formatted on commit via a git hook.

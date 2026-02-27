@@ -10,9 +10,7 @@ import work.spell.iskibal.parser.diagnostic.IskaraDiagnosticListener;
 
 import java.util.*;
 
-/**
- * Visitor that handles data table parsing and builds DataTable AST nodes.
- */
+/// Visitor that handles data table parsing and builds DataTable AST nodes.
 public class TableVisitor {
 
     private final ExpressionVisitor expressionVisitor;
@@ -23,9 +21,7 @@ public class TableVisitor {
         this.diagnostics = diagnostics;
     }
 
-    /**
-     * Parses a data table definition.
-     */
+    /// Parses a data table definition.
     public DataTable parseDataTable(String id, IskaraParser.TableContentContext ctx) {
         List<List<String>> rawRows = parseTableRows(ctx);
 
@@ -57,10 +53,8 @@ public class TableVisitor {
         return new DataTable.Default(id, dataRows);
     }
 
-    /**
-     * Parses table content into a list of rows, where each row is a list of cell
-     * strings.
-     */
+    /// Parses table content into a list of rows, where each row is a list of cell
+    /// strings.
     private List<List<String>> parseTableRows(IskaraParser.TableContentContext ctx) {
         List<List<String>> rows = new ArrayList<>();
 
@@ -85,9 +79,7 @@ public class TableVisitor {
         return rows;
     }
 
-    /**
-     * Checks if a row is a separator row (contains only dashes).
-     */
+    /// Checks if a row is a separator row (contains only dashes).
     private boolean isSeparatorRow(List<String> row) {
         for (String cell : row) {
             String trimmed = cell.trim();
@@ -98,9 +90,7 @@ public class TableVisitor {
         return true;
     }
 
-    /**
-     * Parses a cell's text content as an expression.
-     */
+    /// Parses a cell's text content as an expression.
     private Expression parseCellExpression(String cellText) {
         if (cellText.isEmpty()) {
             return new Expression.Literal.NullLiteral();
@@ -128,10 +118,8 @@ public class TableVisitor {
         return new Expression.Literal.StringLiteral(cellText);
     }
 
-    /**
-     * Parses decision table structure from table content. Returns a map of column
-     * headers to their types (WHEN or THEN).
-     */
+    /// Parses decision table structure from table content. Returns a map of column
+    /// headers to their types (WHEN or THEN).
     public DecisionTableStructure parseDecisionTableStructure(IskaraParser.TableContentContext ctx) {
         List<List<String>> rawRows = parseTableRows(ctx);
 
@@ -196,21 +184,15 @@ public class TableVisitor {
         return new DecisionTableStructure(whenColumns, thenColumns, ruleRows);
     }
 
-    /**
-     * Column definition for decision tables.
-     */
+    /// Column definition for decision tables.
     public record ColumnDef(int index, String expression) {
     }
 
-    /**
-     * A single row from a decision table.
-     */
+    /// A single row from a decision table.
     public record DecisionRow(String id, List<String> whenCells, List<String> thenCells) {
     }
 
-    /**
-     * Parsed decision table structure.
-     */
+    /// Parsed decision table structure.
     public record DecisionTableStructure(List<ColumnDef> whenColumns, List<ColumnDef> thenColumns,
             List<DecisionRow> rows) {
     }

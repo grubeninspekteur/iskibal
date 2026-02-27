@@ -19,9 +19,7 @@ import work.spell.iskibal.model.Output;
 import work.spell.iskibal.model.Rule;
 import work.spell.iskibal.model.RuleModule;
 
-/**
- * Generates a complete Java class for a RuleModule.
- */
+/// Generates a complete Java class for a RuleModule.
 public final class ModuleGenerator {
 
     private final JavaCompilerOptions options;
@@ -30,9 +28,7 @@ public final class ModuleGenerator {
         this.options = options;
     }
 
-    /**
-     * Generates Java source code for the rule module.
-     */
+    /// Generates Java source code for the rule module.
     public String generate(RuleModule module) {
         StringBuilder sb = new StringBuilder();
 

@@ -11,10 +11,8 @@ import org.junit.jupiter.api.Test;
 import work.spell.iskibal.testing.RuleTestBuilder;
 import work.spell.iskibal.testing.RuleTestResult;
 
-/**
- * End-to-end tests for data-driven rules using data tables. Tests template
- * rules and decision tables.
- */
+/// End-to-end tests for data-driven rules using data tables. Tests template
+/// rules and decision tables.
 class DataTableE2ETest {
 
     @Nested

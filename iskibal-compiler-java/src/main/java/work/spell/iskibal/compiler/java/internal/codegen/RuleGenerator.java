@@ -8,9 +8,7 @@ import work.spell.iskibal.model.Expression;
 import work.spell.iskibal.model.Rule;
 import work.spell.iskibal.model.Statement;
 
-/**
- * Generates Java methods for Iskara rules.
- */
+/// Generates Java methods for Iskara rules.
 public final class RuleGenerator {
 
     private final StatementGenerator statementGenerator;
@@ -21,9 +19,7 @@ public final class RuleGenerator {
         this.expressionGenerator = expressionGenerator;
     }
 
-    /**
-     * Generates Java method(s) for a rule.
-     */
+    /// Generates Java method(s) for a rule.
     public String generate(Rule rule) {
         return switch (rule) {
             case Rule.SimpleRule sr -> generateSimpleRule(sr);
@@ -168,10 +164,8 @@ public final class RuleGenerator {
         return sb.toString();
     }
 
-    /**
-     * Generates local variable declarations for let statements in the when section.
-     * These need to be generated before the condition so they are in scope.
-     */
+    /// Generates local variable declarations for let statements in the when section.
+    /// These need to be generated before the condition so they are in scope.
     private String generateLetStatements(List<Statement> statements, String indent) {
         StringBuilder sb = new StringBuilder();
 
@@ -190,9 +184,7 @@ public final class RuleGenerator {
         return "rule_" + ruleId.replaceAll("[^a-zA-Z0-9_]", "_");
     }
 
-    /**
-     * Returns the method name for a rule (for use in evaluate method).
-     */
+    /// Returns the method name for a rule (for use in evaluate method).
     public String getMethodName(Rule rule) {
         return switch (rule) {
             case Rule.SimpleRule sr -> toMethodName(sr.id());
@@ -201,9 +193,7 @@ public final class RuleGenerator {
         };
     }
 
-    /**
-     * Returns all method names for a rule (including template row methods).
-     */
+    /// Returns all method names for a rule (including template row methods).
     public List<String> getMethodNames(Rule rule) {
         return switch (rule) {
             case Rule.SimpleRule sr -> List.of(toMethodName(sr.id()));

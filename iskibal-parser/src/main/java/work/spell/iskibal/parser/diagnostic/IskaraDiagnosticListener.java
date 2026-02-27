@@ -7,9 +7,7 @@ import org.antlr.v4.runtime.Recognizer;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * ANTLR error listener that collects syntax errors as diagnostics.
- */
+/// ANTLR error listener that collects syntax errors as diagnostics.
 public class IskaraDiagnosticListener extends BaseErrorListener {
 
     private final String sourceName;
@@ -26,37 +24,27 @@ public class IskaraDiagnosticListener extends BaseErrorListener {
         diagnostics.add(Diagnostic.error(msg, location));
     }
 
-    /**
-     * Returns all collected diagnostics.
-     */
+    /// Returns all collected diagnostics.
     public List<Diagnostic> getDiagnostics() {
         return List.copyOf(diagnostics);
     }
 
-    /**
-     * Returns true if any errors were recorded.
-     */
+    /// Returns true if any errors were recorded.
     public boolean hasErrors() {
         return diagnostics.stream().anyMatch(d -> d.severity() == Diagnostic.Severity.ERROR);
     }
 
-    /**
-     * Adds a diagnostic manually.
-     */
+    /// Adds a diagnostic manually.
     public void addDiagnostic(Diagnostic diagnostic) {
         diagnostics.add(diagnostic);
     }
 
-    /**
-     * Adds an error diagnostic at the given location.
-     */
+    /// Adds an error diagnostic at the given location.
     public void addError(String message, int line, int column) {
         diagnostics.add(Diagnostic.error(message, SourceLocation.at(sourceName, line, column)));
     }
 
-    /**
-     * Adds a warning diagnostic at the given location.
-     */
+    /// Adds a warning diagnostic at the given location.
     public void addWarning(String message, int line, int column) {
         diagnostics.add(Diagnostic.warning(message, SourceLocation.at(sourceName, line, column)));
     }

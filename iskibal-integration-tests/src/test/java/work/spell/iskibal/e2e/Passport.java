@@ -1,8 +1,6 @@
 package work.spell.iskibal.e2e;
 
-/**
- * Test fixture class representing a passport for navigation tests.
- */
+/// Test fixture class representing a passport for navigation tests.
 public class Passport {
 
     private final boolean valid;

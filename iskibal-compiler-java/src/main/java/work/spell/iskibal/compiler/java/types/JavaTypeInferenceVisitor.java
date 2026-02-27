@@ -17,37 +17,29 @@ import work.spell.iskibal.model.Expression.MessageSend;
 import work.spell.iskibal.model.Expression.Navigation;
 import work.spell.iskibal.model.Statement;
 
-/**
- * Walks the AST and infers Java types for expressions.
- * <p>
- * This visitor produces {@link JavaTypedExpression} instances that pair each
- * expression with its resolved type. The type information is then used during
- * code generation to produce type-correct Java code.
- */
+/// Walks the AST and infers Java types for expressions.
+///
+/// This visitor produces [JavaTypedExpression] instances that pair each
+/// expression with its resolved type. The type information is then used during
+/// code generation to produce type-correct Java code.
 public final class JavaTypeInferenceVisitor {
 
     private final JavaTypeInferenceContext context;
     private final Map<Expression, JavaTypedExpression> typeCache;
 
-    /**
-     * Creates a visitor with the given context.
-     */
+    /// Creates a visitor with the given context.
     public JavaTypeInferenceVisitor(JavaTypeInferenceContext context) {
         this(context, new HashMap<>());
     }
 
-    /**
-     * Creates a visitor with the given context and shared cache.
-     */
+    /// Creates a visitor with the given context and shared cache.
     private JavaTypeInferenceVisitor(JavaTypeInferenceContext context,
             Map<Expression, JavaTypedExpression> sharedCache) {
         this.context = context;
         this.typeCache = sharedCache;
     }
 
-    /**
-     * Infers the type of an expression.
-     */
+    /// Infers the type of an expression.
     public JavaTypedExpression infer(Expression expr) {
         // Check cache first
         JavaTypedExpression cached = typeCache.get(expr);
@@ -283,17 +275,13 @@ public final class JavaTypeInferenceVisitor {
         return new JavaTypedExpression(block, lastType);
     }
 
-    /**
-     * Returns the cached type for an expression, if available.
-     */
+    /// Returns the cached type for an expression, if available.
     public JavaType getType(Expression expr) {
         JavaTypedExpression typed = typeCache.get(expr);
         return typed != null ? typed.type() : UnknownType.INSTANCE;
     }
 
-    /**
-     * Returns the inference context.
-     */
+    /// Returns the inference context.
     public JavaTypeInferenceContext context() {
         return context;
     }

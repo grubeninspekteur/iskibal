@@ -19,9 +19,7 @@ import work.spell.iskibal.compiler.java.types.JavaType.ClassType;
 import work.spell.iskibal.compiler.java.types.JavaType.PrimitiveType;
 import work.spell.iskibal.compiler.java.types.JavaType.UnknownType;
 
-/**
- * Tests for JavaTypeResolver.
- */
+/// Tests for JavaTypeResolver.
 class JavaTypeResolverTest {
 
     private JavaTypeResolver resolver;

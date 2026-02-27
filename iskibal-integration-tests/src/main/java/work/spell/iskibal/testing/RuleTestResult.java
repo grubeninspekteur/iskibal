@@ -3,15 +3,11 @@ package work.spell.iskibal.testing;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Result of building and compiling a rule test.
- */
+/// Result of building and compiling a rule test.
 public sealed interface RuleTestResult permits RuleTestResult.Success, RuleTestResult.ParseFailure,
         RuleTestResult.AnalysisFailure, RuleTestResult.CodegenFailure, RuleTestResult.CompilationFailure {
 
-    /**
-     * Successful result with compiled and instantiated rules.
-     */
+    /// Successful result with compiled and instantiated rules.
     record Success(CompiledRules compiledRules, String generatedSource) implements RuleTestResult {
         @Override
         public boolean isSuccess() {
@@ -34,9 +30,7 @@ public sealed interface RuleTestResult permits RuleTestResult.Success, RuleTestR
         }
     }
 
-    /**
-     * Failed to parse the Iskara source.
-     */
+    /// Failed to parse the Iskara source.
     record ParseFailure(List<String> errors) implements RuleTestResult {
         @Override
         public boolean isSuccess() {
@@ -59,9 +53,7 @@ public sealed interface RuleTestResult permits RuleTestResult.Success, RuleTestR
         }
     }
 
-    /**
-     * Failed semantic analysis.
-     */
+    /// Failed semantic analysis.
     record AnalysisFailure(List<String> errors) implements RuleTestResult {
         @Override
         public boolean isSuccess() {
@@ -84,9 +76,7 @@ public sealed interface RuleTestResult permits RuleTestResult.Success, RuleTestR
         }
     }
 
-    /**
-     * Failed Java code generation.
-     */
+    /// Failed Java code generation.
     record CodegenFailure(List<String> errors) implements RuleTestResult {
         @Override
         public boolean isSuccess() {
@@ -109,9 +99,7 @@ public sealed interface RuleTestResult permits RuleTestResult.Success, RuleTestR
         }
     }
 
-    /**
-     * Failed Java compilation of generated code.
-     */
+    /// Failed Java compilation of generated code.
     record CompilationFailure(List<String> errors, String generatedSource) implements RuleTestResult {
         @Override
         public boolean isSuccess() {
@@ -134,23 +122,15 @@ public sealed interface RuleTestResult permits RuleTestResult.Success, RuleTestR
         }
     }
 
-    /**
-     * Returns true if all stages succeeded.
-     */
+    /// Returns true if all stages succeeded.
     boolean isSuccess();
 
-    /**
-     * Returns the compiled rules if successful.
-     */
+    /// Returns the compiled rules if successful.
     Optional<CompiledRules> rules();
 
-    /**
-     * Returns error messages from the failed stage.
-     */
+    /// Returns error messages from the failed stage.
     List<String> getErrors();
 
-    /**
-     * Returns the name of the stage that failed (or "success" if all succeeded).
-     */
+    /// Returns the name of the stage that failed (or "success" if all succeeded).
     String getStage();
 }

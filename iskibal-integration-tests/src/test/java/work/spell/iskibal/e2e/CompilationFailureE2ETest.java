@@ -9,10 +9,8 @@ import org.junit.jupiter.api.Test;
 import work.spell.iskibal.testing.RuleTestBuilder;
 import work.spell.iskibal.testing.RuleTestResult;
 
-/**
- * End-to-end tests for semantic analysis errors. Tests that the compiler
- * correctly rejects invalid rules with appropriate error messages.
- */
+/// End-to-end tests for semantic analysis errors. Tests that the compiler
+/// correctly rejects invalid rules with appropriate error messages.
 class CompilationFailureE2ETest {
 
     @Nested

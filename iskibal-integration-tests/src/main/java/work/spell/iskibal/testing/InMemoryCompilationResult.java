@@ -3,15 +3,11 @@ package work.spell.iskibal.testing;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Result of in-memory Java compilation.
- */
+/// Result of in-memory Java compilation.
 public sealed interface InMemoryCompilationResult
         permits InMemoryCompilationResult.Success, InMemoryCompilationResult.Failure {
 
-    /**
-     * Successful compilation result containing the compiled class.
-     */
+    /// Successful compilation result containing the compiled class.
     record Success(Class<?> compiledClass, String className) implements InMemoryCompilationResult {
         @Override
         public boolean isSuccess() {
@@ -29,9 +25,7 @@ public sealed interface InMemoryCompilationResult
         }
     }
 
-    /**
-     * Failed compilation result containing diagnostic messages.
-     */
+    /// Failed compilation result containing diagnostic messages.
     record Failure(List<String> diagnostics) implements InMemoryCompilationResult {
         @Override
         public boolean isSuccess() {
@@ -49,18 +43,12 @@ public sealed interface InMemoryCompilationResult
         }
     }
 
-    /**
-     * Returns true if the compilation was successful.
-     */
+    /// Returns true if the compilation was successful.
     boolean isSuccess();
 
-    /**
-     * Returns the compiled class if successful.
-     */
+    /// Returns the compiled class if successful.
     Optional<Class<?>> getCompiledClass();
 
-    /**
-     * Returns diagnostic messages (errors for failure, warnings for success).
-     */
+    /// Returns diagnostic messages (errors for failure, warnings for success).
     List<String> getDiagnostics();
 }

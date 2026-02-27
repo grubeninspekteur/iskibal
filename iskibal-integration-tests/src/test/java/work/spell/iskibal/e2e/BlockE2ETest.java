@@ -13,11 +13,9 @@ import org.junit.jupiter.api.Test;
 import work.spell.iskibal.testing.RuleTestBuilder;
 import work.spell.iskibal.testing.RuleTestResult;
 
-/**
- * End-to-end tests for block expressions. Blocks are parametrized expressions
- * that translate to Java lambdas and can be passed to collection operations or
- * Java methods accepting functional interfaces.
- */
+/// End-to-end tests for block expressions. Blocks are parametrized expressions
+/// that translate to Java lambdas and can be passed to collection operations or
+/// Java methods accepting functional interfaces.
 class BlockE2ETest {
 
     @Nested

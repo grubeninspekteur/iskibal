@@ -13,45 +13,39 @@ import org.asciidoctor.ast.StructuralNode;
 
 import work.spell.iskibal.model.Expression;
 
-/**
- * Resolves alias definitions for decision tables.
- * <p>
- * Aliases are defined in definition lists with the role {@code .aliases} and a
- * {@code for} attribute pointing to the target decision table ID:
- *
- * <pre>
- * [.aliases,for="TABLE_ID"]
- * alias1::
- * +
- * [source,iskara]
- * ----
- * expression
- * ----
- * </pre>
- */
+/// Resolves alias definitions for decision tables.
+///
+/// Aliases are defined in definition lists with the role `.aliases` and a
+/// `for` attribute pointing to the target decision table ID:
+///
+/// ```
+/// [.aliases,for="TABLE_ID"]
+/// alias1::
+/// +
+/// [source,iskara]
+/// ----
+/// expression
+/// ----
+/// ```
 public class AliasResolver {
 
     private final ExpressionParser expressionParser;
 
-    /**
-     * Creates an AliasResolver with the given expression parser.
-     *
-     * @param expressionParser
-     *            the parser for alias expressions
-     */
+    /// Creates an AliasResolver with the given expression parser.
+    ///
+    /// @param expressionParser
+    ///            the parser for alias expressions
     public AliasResolver(ExpressionParser expressionParser) {
         this.expressionParser = expressionParser;
     }
 
-    /**
-     * Finds and resolves aliases for a given decision table ID.
-     *
-     * @param document
-     *            the AsciiDoc document
-     * @param tableId
-     *            the ID of the decision table
-     * @return map of alias names to their block expressions
-     */
+    /// Finds and resolves aliases for a given decision table ID.
+    ///
+    /// @param document
+    ///            the AsciiDoc document
+    /// @param tableId
+    ///            the ID of the decision table
+    /// @return map of alias names to their block expressions
     public Map<String, Expression.Block> resolveAliases(Document document, String tableId) {
         Map<String, Expression.Block> aliases = new LinkedHashMap<>();
 
@@ -64,9 +58,7 @@ public class AliasResolver {
         return aliases;
     }
 
-    /**
-     * Checks if a block is an alias definition list for the given table ID.
-     */
+    /// Checks if a block is an alias definition list for the given table ID.
     private boolean isAliasBlockFor(StructuralNode block, String tableId) {
         if (!(block instanceof DescriptionList)) {
             return false;
@@ -79,9 +71,7 @@ public class AliasResolver {
         return forAttr != null && forAttr.toString().equals(tableId);
     }
 
-    /**
-     * Parses alias definitions from a description list.
-     */
+    /// Parses alias definitions from a description list.
     private void parseAliasDefinitions(StructuralNode block, Map<String, Expression.Block> aliases) {
         if (!(block instanceof DescriptionList descList)) {
             return;
@@ -103,9 +93,7 @@ public class AliasResolver {
         }
     }
 
-    /**
-     * Extracts the alias name from a description list entry.
-     */
+    /// Extracts the alias name from a description list entry.
     private String extractAliasName(DescriptionListEntry entry) {
         java.util.List<ListItem> terms = entry.getTerms();
         if (terms == null || terms.isEmpty()) {
@@ -114,12 +102,10 @@ public class AliasResolver {
         return terms.getFirst().getText();
     }
 
-    /**
-     * Extracts the Iskara source code from a description list entry.
-     * <p>
-     * The source is expected to be in a [source,iskara] listing block within
-     * the entry's description.
-     */
+    /// Extracts the Iskara source code from a description list entry.
+    ///
+    /// The source is expected to be in a [source,iskara] listing block within
+    /// the entry's description.
     private String extractIskaraSource(DescriptionListEntry entry) {
         ListItem description = entry.getDescription();
         if (description == null) {
@@ -148,11 +134,9 @@ public class AliasResolver {
         return null;
     }
 
-    /**
-     * Parses Iskara source as a block expression.
-     * <p>
-     * If the source doesn't already have block brackets, wraps it in a block.
-     */
+    /// Parses Iskara source as a block expression.
+    ///
+    /// If the source doesn't already have block brackets, wraps it in a block.
     private Expression.Block parseAsBlock(String source) {
         String trimmed = source.trim();
 
@@ -166,9 +150,7 @@ public class AliasResolver {
         return expressionParser.parseBlock(wrapped);
     }
 
-    /**
-     * Recursively finds all blocks in a document.
-     */
+    /// Recursively finds all blocks in a document.
     private java.util.List<StructuralNode> findAllBlocks(StructuralNode node) {
         java.util.List<StructuralNode> blocks = new ArrayList<>();
         blocks.add(node);

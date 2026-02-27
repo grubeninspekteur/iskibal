@@ -18,9 +18,7 @@ import work.spell.iskibal.model.Global;
 import work.spell.iskibal.model.Output;
 import work.spell.iskibal.model.RuleModule;
 
-/**
- * Tests for JavaTypeInferenceContext.
- */
+/// Tests for JavaTypeInferenceContext.
 class JavaTypeInferenceContextTest {
 
     private JavaTypeResolver resolver;

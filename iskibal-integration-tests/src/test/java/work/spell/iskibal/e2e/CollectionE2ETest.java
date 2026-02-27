@@ -17,9 +17,7 @@ import org.junit.jupiter.api.Test;
 import work.spell.iskibal.testing.RuleTestBuilder;
 import work.spell.iskibal.testing.RuleTestResult;
 
-/**
- * End-to-end tests for collection literals and operations.
- */
+/// End-to-end tests for collection literals and operations.
 class CollectionE2ETest {
 
     @Nested
@@ -109,11 +107,9 @@ class CollectionE2ETest {
                     .isEqualTo(Map.of("hello", "world", "number", BigDecimal.valueOf(42)));
         }
 
-        /**
-         * A naiive implementation would use {@link Map#of()} with key-value pairs,
-         * which is only defined for at most 10 pairs. Rather,
-         * {@link Map#ofEntries(Entry[])} should be used.
-         */
+        /// A naiive implementation would use [Map#of()] with key-value pairs,
+        /// which is only defined for at most 10 pairs. Rather,
+        /// [Map#ofEntries(Entry[])] should be used.
         @Test
         @DisplayName("Map literals with many arguments be created")
         void mapLiteralWithManyArguments() throws Exception {

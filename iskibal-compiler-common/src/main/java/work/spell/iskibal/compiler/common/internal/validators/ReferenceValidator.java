@@ -26,20 +26,16 @@ import work.spell.iskibal.model.Rule;
 import work.spell.iskibal.model.RuleModule;
 import work.spell.iskibal.model.Statement;
 
-/**
- * Validates identifier references within a rule module.
- */
+/// Validates identifier references within a rule module.
 public final class ReferenceValidator {
 
     private final List<SemanticDiagnostic> diagnostics = new ArrayList<>();
 
-    /**
-     * Validates identifier references in the module.
-     *
-     * @param module
-     *            the rule module to validate
-     * @return list of diagnostics (empty if no errors)
-     */
+    /// Validates identifier references in the module.
+    ///
+    /// @param module
+    ///            the rule module to validate
+    /// @return list of diagnostics (empty if no errors)
     public List<SemanticDiagnostic> validate(RuleModule module) {
         diagnostics.clear();
 

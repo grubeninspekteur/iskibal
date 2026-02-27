@@ -24,22 +24,18 @@ import javax.tools.StandardJavaFileManager;
 import javax.tools.StandardLocation;
 import javax.tools.ToolProvider;
 
-/**
- * Compiles Java source code in memory using {@link javax.tools.JavaCompiler}.
- * <p>
- * This allows end-to-end testing of generated code without writing to the file
- * system.
- */
+/// Compiles Java source code in memory using [JavaCompiler].
+///
+/// This allows end-to-end testing of generated code without writing to the file
+/// system.
 public class InMemoryCompiler {
 
     private final JavaCompiler compiler;
 
-    /**
-     * Creates a new in-memory compiler.
-     *
-     * @throws IllegalStateException
-     *             if the system Java compiler is not available
-     */
+    /// Creates a new in-memory compiler.
+    ///
+    /// @throws IllegalStateException
+    ///             if the system Java compiler is not available
     public InMemoryCompiler() {
         this.compiler = ToolProvider.getSystemJavaCompiler();
         if (compiler == null) {
@@ -48,30 +44,26 @@ public class InMemoryCompiler {
         }
     }
 
-    /**
-     * Compiles the given Java source code.
-     *
-     * @param className
-     *            the fully qualified class name
-     * @param sourceCode
-     *            the Java source code
-     * @return the compilation result
-     */
+    /// Compiles the given Java source code.
+    ///
+    /// @param className
+    ///            the fully qualified class name
+    /// @param sourceCode
+    ///            the Java source code
+    /// @return the compilation result
     public InMemoryCompilationResult compile(String className, String sourceCode) {
         return compile(className, sourceCode, List.of());
     }
 
-    /**
-     * Compiles the given Java source code with additional classes available.
-     *
-     * @param className
-     *            the fully qualified class name
-     * @param sourceCode
-     *            the Java source code
-     * @param additionalClasses
-     *            classes to make available to the compiled code
-     * @return the compilation result
-     */
+    /// Compiles the given Java source code with additional classes available.
+    ///
+    /// @param className
+    ///            the fully qualified class name
+    /// @param sourceCode
+    ///            the Java source code
+    /// @param additionalClasses
+    ///            classes to make available to the compiled code
+    /// @return the compilation result
     public InMemoryCompilationResult compile(String className, String sourceCode, List<Class<?>> additionalClasses) {
         DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
         StringWriter output = new StringWriter();
@@ -114,17 +106,15 @@ public class InMemoryCompiler {
         return sb.toString();
     }
 
-    /**
-     * Configures the file manager with paths from the running JVM.
-     * <p>
-     * When running with module path (e.g., IntelliJ with module path enabled), the
-     * {@link StandardJavaFileManager} doesn't automatically inherit the JVM's
-     * paths. We combine both the module path (for dependencies) and class path (for
-     * test classes) to ensure the compiler can resolve all types.
-     * <p>
-     * The compiled code ends up in the unnamed module, which can read all exported
-     * packages from named modules at runtime.
-     */
+    /// Configures the file manager with paths from the running JVM.
+    ///
+    /// When running with module path (e.g., IntelliJ with module path enabled), the
+    /// [StandardJavaFileManager] doesn't automatically inherit the JVM's
+    /// paths. We combine both the module path (for dependencies) and class path (for
+    /// test classes) to ensure the compiler can resolve all types.
+    ///
+    /// The compiled code ends up in the unnamed module, which can read all exported
+    /// packages from named modules at runtime.
     private void configureCompilationPaths(StandardJavaFileManager fileManager) {
         List<File> allPaths = new ArrayList<>();
 
@@ -149,9 +139,7 @@ public class InMemoryCompiler {
         }
     }
 
-    /**
-     * JavaFileObject that holds source code in memory.
-     */
+    /// JavaFileObject that holds source code in memory.
     private static class InMemorySourceFile extends SimpleJavaFileObject {
         private final String content;
 
@@ -166,9 +154,7 @@ public class InMemoryCompiler {
         }
     }
 
-    /**
-     * JavaFileObject that holds compiled bytecode in memory.
-     */
+    /// JavaFileObject that holds compiled bytecode in memory.
     private static class InMemoryClassFile extends SimpleJavaFileObject {
         private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
@@ -186,9 +172,7 @@ public class InMemoryCompiler {
         }
     }
 
-    /**
-     * ClassLoader that loads classes from in-memory bytecode.
-     */
+    /// ClassLoader that loads classes from in-memory bytecode.
     private static class InMemoryClassLoader extends ClassLoader {
         private final Map<String, InMemoryClassFile> classFiles;
 
@@ -208,9 +192,7 @@ public class InMemoryCompiler {
         }
     }
 
-    /**
-     * FileManager that stores compiled classes in memory.
-     */
+    /// FileManager that stores compiled classes in memory.
     private static class InMemoryFileManager extends ForwardingJavaFileManager<StandardJavaFileManager> {
         private final Map<String, InMemoryClassFile> classFiles = new HashMap<>();
         private final List<Class<?>> additionalClasses;

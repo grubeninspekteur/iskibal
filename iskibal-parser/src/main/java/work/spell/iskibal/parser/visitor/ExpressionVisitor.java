@@ -17,9 +17,7 @@ import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.util.*;
 
-/**
- * Visitor that builds Expression AST nodes from the parse tree.
- */
+/// Visitor that builds Expression AST nodes from the parse tree.
 public class ExpressionVisitor extends IskaraParserBaseVisitor<Expression> {
 
     private final IskaraDiagnosticListener diagnostics;

@@ -1,15 +1,13 @@
 package work.spell.iskibal.parser.diagnostic;
 
-/**
- * Represents a diagnostic message from parsing.
- *
- * @param severity
- *            the severity level of the diagnostic
- * @param message
- *            the diagnostic message
- * @param location
- *            the source location where the diagnostic occurred
- */
+/// Represents a diagnostic message from parsing.
+///
+/// @param severity
+///            the severity level of the diagnostic
+/// @param message
+///            the diagnostic message
+/// @param location
+///            the source location where the diagnostic occurred
 public record Diagnostic(Severity severity, String message, SourceLocation location) {
     public enum Severity {
         ERROR, WARNING, INFO

@@ -1,9 +1,7 @@
 package work.spell.iskibal.e2e;
 
-/**
- * Mutable test fixture for testing navigation assignment (setters). Unlike
- * Customer, this class has setters to allow property modification.
- */
+/// Mutable test fixture for testing navigation assignment (setters). Unlike
+/// Customer, this class has setters to allow property modification.
 public class MutableCustomer {
 
     private String name;

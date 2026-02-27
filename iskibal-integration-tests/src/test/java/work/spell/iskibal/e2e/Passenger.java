@@ -1,8 +1,6 @@
 package work.spell.iskibal.e2e;
 
-/**
- * Test fixture class representing a passenger for navigation tests.
- */
+/// Test fixture class representing a passenger for navigation tests.
 public class Passenger {
 
     private final String name;

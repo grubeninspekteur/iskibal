@@ -6,9 +6,7 @@ import work.spell.iskibal.parser.IskaraParser;
 import work.spell.iskibal.parser.IskaraParserBaseVisitor;
 import work.spell.iskibal.parser.diagnostic.IskaraDiagnosticListener;
 
-/**
- * Visitor that builds Statement AST nodes from the parse tree.
- */
+/// Visitor that builds Statement AST nodes from the parse tree.
 public class StatementVisitor extends IskaraParserBaseVisitor<Statement> {
 
     private final ExpressionVisitor expressionVisitor;

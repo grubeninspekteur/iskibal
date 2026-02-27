@@ -2,9 +2,7 @@ package work.spell.iskibal.e2e;
 
 import java.math.BigDecimal;
 
-/**
- * Test fixture class representing an order for rule tests.
- */
+/// Test fixture class representing an order for rule tests.
 public class Order {
 
     private final BigDecimal total;

@@ -11,9 +11,7 @@ import work.spell.iskibal.model.Rule;
 import work.spell.iskibal.model.RuleModule;
 import work.spell.iskibal.model.Statement;
 
-/**
- * Validates rule section constraints - ensures rules have required sections.
- */
+/// Validates rule section constraints - ensures rules have required sections.
 public final class SectionValidator {
 
     private static final Set<Binary.Operator> COMPARISON_OPERATORS = Set.of(Binary.Operator.EQUALS,
@@ -22,13 +20,11 @@ public final class SectionValidator {
 
     private final List<SemanticDiagnostic> diagnostics = new ArrayList<>();
 
-    /**
-     * Validates section constraints in the module.
-     *
-     * @param module
-     *            the rule module to validate
-     * @return list of diagnostics (empty if no errors)
-     */
+    /// Validates section constraints in the module.
+    ///
+    /// @param module
+    ///            the rule module to validate
+    /// @return list of diagnostics (empty if no errors)
     public List<SemanticDiagnostic> validate(RuleModule module) {
         diagnostics.clear();
 
@@ -91,12 +87,10 @@ public final class SectionValidator {
         }
     }
 
-    /**
-     * Validates that boolean expressions in when sections are not disconnected.
-     * According to the Iskara spec, boolean expressions that aren't the last
-     * statement, aren't in a comma expression, and aren't local variable
-     * assignments should be rejected.
-     */
+    /// Validates that boolean expressions in when sections are not disconnected.
+    /// According to the Iskara spec, boolean expressions that aren't the last
+    /// statement, aren't in a comma expression, and aren't local variable
+    /// assignments should be rejected.
     private void validateWhenSection(List<Statement> statements, String ruleId) {
         if (statements.size() <= 1) {
             return; // Single statement or empty - nothing to validate
@@ -116,10 +110,8 @@ public final class SectionValidator {
         }
     }
 
-    /**
-     * Checks if an expression is likely to evaluate to a boolean. This includes
-     * comparison operators and boolean literals.
-     */
+    /// Checks if an expression is likely to evaluate to a boolean. This includes
+    /// comparison operators and boolean literals.
     private boolean isBooleanExpression(Expression expr) {
         return switch (expr) {
             case Binary bin -> COMPARISON_OPERATORS.contains(bin.operator());

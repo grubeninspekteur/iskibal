@@ -9,10 +9,8 @@ import work.spell.iskibal.parser.IskaraParser;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Tests for the Iskara parser grammar. Verifies that the parser correctly
- * constructs parse trees from source code.
- */
+/// Tests for the Iskara parser grammar. Verifies that the parser correctly
+/// constructs parse trees from source code.
 class ParserTest {
 
     @Nested

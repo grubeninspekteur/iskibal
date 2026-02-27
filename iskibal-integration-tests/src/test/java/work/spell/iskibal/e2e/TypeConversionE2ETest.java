@@ -14,10 +14,8 @@ import org.junit.jupiter.api.Test;
 import work.spell.iskibal.testing.RuleTestBuilder;
 import work.spell.iskibal.testing.RuleTestResult;
 
-/**
- * End-to-end tests for type conversion between int and BigDecimal. These tests
- * validate that the compiler correctly handles type coercion scenarios.
- */
+/// End-to-end tests for type conversion between int and BigDecimal. These tests
+/// validate that the compiler correctly handles type coercion scenarios.
 class TypeConversionE2ETest {
 
     @Nested

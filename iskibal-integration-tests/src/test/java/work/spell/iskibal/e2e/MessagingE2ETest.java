@@ -11,10 +11,8 @@ import org.junit.jupiter.api.Test;
 import work.spell.iskibal.testing.RuleTestBuilder;
 import work.spell.iskibal.testing.RuleTestResult;
 
-/**
- * End-to-end tests for Smalltalk-style message sending. Exercises keyword and
- * multi-keyword messages.
- */
+/// End-to-end tests for Smalltalk-style message sending. Exercises keyword and
+/// multi-keyword messages.
 class MessagingE2ETest {
 
     @Nested

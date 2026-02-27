@@ -14,40 +14,32 @@ import work.spell.iskibal.model.Fact;
 import work.spell.iskibal.model.Global;
 import work.spell.iskibal.model.Output;
 
-/**
- * Parses AsciiDoc tables into Iskara model objects.
- * <p>
- * Supports parsing of:
- * <ul>
- * <li>{@code .facts} tables into {@link Fact} objects</li>
- * <li>{@code .globals} tables into {@link Global} objects</li>
- * <li>{@code .outputs} tables into {@link Output} objects</li>
- * <li>{@code .data-table} tables into {@link DataTable} objects</li>
- * </ul>
- */
+/// Parses AsciiDoc tables into Iskara model objects.
+///
+/// Supports parsing of:
+/// - `.facts` tables into [Fact] objects
+/// - `.globals` tables into [Global] objects
+/// - `.outputs` tables into [Output] objects
+/// - `.data-table` tables into [DataTable] objects
 public class TableParser {
 
     private final ExpressionParser expressionParser;
 
-    /**
-     * Creates a TableParser with the given expression parser.
-     *
-     * @param expressionParser
-     *            the parser for expressions in table cells
-     */
+    /// Creates a TableParser with the given expression parser.
+    ///
+    /// @param expressionParser
+    ///            the parser for expressions in table cells
     public TableParser(ExpressionParser expressionParser) {
         this.expressionParser = expressionParser;
     }
 
-    /**
-     * Parses a .facts table into a list of Fact objects.
-     * <p>
-     * Expected columns: Fact name | Type | Description (optional)
-     *
-     * @param table
-     *            the AsciiDoc table
-     * @return list of parsed facts
-     */
+    /// Parses a .facts table into a list of Fact objects.
+    ///
+    /// Expected columns: Fact name | Type | Description (optional)
+    ///
+    /// @param table
+    ///            the AsciiDoc table
+    /// @return list of parsed facts
     public java.util.List<Fact> parseFacts(Table table) {
         java.util.List<Fact> facts = new ArrayList<>();
         java.util.List<Row> bodyRows = getBodyRows(table);
@@ -68,15 +60,13 @@ public class TableParser {
         return facts;
     }
 
-    /**
-     * Parses a .globals table into a list of Global objects.
-     * <p>
-     * Expected columns: Global name | Type | Description (optional)
-     *
-     * @param table
-     *            the AsciiDoc table
-     * @return list of parsed globals
-     */
+    /// Parses a .globals table into a list of Global objects.
+    ///
+    /// Expected columns: Global name | Type | Description (optional)
+    ///
+    /// @param table
+    ///            the AsciiDoc table
+    /// @return list of parsed globals
     public java.util.List<Global> parseGlobals(Table table) {
         java.util.List<Global> globals = new ArrayList<>();
         java.util.List<Row> bodyRows = getBodyRows(table);
@@ -97,16 +87,14 @@ public class TableParser {
         return globals;
     }
 
-    /**
-     * Parses a .outputs table into a list of Output objects.
-     * <p>
-     * Expected columns: Output name | Type | Initial value | Description
-     * (optional)
-     *
-     * @param table
-     *            the AsciiDoc table
-     * @return list of parsed outputs
-     */
+    /// Parses a .outputs table into a list of Output objects.
+    ///
+    /// Expected columns: Output name | Type | Initial value | Description
+    /// (optional)
+    ///
+    /// @param table
+    ///            the AsciiDoc table
+    /// @return list of parsed outputs
     public java.util.List<Output> parseOutputs(Table table) {
         java.util.List<Output> outputs = new ArrayList<>();
         java.util.List<Row> bodyRows = getBodyRows(table);
@@ -132,18 +120,16 @@ public class TableParser {
         return outputs;
     }
 
-    /**
-     * Parses a .data-table into a DataTable object.
-     * <p>
-     * The first row is treated as column headers. Subsequent rows contain data
-     * values.
-     *
-     * @param table
-     *            the AsciiDoc table
-     * @param id
-     *            the table ID
-     * @return the parsed DataTable
-     */
+    /// Parses a .data-table into a DataTable object.
+    ///
+    /// The first row is treated as column headers. Subsequent rows contain data
+    /// values.
+    ///
+    /// @param table
+    ///            the AsciiDoc table
+    /// @param id
+    ///            the table ID
+    /// @return the parsed DataTable
     public DataTable parseDataTable(Table table, String id) {
         java.util.List<String> headers = new ArrayList<>();
         java.util.List<DataTable.Row> rows = new ArrayList<>();
@@ -186,9 +172,7 @@ public class TableParser {
         return new DataTable.Default(id != null ? id : "unnamed", rows);
     }
 
-    /**
-     * Gets the body rows of a table, skipping header rows.
-     */
+    /// Gets the body rows of a table, skipping header rows.
     private java.util.List<Row> getBodyRows(Table table) {
         java.util.List<Row> body = table.getBody();
         if (body != null && !body.isEmpty()) {
@@ -197,9 +181,7 @@ public class TableParser {
         return java.util.List.of();
     }
 
-    /**
-     * Gets the text content of a cell.
-     */
+    /// Gets the text content of a cell.
     private String getCellText(Cell cell) {
         String text = cell.getText();
         return text != null ? text : "";

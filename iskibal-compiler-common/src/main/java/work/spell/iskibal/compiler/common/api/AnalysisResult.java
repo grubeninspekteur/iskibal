@@ -6,15 +6,11 @@ import java.util.function.Function;
 
 import work.spell.iskibal.model.RuleModule;
 
-/**
- * Result of semantic analysis, either success with optional warnings, or
- * failure with a list of errors.
- */
+/// Result of semantic analysis, either success with optional warnings, or
+/// failure with a list of errors.
 public sealed interface AnalysisResult permits AnalysisResult.Success, AnalysisResult.Failure {
 
-    /**
-     * Successful analysis result containing the validated module and any warnings.
-     */
+    /// Successful analysis result containing the validated module and any warnings.
     record Success(RuleModule module, List<SemanticDiagnostic> warnings) implements AnalysisResult {
         public Success(RuleModule module) {
             this(module, List.of());
@@ -41,9 +37,7 @@ public sealed interface AnalysisResult permits AnalysisResult.Success, AnalysisR
         }
     }
 
-    /**
-     * Failed analysis result containing the list of errors.
-     */
+    /// Failed analysis result containing the list of errors.
     record Failure(List<SemanticDiagnostic> errors) implements AnalysisResult {
         @Override
         public boolean isSuccess() {
@@ -66,29 +60,19 @@ public sealed interface AnalysisResult permits AnalysisResult.Success, AnalysisR
         }
     }
 
-    /**
-     * Returns true if the analysis was successful.
-     */
+    /// Returns true if the analysis was successful.
     boolean isSuccess();
 
-    /**
-     * Returns the validated module if successful, empty otherwise.
-     */
+    /// Returns the validated module if successful, empty otherwise.
     Optional<RuleModule> getModule();
 
-    /**
-     * Returns all diagnostics (warnings for success, errors for failure).
-     */
+    /// Returns all diagnostics (warnings for success, errors for failure).
     List<SemanticDiagnostic> getDiagnostics();
 
-    /**
-     * Returns errors only (empty for success).
-     */
+    /// Returns errors only (empty for success).
     List<SemanticDiagnostic> getErrors();
 
-    /**
-     * Maps the module if successful, preserving warnings.
-     */
+    /// Maps the module if successful, preserving warnings.
     default <U> AnalysisResult map(Function<RuleModule, RuleModule> mapper) {
         return switch (this) {
             case Success(var module, var warnings) -> new Success(mapper.apply(module), warnings);

@@ -1,15 +1,13 @@
 package work.spell.iskibal.compiler.common.api;
 
-/**
- * Represents a semantic diagnostic message.
- *
- * @param severity
- *            the severity level of the diagnostic
- * @param message
- *            the diagnostic message
- * @param elementName
- *            the name of the element where the diagnostic occurred (optional)
- */
+/// Represents a semantic diagnostic message.
+///
+/// @param severity
+///            the severity level of the diagnostic
+/// @param message
+///            the diagnostic message
+/// @param elementName
+///            the name of the element where the diagnostic occurred (optional)
 public record SemanticDiagnostic(Severity severity, String message, String elementName) {
     public enum Severity {
         ERROR, WARNING

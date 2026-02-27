@@ -12,10 +12,8 @@ import org.junit.jupiter.api.Test;
 import work.spell.iskibal.testing.RuleTestBuilder;
 import work.spell.iskibal.testing.RuleTestResult;
 
-/**
- * End-to-end tests for module-level structure including module header and
- * imports section.
- */
+/// End-to-end tests for module-level structure including module header and
+/// imports section.
 class ModuleStructureE2ETest {
 
     @Nested

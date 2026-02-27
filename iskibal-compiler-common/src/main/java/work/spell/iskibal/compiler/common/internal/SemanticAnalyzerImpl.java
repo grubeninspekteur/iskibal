@@ -12,10 +12,8 @@ import work.spell.iskibal.compiler.common.internal.validators.ReferenceValidator
 import work.spell.iskibal.compiler.common.internal.validators.SectionValidator;
 import work.spell.iskibal.model.RuleModule;
 
-/**
- * Implementation of the semantic analyzer that validates a RuleModule against
- * Iskara language rules.
- */
+/// Implementation of the semantic analyzer that validates a RuleModule against
+/// Iskara language rules.
 public final class SemanticAnalyzerImpl implements SemanticAnalyzer {
 
     private final DeclarationValidator declarationValidator = new DeclarationValidator();

@@ -2,27 +2,21 @@ package work.spell.iskibal.testing;
 
 import java.util.List;
 
-/**
- * Result of compiling a rule source into a reusable template.
- * <p>
- * This allows tests to compile once and instantiate multiple times with
- * different arguments, improving test performance for parameterized tests.
- */
+/// Result of compiling a rule source into a reusable template.
+///
+/// This allows tests to compile once and instantiate multiple times with
+/// different arguments, improving test performance for parameterized tests.
 public sealed interface CompiledRuleTemplate permits CompiledRuleTemplate.Success, CompiledRuleTemplate.Failure {
 
-    /**
-     * Successfully compiled rule template.
-     */
+    /// Successfully compiled rule template.
     record Success(Class<?> rulesClass, String generatedSource) implements CompiledRuleTemplate {
 
-        /**
-         * Creates a new instance of the compiled rules with the given constructor
-         * arguments.
-         *
-         * @param args
-         *            constructor arguments (facts and globals)
-         * @return a RuleTestResult representing the instantiation result
-         */
+        /// Creates a new instance of the compiled rules with the given constructor
+        /// arguments.
+        ///
+        /// @param args
+        ///            constructor arguments (facts and globals)
+        /// @return a RuleTestResult representing the instantiation result
         public RuleTestResult instantiate(Object... args) {
             try {
                 CompiledRules rules = CompiledRules.instantiate(rulesClass, args);
@@ -45,9 +39,7 @@ public sealed interface CompiledRuleTemplate permits CompiledRuleTemplate.Succes
         }
     }
 
-    /**
-     * Failed compilation.
-     */
+    /// Failed compilation.
     record Failure(RuleTestResult failureResult) implements CompiledRuleTemplate {
 
         @Override
@@ -61,16 +53,12 @@ public sealed interface CompiledRuleTemplate permits CompiledRuleTemplate.Succes
         }
     }
 
-    /**
-     * Returns true if compilation succeeded.
-     */
+    /// Returns true if compilation succeeded.
     boolean isSuccess();
 
-    /**
-     * Converts this template to a RuleTestResult.
-     * <p>
-     * For Success, this returns a failure indicating no facts were provided. For
-     * Failure, this returns the underlying failure result.
-     */
+    /// Converts this template to a RuleTestResult.
+    ///
+    /// For Success, this returns a failure indicating no facts were provided. For
+    /// Failure, this returns the underlying failure result.
     RuleTestResult toResult();
 }

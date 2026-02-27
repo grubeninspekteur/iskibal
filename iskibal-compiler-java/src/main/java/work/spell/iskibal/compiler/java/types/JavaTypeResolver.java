@@ -15,40 +15,32 @@ import work.spell.iskibal.compiler.java.types.JavaType.ClassType;
 import work.spell.iskibal.compiler.java.types.JavaType.PrimitiveType;
 import work.spell.iskibal.compiler.java.types.JavaType.UnknownType;
 
-/**
- * Resolves Java types using reflection.
- * <p>
- * This resolver uses a ClassLoader to load and inspect classes, determining
- * their type characteristics (record, collection, etc.) and resolving property
- * types including generic type arguments.
- */
+/// Resolves Java types using reflection.
+///
+/// This resolver uses a ClassLoader to load and inspect classes, determining
+/// their type characteristics (record, collection, etc.) and resolving property
+/// types including generic type arguments.
 public final class JavaTypeResolver {
 
     private final ClassLoader classLoader;
     private final Map<String, JavaType> typeCache = new ConcurrentHashMap<>();
     private final Map<PropertyKey, JavaType> propertyCache = new ConcurrentHashMap<>();
 
-    /**
-     * Creates a resolver using the thread context class loader.
-     */
+    /// Creates a resolver using the thread context class loader.
     public JavaTypeResolver() {
         this(Thread.currentThread().getContextClassLoader());
     }
 
-    /**
-     * Creates a resolver using the specified class loader.
-     */
+    /// Creates a resolver using the specified class loader.
     public JavaTypeResolver(ClassLoader classLoader) {
         this.classLoader = classLoader != null ? classLoader : ClassLoader.getSystemClassLoader();
     }
 
-    /**
-     * Resolves a Java type by its fully qualified name.
-     *
-     * @param qualifiedName
-     *            the fully qualified class name
-     * @return the resolved JavaType, or UnknownType if the class cannot be loaded
-     */
+    /// Resolves a Java type by its fully qualified name.
+    ///
+    /// @param qualifiedName
+    ///            the fully qualified class name
+    /// @return the resolved JavaType, or UnknownType if the class cannot be loaded
     public JavaType resolve(String qualifiedName) {
         if (qualifiedName == null || qualifiedName.isEmpty()) {
             return UnknownType.INSTANCE;
@@ -87,9 +79,7 @@ public final class JavaTypeResolver {
         }
     }
 
-    /**
-     * Creates a JavaType from a Class object.
-     */
+    /// Creates a JavaType from a Class object.
     public JavaType fromClass(Class<?> clazz) {
         if (clazz == null) {
             return UnknownType.INSTANCE;
@@ -127,9 +117,7 @@ public final class JavaTypeResolver {
         return classType;
     }
 
-    /**
-     * Creates a JavaType from a reflection Type, preserving generic information.
-     */
+    /// Creates a JavaType from a reflection Type, preserving generic information.
     public JavaType fromType(Type type) {
         if (type == null) {
             return UnknownType.INSTANCE;
@@ -209,15 +197,13 @@ public final class JavaTypeResolver {
         return ClassType.TypeKind.REGULAR;
     }
 
-    /**
-     * Resolves the type of a property on the given type.
-     *
-     * @param ownerType
-     *            the type that owns the property
-     * @param propertyName
-     *            the property name
-     * @return the property type, or UnknownType if not found
-     */
+    /// Resolves the type of a property on the given type.
+    ///
+    /// @param ownerType
+    ///            the type that owns the property
+    /// @param propertyName
+    ///            the property name
+    /// @return the property type, or UnknownType if not found
     public JavaType resolveProperty(JavaType ownerType, String propertyName) {
         if (ownerType instanceof UnknownType) {
             return UnknownType.INSTANCE;
@@ -309,9 +295,7 @@ public final class JavaTypeResolver {
         return Optional.empty();
     }
 
-    /**
-     * Checks if the given type is a record type.
-     */
+    /// Checks if the given type is a record type.
     public boolean isRecord(JavaType type) {
         if (type instanceof ClassType ct) {
             if (ct.isRecord()) {
@@ -328,9 +312,7 @@ public final class JavaTypeResolver {
         return false;
     }
 
-    /**
-     * Checks if the given type is a collection type.
-     */
+    /// Checks if the given type is a collection type.
     public boolean isCollection(JavaType type) {
         if (type.isCollection()) {
             return true;
@@ -346,9 +328,7 @@ public final class JavaTypeResolver {
         return false;
     }
 
-    /**
-     * Clears all cached type information.
-     */
+    /// Clears all cached type information.
     public void clearCache() {
         typeCache.clear();
         propertyCache.clear();

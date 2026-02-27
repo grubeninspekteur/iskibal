@@ -13,9 +13,7 @@ import work.spell.iskibal.compiler.java.types.JavaType.ClassType;
 import work.spell.iskibal.compiler.java.types.JavaType.PrimitiveType;
 import work.spell.iskibal.compiler.java.types.JavaType.UnknownType;
 
-/**
- * Tests for the JavaType sealed interface hierarchy.
- */
+/// Tests for the JavaType sealed interface hierarchy.
 class JavaTypeTest {
 
     @Nested

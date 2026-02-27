@@ -23,9 +23,7 @@ import work.spell.iskibal.model.Expression.MessageSend.UnaryMessage;
 import work.spell.iskibal.model.Expression.Navigation;
 import work.spell.iskibal.model.Statement;
 
-/**
- * Generates Java code for Iskara expressions.
- */
+/// Generates Java code for Iskara expressions.
 public final class ExpressionGenerator {
 
     private final JavaCompilerOptions options;
@@ -52,17 +50,13 @@ public final class ExpressionGenerator {
         this.typeVisitor = typeVisitor;
     }
 
-    /**
-     * Returns true if type inference is enabled.
-     */
+    /// Returns true if type inference is enabled.
     private boolean hasTypeInfo() {
         return typeVisitor != null;
     }
 
-    /**
-     * Gets the inferred type for an expression, or null if type inference is
-     * disabled.
-     */
+    /// Gets the inferred type for an expression, or null if type inference is
+    /// disabled.
     private JavaType getType(Expression expr) {
         if (typeVisitor == null) {
             return null;
@@ -71,11 +65,9 @@ public final class ExpressionGenerator {
         return typed.type();
     }
 
-    /**
-     * Registers a let variable's type in the type context. This must be called
-     * before generating code for subsequent expressions that reference the
-     * variable.
-     */
+    /// Registers a let variable's type in the type context. This must be called
+    /// before generating code for subsequent expressions that reference the
+    /// variable.
     public void registerLetVariable(String name, Expression value) {
         if (typeVisitor != null) {
             JavaType type = getType(value);
@@ -85,9 +77,7 @@ public final class ExpressionGenerator {
         }
     }
 
-    /**
-     * Generates Java code for an expression.
-     */
+    /// Generates Java code for an expression.
     public String generate(Expression expr) {
         return switch (expr) {
             case Identifier id -> generateIdentifier(id);
@@ -367,11 +357,9 @@ public final class ExpressionGenerator {
         };
     }
 
-    /**
-     * Checks if an expression evaluates to a String type. This is used to
-     * determine if a PLUS operation should use string concatenation instead of
-     * numeric addition.
-     */
+    /// Checks if an expression evaluates to a String type. This is used to
+    /// determine if a PLUS operation should use string concatenation instead of
+    /// numeric addition.
     private boolean isStringExpression(Expression expr) {
         return switch (expr) {
             case Literal.StringLiteral _ -> true;
@@ -601,10 +589,8 @@ public final class ExpressionGenerator {
         return sb.toString();
     }
 
-    /**
-     * Generates code for navigating through a collection that appears mid-chain.
-     * For example: cart.items.name where items is a List
-     */
+    /// Generates code for navigating through a collection that appears mid-chain.
+    /// For example: cart.items.name where items is a List
     private String generateMidChainCollectionNavigation(String collectionExpr, JavaType collectionType,
             List<String> propertyNames) {
         StringBuilder sb = new StringBuilder();
@@ -639,11 +625,9 @@ public final class ExpressionGenerator {
         return sb.toString();
     }
 
-    /**
-     * Generates the property accessor call for a given property name. Uses
-     * record-style accessor (name()) for records, bean-style (getName()) for
-     * others.
-     */
+    /// Generates the property accessor call for a given property name. Uses
+    /// record-style accessor (name()) for records, bean-style (getName()) for
+    /// others.
     private String generatePropertyAccessor(String name, JavaType ownerType) {
         if (hasTypeInfo() && ownerType != null && ownerType.isRecord()) {
             // Record accessor: name()
@@ -703,11 +687,9 @@ public final class ExpressionGenerator {
         return sb.toString();
     }
 
-    /**
-     * Rewrites an expression to include the implicit 'it' parameter.
-     * Transforms Identifier("x") to Navigation(Identifier("it"), ["x"])
-     * so that normal code generation produces proper property accessors.
-     */
+    /// Rewrites an expression to include the implicit 'it' parameter.
+    /// Transforms Identifier("x") to Navigation(Identifier("it"), ["x"])
+    /// so that normal code generation produces proper property accessors.
     private Expression rewriteImplicitItExpression(Expression expr) {
         return switch (expr) {
             case Identifier id -> new Navigation(new Identifier("it"), List.of(id.name()));
@@ -728,10 +710,8 @@ public final class ExpressionGenerator {
         };
     }
 
-    /**
-     * Generates the body of a block as statements (without lambda wrapper).
-     * Used for inlining blocks in control flow constructs like ifTrue:/ifFalse:.
-     */
+    /// Generates the body of a block as statements (without lambda wrapper).
+    /// Used for inlining blocks in control flow constructs like ifTrue:/ifFalse:.
     private String generateBlockBody(Block block) {
         StringBuilder sb = new StringBuilder();
         for (Statement stmt : block.statements()) {

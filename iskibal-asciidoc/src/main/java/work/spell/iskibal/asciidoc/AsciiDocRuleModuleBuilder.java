@@ -27,21 +27,17 @@ import work.spell.iskibal.parser.api.ParseResult;
 import work.spell.iskibal.parser.api.Parser;
 import work.spell.iskibal.parser.api.SourceType;
 
-/**
- * Builds a {@link RuleModule} from an AsciidoctorJ {@link Document}.
- * <p>
- * Traverses the document tree and extracts rule components based on block
- * roles:
- * <ul>
- * <li>{@code .rule} - Rule source blocks</li>
- * <li>{@code .imports} - Import definition lists</li>
- * <li>{@code .facts} - Fact tables</li>
- * <li>{@code .globals} - Global tables</li>
- * <li>{@code .outputs} - Output tables</li>
- * <li>{@code .data-table} - Data tables</li>
- * <li>{@code .decision-table} - Decision tables</li>
- * </ul>
- */
+/// Builds a [RuleModule] from an AsciidoctorJ [Document].
+///
+/// Traverses the document tree and extracts rule components based on block
+/// roles:
+/// - `.rule` - Rule source blocks
+/// - `.imports` - Import definition lists
+/// - `.facts` - Fact tables
+/// - `.globals` - Global tables
+/// - `.outputs` - Output tables
+/// - `.data-table` - Data tables
+/// - `.decision-table` - Decision tables
 public class AsciiDocRuleModuleBuilder {
 
     private static final Pattern CAPTION_PATTERN = Pattern.compile("^([A-Z0-9_-]+):\\s*(.*)$");
@@ -53,32 +49,26 @@ public class AsciiDocRuleModuleBuilder {
     private final Parser iskaraParser;
     private final Locale locale;
 
-    /**
-     * Creates an AsciiDocRuleModuleBuilder with the default locale.
-     */
+    /// Creates an AsciiDocRuleModuleBuilder with the default locale.
     public AsciiDocRuleModuleBuilder() {
         this(Locale.getDefault());
     }
 
-    /**
-     * Creates an AsciiDocRuleModuleBuilder with the specified locale.
-     *
-     * @param locale
-     *            the locale for number parsing
-     */
+    /// Creates an AsciiDocRuleModuleBuilder with the specified locale.
+    ///
+    /// @param locale
+    ///            the locale for number parsing
     public AsciiDocRuleModuleBuilder(Locale locale) {
         this(Parser.load(), locale);
     }
 
-    /**
-     * Creates an AsciiDocRuleModuleBuilder with the specified parser and
-     * locale.
-     *
-     * @param parser
-     *            the parser to use
-     * @param locale
-     *            the locale for number parsing
-     */
+    /// Creates an AsciiDocRuleModuleBuilder with the specified parser and
+    /// locale.
+    ///
+    /// @param parser
+    ///            the parser to use
+    /// @param locale
+    ///            the locale for number parsing
     public AsciiDocRuleModuleBuilder(Parser parser, Locale locale) {
         this.locale = locale;
         this.iskaraParser = parser;
@@ -88,13 +78,11 @@ public class AsciiDocRuleModuleBuilder {
         this.aliasResolver = new AliasResolver(expressionParser);
     }
 
-    /**
-     * Builds a RuleModule from an AsciiDoc document.
-     *
-     * @param document
-     *            the parsed AsciiDoc document
-     * @return the built RuleModule
-     */
+    /// Builds a RuleModule from an AsciiDoc document.
+    ///
+    /// @param document
+    ///            the parsed AsciiDoc document
+    /// @return the built RuleModule
     public RuleModule build(Document document) {
         java.util.List<Import> imports = new ArrayList<>();
         java.util.List<Fact> facts = new ArrayList<>();
@@ -108,9 +96,7 @@ public class AsciiDocRuleModuleBuilder {
         return new RuleModule.Default(imports, facts, globals, outputs, dataTables, rules);
     }
 
-    /**
-     * Recursively processes blocks in the document.
-     */
+    /// Recursively processes blocks in the document.
     private void processBlocks(Document document, StructuralNode node,
             java.util.List<Import> imports, java.util.List<Fact> facts, java.util.List<Global> globals,
             java.util.List<Output> outputs, java.util.List<DataTable> dataTables, java.util.List<Rule> rules) {
@@ -179,9 +165,7 @@ public class AsciiDocRuleModuleBuilder {
         }
     }
 
-    /**
-     * Gets the primary role from a block's roles list.
-     */
+    /// Gets the primary role from a block's roles list.
     private String getPrimaryRole(StructuralNode block) {
         java.util.List<String> roles = block.getRoles();
         if (roles == null || roles.isEmpty()) {
@@ -190,9 +174,7 @@ public class AsciiDocRuleModuleBuilder {
         return roles.getFirst();
     }
 
-    /**
-     * Checks if a block is an Iskara source block.
-     */
+    /// Checks if a block is an Iskara source block.
     private boolean isIskaraSourceBlock(StructuralNode block) {
         if (!(block instanceof org.asciidoctor.ast.Block listing)) {
             return false;
@@ -202,9 +184,7 @@ public class AsciiDocRuleModuleBuilder {
         return "source".equals(style) && "iskara".equals(language);
     }
 
-    /**
-     * Parses a rule from a source block.
-     */
+    /// Parses a rule from a source block.
     private Rule parseRuleBlock(StructuralNode block) {
         if (!(block instanceof org.asciidoctor.ast.Block listing)) {
             return null;
@@ -242,9 +222,7 @@ public class AsciiDocRuleModuleBuilder {
         return null;
     }
 
-    /**
-     * Builds the full Iskara source for a rule.
-     */
+    /// Builds the full Iskara source for a rule.
     private String buildRuleSource(String id, String description, String source) {
         StringBuilder sb = new StringBuilder();
         if (id != null) {
@@ -262,10 +240,8 @@ public class AsciiDocRuleModuleBuilder {
         return sb.toString();
     }
 
-    /**
-     * Quotes an identifier if it contains non-identifier characters.
-     * Uses backticks for quoted identifiers: `RULE-001`
-     */
+    /// Quotes an identifier if it contains non-identifier characters.
+    /// Uses backticks for quoted identifiers: `RULE-001`
     private String quoteIdIfNeeded(String id) {
         // Check if ID is a valid unquoted identifier (starts with letter/underscore,
         // contains only letters, digits, underscores)
@@ -276,9 +252,7 @@ public class AsciiDocRuleModuleBuilder {
         return "`" + id + "`";
     }
 
-    /**
-     * Parses imports from a definition list or example block containing one.
-     */
+    /// Parses imports from a definition list or example block containing one.
     private java.util.List<Import> parseImports(StructuralNode block) {
         java.util.List<Import> imports = new ArrayList<>();
 
@@ -325,9 +299,7 @@ public class AsciiDocRuleModuleBuilder {
         }
     }
 
-    /**
-     * Parses a decision table.
-     */
+    /// Parses a decision table.
     private DecisionTableRule parseDecisionTable(Document document, Table table) {
         String id = table.getId();
         String title = table.getTitle();

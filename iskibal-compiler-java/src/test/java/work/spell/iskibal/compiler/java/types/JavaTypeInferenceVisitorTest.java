@@ -32,9 +32,7 @@ import work.spell.iskibal.model.Output;
 import work.spell.iskibal.model.RuleModule;
 import work.spell.iskibal.model.Statement;
 
-/**
- * Tests for JavaTypeInferenceVisitor.
- */
+/// Tests for JavaTypeInferenceVisitor.
 class JavaTypeInferenceVisitorTest {
 
     private JavaTypeResolver resolver;

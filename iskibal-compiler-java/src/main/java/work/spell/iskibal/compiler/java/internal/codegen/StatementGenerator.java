@@ -4,9 +4,7 @@ import java.util.List;
 
 import work.spell.iskibal.model.Statement;
 
-/**
- * Generates Java code for Iskara statements.
- */
+/// Generates Java code for Iskara statements.
 public final class StatementGenerator {
 
     private final ExpressionGenerator expressionGenerator;
@@ -15,9 +13,7 @@ public final class StatementGenerator {
         this.expressionGenerator = expressionGenerator;
     }
 
-    /**
-     * Generates Java code for a single statement.
-     */
+    /// Generates Java code for a single statement.
     public String generate(Statement stmt, String indent) {
         return switch (stmt) {
             case Statement.ExpressionStatement es -> indent + expressionGenerator.generate(es.expression()) + ";";
@@ -30,9 +26,7 @@ public final class StatementGenerator {
         };
     }
 
-    /**
-     * Generates Java code for a list of statements.
-     */
+    /// Generates Java code for a list of statements.
     public String generateStatements(List<Statement> statements, String indent) {
         StringBuilder sb = new StringBuilder();
         for (Statement stmt : statements) {

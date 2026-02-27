@@ -15,16 +15,14 @@ import work.spell.iskibal.parser.api.ParseResult;
 import work.spell.iskibal.parser.api.Parser;
 import work.spell.iskibal.parser.internal.IskaraParserImpl;
 
-/**
- * Fluent builder for end-to-end rule tests.
- * <p>
- * Orchestrates the full pipeline: Parse → Analyze → Generate → Compile →
- * Instantiate
- *
- * <pre>
- * var result = RuleTestBuilder.forSource(source).withPackage("test.rules").withFact(item).build();
- * </pre>
- */
+/// Fluent builder for end-to-end rule tests.
+///
+/// Orchestrates the full pipeline: Parse → Analyze → Generate → Compile →
+/// Instantiate
+///
+/// ```
+/// var result = RuleTestBuilder.forSource(source).withPackage("test.rules").withFact(item).build();
+/// ```
 public class RuleTestBuilder {
 
     private final String source;
@@ -37,60 +35,50 @@ public class RuleTestBuilder {
         this.source = source;
     }
 
-    /**
-     * Creates a new builder for the given Iskara source code.
-     *
-     * @param source
-     *            the Iskara rule source code
-     * @return a new builder
-     */
+    /// Creates a new builder for the given Iskara source code.
+    ///
+    /// @param source
+    ///            the Iskara rule source code
+    /// @return a new builder
     public static RuleTestBuilder forSource(String source) {
         return new RuleTestBuilder(source);
     }
 
-    /**
-     * Sets the package name for generated code.
-     *
-     * @param packageName
-     *            the package name
-     * @return this builder
-     */
+    /// Sets the package name for generated code.
+    ///
+    /// @param packageName
+    ///            the package name
+    /// @return this builder
     public RuleTestBuilder withPackage(String packageName) {
         this.packageName = packageName;
         return this;
     }
 
-    /**
-     * Sets the class name for generated code.
-     *
-     * @param className
-     *            the class name
-     * @return this builder
-     */
+    /// Sets the class name for generated code.
+    ///
+    /// @param className
+    ///            the class name
+    /// @return this builder
     public RuleTestBuilder withClassName(String className) {
         this.className = className;
         return this;
     }
 
-    /**
-     * Adds a fact to be passed to the generated rules constructor.
-     *
-     * @param fact
-     *            the fact instance
-     * @return this builder
-     */
+    /// Adds a fact to be passed to the generated rules constructor.
+    ///
+    /// @param fact
+    ///            the fact instance
+    /// @return this builder
     public RuleTestBuilder withFact(Object fact) {
         this.facts.add(fact);
         return this;
     }
 
-    /**
-     * Adds multiple facts to be passed to the generated rules constructor.
-     *
-     * @param facts
-     *            the fact instances
-     * @return this builder
-     */
+    /// Adds multiple facts to be passed to the generated rules constructor.
+    ///
+    /// @param facts
+    ///            the fact instances
+    /// @return this builder
     public RuleTestBuilder withFacts(Object... facts) {
         for (Object fact : facts) {
             this.facts.add(fact);
@@ -98,25 +86,21 @@ public class RuleTestBuilder {
         return this;
     }
 
-    /**
-     * Adds a global to be passed to the generated rules constructor.
-     *
-     * @param global
-     *            the global instance
-     * @return this builder
-     */
+    /// Adds a global to be passed to the generated rules constructor.
+    ///
+    /// @param global
+    ///            the global instance
+    /// @return this builder
     public RuleTestBuilder withGlobal(Object global) {
         this.globals.add(global);
         return this;
     }
 
-    /**
-     * Adds multiple globals to be passed to the generated rules constructor.
-     *
-     * @param globals
-     *            the global instances
-     * @return this builder
-     */
+    /// Adds multiple globals to be passed to the generated rules constructor.
+    ///
+    /// @param globals
+    ///            the global instances
+    /// @return this builder
     public RuleTestBuilder withGlobals(Object... globals) {
         for (Object global : globals) {
             this.globals.add(global);
@@ -124,22 +108,18 @@ public class RuleTestBuilder {
         return this;
     }
 
-    /**
-     * Compiles the rules without instantiation, returning a reusable template.
-     * <p>
-     * This allows tests to compile once and instantiate multiple times with
-     * different arguments, improving performance for parameterized tests.
-     * <p>
-     * This method orchestrates stages 1-4 of the pipeline:
-     * <ol>
-     * <li>Parse the Iskara source</li>
-     * <li>Run semantic analysis</li>
-     * <li>Generate Java source code</li>
-     * <li>Compile Java source to bytecode</li>
-     * </ol>
-     *
-     * @return a template that can be instantiated multiple times
-     */
+    /// Compiles the rules without instantiation, returning a reusable template.
+    ///
+    /// This allows tests to compile once and instantiate multiple times with
+    /// different arguments, improving performance for parameterized tests.
+    ///
+    /// This method orchestrates stages 1-4 of the pipeline:
+    /// - Parse the Iskara source
+    /// - Run semantic analysis
+    /// - Generate Java source code
+    /// - Compile Java source to bytecode
+    ///
+    /// @return a template that can be instantiated multiple times
     public CompiledRuleTemplate compile() {
         // Stage 1: Parse
         Parser parser = new IskaraParserImpl();
@@ -188,20 +168,16 @@ public class RuleTestBuilder {
         return new CompiledRuleTemplate.Success(compiledClass, generatedSource);
     }
 
-    /**
-     * Builds and compiles the rules, returning the result.
-     * <p>
-     * This method orchestrates the full pipeline:
-     * <ol>
-     * <li>Parse the Iskara source</li>
-     * <li>Run semantic analysis</li>
-     * <li>Generate Java source code</li>
-     * <li>Compile Java source to bytecode</li>
-     * <li>Instantiate the compiled class</li>
-     * </ol>
-     *
-     * @return the test result
-     */
+    /// Builds and compiles the rules, returning the result.
+    ///
+    /// This method orchestrates the full pipeline:
+    /// - Parse the Iskara source
+    /// - Run semantic analysis
+    /// - Generate Java source code
+    /// - Compile Java source to bytecode
+    /// - Instantiate the compiled class
+    ///
+    /// @return the test result
     public RuleTestResult build() {
         // Stage 1: Parse
         Parser parser = new IskaraParserImpl();

@@ -3,76 +3,56 @@ package work.spell.iskibal.compiler.java.types;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Represents Java types used during type inference and code generation.
- * <p>
- * This is a Java-specific type model used internally by the Java compiler to
- * generate type-correct code. It is separate from the rule model, which remains
- * target-agnostic.
- */
+/// Represents Java types used during type inference and code generation.
+///
+/// This is a Java-specific type model used internally by the Java compiler to
+/// generate type-correct code. It is separate from the rule model, which remains
+/// target-agnostic.
 public sealed interface JavaType
         permits JavaType.PrimitiveType, JavaType.ClassType, JavaType.ArrayType, JavaType.UnknownType {
 
-    /**
-     * Returns the fully qualified name of this type.
-     */
+    /// Returns the fully qualified name of this type.
     String qualifiedName();
 
-    /**
-     * Returns true if this type represents a Java collection (List, Set,
-     * Collection).
-     */
+    /// Returns true if this type represents a Java collection (List, Set,
+    /// Collection).
     default boolean isCollection() {
         return false;
     }
 
-    /**
-     * Returns true if this type represents a Java Map.
-     */
+    /// Returns true if this type represents a Java Map.
     default boolean isMap() {
         return false;
     }
 
-    /**
-     * Returns true if this type represents a Java record.
-     */
+    /// Returns true if this type represents a Java record.
     default boolean isRecord() {
         return false;
     }
 
-    /**
-     * Returns true if this type is numeric (primitive or boxed numeric type, or
-     * BigDecimal/BigInteger).
-     */
+    /// Returns true if this type is numeric (primitive or boxed numeric type, or
+    /// BigDecimal/BigInteger).
     default boolean isNumeric() {
         return false;
     }
 
-    /**
-     * Returns true if this type is boolean (primitive or boxed).
-     */
+    /// Returns true if this type is boolean (primitive or boxed).
     default boolean isBoolean() {
         return false;
     }
 
-    /**
-     * Returns true if this type is a String.
-     */
+    /// Returns true if this type is a String.
     default boolean isString() {
         return false;
     }
 
-    /**
-     * Returns the element type if this is a collection or array, otherwise returns
-     * this type.
-     */
+    /// Returns the element type if this is a collection or array, otherwise returns
+    /// this type.
     default JavaType elementType() {
         return this;
     }
 
-    /**
-     * Primitive Java types.
-     */
+    /// Primitive Java types.
     enum PrimitiveType implements JavaType {
         INT("int", true, false), LONG("long", true, false), DOUBLE("double", true, false), FLOAT("float", true,
                 false), BOOLEAN("boolean", false, true), CHAR("char", false,
@@ -103,9 +83,7 @@ public sealed interface JavaType
             return booleanType;
         }
 
-        /**
-         * Returns the primitive type for the given name, or null if not a primitive.
-         */
+        /// Returns the primitive type for the given name, or null if not a primitive.
         public static PrimitiveType forName(String name) {
             for (PrimitiveType type : values()) {
                 if (type.name.equals(name)) {
@@ -116,27 +94,23 @@ public sealed interface JavaType
         }
     }
 
-    /**
-     * Reference types (classes, interfaces, records).
-     */
+    /// Reference types (classes, interfaces, records).
     record ClassType(String qualifiedName, List<JavaType> typeArguments, boolean record,
             TypeKind kind) implements JavaType {
 
-        /**
-         * Kinds of class types for special handling.
-         */
+        /// Kinds of class types for special handling.
         public enum TypeKind {
-            /** Regular class or interface */
+            /// Regular class or interface
             REGULAR,
-            /** Collection type (List, Set, Collection) */
+            /// Collection type (List, Set, Collection)
             COLLECTION,
-            /** Map type */
+            /// Map type
             MAP,
-            /** Boxed primitive (Integer, Long, etc.) */
+            /// Boxed primitive (Integer, Long, etc.)
             BOXED_PRIMITIVE,
-            /** BigDecimal or BigInteger */
+            /// BigDecimal or BigInteger
             BIG_NUMERIC,
-            /** String */
+            /// String
             STRING
         }
 
@@ -145,37 +119,27 @@ public sealed interface JavaType
             typeArguments = typeArguments != null ? List.copyOf(typeArguments) : List.of();
         }
 
-        /**
-         * Creates a simple class type without type arguments.
-         */
+        /// Creates a simple class type without type arguments.
         public static ClassType of(String qualifiedName) {
             return new ClassType(qualifiedName, List.of(), false, TypeKind.REGULAR);
         }
 
-        /**
-         * Creates a class type with the specified kind.
-         */
+        /// Creates a class type with the specified kind.
         public static ClassType of(String qualifiedName, TypeKind kind) {
             return new ClassType(qualifiedName, List.of(), false, kind);
         }
 
-        /**
-         * Creates a record type.
-         */
+        /// Creates a record type.
         public static ClassType record(String qualifiedName) {
             return new ClassType(qualifiedName, List.of(), true, TypeKind.REGULAR);
         }
 
-        /**
-         * Creates a collection type with the specified element type.
-         */
+        /// Creates a collection type with the specified element type.
         public static ClassType collection(String qualifiedName, JavaType elementType) {
             return new ClassType(qualifiedName, List.of(elementType), false, TypeKind.COLLECTION);
         }
 
-        /**
-         * Creates a map type with the specified key and value types.
-         */
+        /// Creates a map type with the specified key and value types.
         public static ClassType map(String qualifiedName, JavaType keyType, JavaType valueType) {
             return new ClassType(qualifiedName, List.of(keyType, valueType), false, TypeKind.MAP);
         }
@@ -224,9 +188,7 @@ public sealed interface JavaType
             return this;
         }
 
-        /**
-         * Returns the key type if this is a map, otherwise returns unknown.
-         */
+        /// Returns the key type if this is a map, otherwise returns unknown.
         public JavaType keyType() {
             if (isMap() && typeArguments.size() >= 1) {
                 return typeArguments.getFirst();
@@ -234,9 +196,7 @@ public sealed interface JavaType
             return UnknownType.INSTANCE;
         }
 
-        /**
-         * Returns the value type if this is a map, otherwise returns unknown.
-         */
+        /// Returns the value type if this is a map, otherwise returns unknown.
         public JavaType valueType() {
             if (isMap() && typeArguments.size() >= 2) {
                 return typeArguments.get(1);
@@ -244,18 +204,14 @@ public sealed interface JavaType
             return UnknownType.INSTANCE;
         }
 
-        /**
-         * Returns the simple (unqualified) name of this class.
-         */
+        /// Returns the simple (unqualified) name of this class.
         public String simpleName() {
             int lastDot = qualifiedName.lastIndexOf('.');
             return lastDot >= 0 ? qualifiedName.substring(lastDot + 1) : qualifiedName;
         }
     }
 
-    /**
-     * Array types.
-     */
+    /// Array types.
     record ArrayType(JavaType componentType) implements JavaType {
 
         public ArrayType {
@@ -273,17 +229,13 @@ public sealed interface JavaType
         }
     }
 
-    /**
-     * Represents an unknown or unresolved type.
-     */
+    /// Represents an unknown or unresolved type.
     record UnknownType(String hint) implements JavaType {
 
-        /** Singleton instance for types with no hint. */
+        /// Singleton instance for types with no hint.
         public static final UnknownType INSTANCE = new UnknownType(null);
 
-        /**
-         * Creates an unknown type with a hint about what was expected.
-         */
+        /// Creates an unknown type with a hint about what was expected.
         public static UnknownType withHint(String hint) {
             return new UnknownType(hint);
         }

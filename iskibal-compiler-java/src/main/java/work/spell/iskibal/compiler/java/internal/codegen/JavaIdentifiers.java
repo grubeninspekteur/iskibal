@@ -1,21 +1,17 @@
 package work.spell.iskibal.compiler.java.internal.codegen;
 
-/**
- * Utility methods for working with Java identifiers.
- */
+/// Utility methods for working with Java identifiers.
 public final class JavaIdentifiers {
 
     private JavaIdentifiers() {
     }
 
-    /**
-     * Sanitizes a name to be a valid Java identifier. Spaces and other invalid
-     * characters are replaced or removed, and the result is converted to camelCase.
-     *
-     * @param name
-     *            the name to sanitize
-     * @return a valid Java identifier
-     */
+    /// Sanitizes a name to be a valid Java identifier. Spaces and other invalid
+    /// characters are replaced or removed, and the result is converted to camelCase.
+    ///
+    /// @param name
+    ///            the name to sanitize
+    /// @return a valid Java identifier
     public static String sanitize(String name) {
         if (name == null || name.isEmpty()) {
             return name;
@@ -61,13 +57,11 @@ public final class JavaIdentifiers {
         return sb.toString();
     }
 
-    /**
-     * Capitalizes the first letter of a string (for getter/setter names).
-     *
-     * @param s
-     *            the string to capitalize
-     * @return the capitalized string
-     */
+    /// Capitalizes the first letter of a string (for getter/setter names).
+    ///
+    /// @param s
+    ///            the string to capitalize
+    /// @return the capitalized string
     public static String capitalize(String s) {
         if (s == null || s.isEmpty()) {
             return s;
@@ -75,13 +69,11 @@ public final class JavaIdentifiers {
         return Character.toUpperCase(s.charAt(0)) + s.substring(1);
     }
 
-    /**
-     * Sanitizes a name and capitalizes the first letter, suitable for getter names.
-     *
-     * @param name
-     *            the name to process
-     * @return sanitized and capitalized name
-     */
+    /// Sanitizes a name and capitalizes the first letter, suitable for getter names.
+    ///
+    /// @param name
+    ///            the name to process
+    /// @return sanitized and capitalized name
     public static String sanitizeAndCapitalize(String name) {
         return capitalize(sanitize(name));
     }

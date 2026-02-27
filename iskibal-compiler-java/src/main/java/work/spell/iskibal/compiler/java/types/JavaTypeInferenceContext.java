@@ -10,17 +10,13 @@ import work.spell.iskibal.model.Global;
 import work.spell.iskibal.model.Output;
 import work.spell.iskibal.model.RuleModule;
 
-/**
- * Tracks type information during type inference.
- * <p>
- * This context manages:
- * <ul>
- * <li>Fact types - input objects available to rules</li>
- * <li>Global types - shared state accessible via @name syntax</li>
- * <li>Output types - rule outputs</li>
- * <li>Local variable types - variables declared with let</li>
- * </ul>
- */
+/// Tracks type information during type inference.
+///
+/// This context manages:
+/// - Fact types - input objects available to rules
+/// - Global types - shared state accessible via @name syntax
+/// - Output types - rule outputs
+/// - Local variable types - variables declared with let
 public final class JavaTypeInferenceContext {
 
     private final JavaTypeResolver resolver;
@@ -30,25 +26,19 @@ public final class JavaTypeInferenceContext {
     private final Map<String, JavaType> localTypes = new HashMap<>();
     private final Map<String, JavaType> dataTableTypes = new HashMap<>();
 
-    /**
-     * Creates a context with the given resolver.
-     */
+    /// Creates a context with the given resolver.
     public JavaTypeInferenceContext(JavaTypeResolver resolver) {
         this.resolver = Objects.requireNonNull(resolver, "resolver");
     }
 
-    /**
-     * Creates a context and initializes it from a RuleModule.
-     */
+    /// Creates a context and initializes it from a RuleModule.
     public static JavaTypeInferenceContext fromModule(RuleModule module, JavaTypeResolver resolver) {
         JavaTypeInferenceContext context = new JavaTypeInferenceContext(resolver);
         context.initializeFromModule(module);
         return context;
     }
 
-    /**
-     * Initializes the context with type information from a RuleModule.
-     */
+    /// Initializes the context with type information from a RuleModule.
     public void initializeFromModule(RuleModule module) {
         // Register fact types
         for (Fact fact : module.facts()) {
@@ -87,22 +77,18 @@ public final class JavaTypeInferenceContext {
         }
     }
 
-    /**
-     * Returns the type resolver.
-     */
+    /// Returns the type resolver.
     public JavaTypeResolver resolver() {
         return resolver;
     }
 
-    /**
-     * Looks up the type of an identifier.
-     * <p>
-     * This checks facts, outputs, and local variables in order.
-     *
-     * @param name
-     *            the identifier name
-     * @return the type, or UnknownType if not found
-     */
+    /// Looks up the type of an identifier.
+    ///
+    /// This checks facts, outputs, and local variables in order.
+    ///
+    /// @param name
+    ///            the identifier name
+    /// @return the type, or UnknownType if not found
     public JavaType lookupIdentifier(String name) {
         // Check facts first
         JavaType type = factTypes.get(name);
@@ -131,13 +117,11 @@ public final class JavaTypeInferenceContext {
         return JavaType.UnknownType.withHint("identifier: " + name);
     }
 
-    /**
-     * Looks up the type of a global (prefixed with @ in source).
-     *
-     * @param name
-     *            the global name (without @ prefix)
-     * @return the type, or UnknownType if not found
-     */
+    /// Looks up the type of a global (prefixed with @ in source).
+    ///
+    /// @param name
+    ///            the global name (without @ prefix)
+    /// @return the type, or UnknownType if not found
     public JavaType lookupGlobal(String name) {
         JavaType type = globalTypes.get(name);
         if (type != null) {
@@ -146,47 +130,35 @@ public final class JavaTypeInferenceContext {
         return JavaType.UnknownType.withHint("global: @" + name);
     }
 
-    /**
-     * Declares a local variable with the given type.
-     */
+    /// Declares a local variable with the given type.
     public void declareLocal(String name, JavaType type) {
         localTypes.put(name, type);
     }
 
-    /**
-     * Returns true if the given name is a known fact.
-     */
+    /// Returns true if the given name is a known fact.
     public boolean isFact(String name) {
         return factTypes.containsKey(name);
     }
 
-    /**
-     * Returns true if the given name is a known global.
-     */
+    /// Returns true if the given name is a known global.
     public boolean isGlobal(String name) {
         return globalTypes.containsKey(name);
     }
 
-    /**
-     * Returns true if the given name is a known output.
-     */
+    /// Returns true if the given name is a known output.
     public boolean isOutput(String name) {
         return outputTypes.containsKey(name);
     }
 
-    /**
-     * Returns the type of the given output.
-     */
+    /// Returns the type of the given output.
     public JavaType getOutputType(String name) {
         return outputTypes.getOrDefault(name, JavaType.UnknownType.INSTANCE);
     }
 
-    /**
-     * Creates a child context for a nested scope (e.g., block).
-     * <p>
-     * The child context shares fact, global, and output types but has its own local
-     * variables.
-     */
+    /// Creates a child context for a nested scope (e.g., block).
+    ///
+    /// The child context shares fact, global, and output types but has its own local
+    /// variables.
     public JavaTypeInferenceContext childScope() {
         JavaTypeInferenceContext child = new JavaTypeInferenceContext(resolver);
         child.factTypes.putAll(this.factTypes);

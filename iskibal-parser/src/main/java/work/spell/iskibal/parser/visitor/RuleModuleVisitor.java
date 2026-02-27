@@ -8,9 +8,7 @@ import work.spell.iskibal.parser.diagnostic.IskaraDiagnosticListener;
 
 import java.util.*;
 
-/**
- * Visitor that builds a complete RuleModule from the parse tree.
- */
+/// Visitor that builds a complete RuleModule from the parse tree.
 public class RuleModuleVisitor extends IskaraParserBaseVisitor<RuleModule> {
 
     private final ExpressionVisitor expressionVisitor;

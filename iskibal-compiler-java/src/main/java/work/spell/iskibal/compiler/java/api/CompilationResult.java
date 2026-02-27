@@ -4,14 +4,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * Result of Java compilation, containing generated source files.
- */
+/// Result of Java compilation, containing generated source files.
 public sealed interface CompilationResult permits CompilationResult.Success, CompilationResult.Failure {
 
-    /**
-     * Successful compilation result containing the generated source files.
-     */
+    /// Successful compilation result containing the generated source files.
     record Success(Map<String, String> sourceFiles) implements CompilationResult {
         @Override
         public boolean isSuccess() {
@@ -28,9 +24,7 @@ public sealed interface CompilationResult permits CompilationResult.Success, Com
             return List.of();
         }
 
-        /**
-         * Returns the source code for the main generated file.
-         */
+        /// Returns the source code for the main generated file.
         public String getMainSource() {
             if (sourceFiles.isEmpty()) {
                 return "";
@@ -39,9 +33,7 @@ public sealed interface CompilationResult permits CompilationResult.Success, Com
         }
     }
 
-    /**
-     * Failed compilation result containing error messages.
-     */
+    /// Failed compilation result containing error messages.
     record Failure(List<String> errors) implements CompilationResult {
         @Override
         public boolean isSuccess() {
@@ -59,20 +51,14 @@ public sealed interface CompilationResult permits CompilationResult.Success, Com
         }
     }
 
-    /**
-     * Returns true if the compilation was successful.
-     */
+    /// Returns true if the compilation was successful.
     boolean isSuccess();
 
-    /**
-     * Returns the generated source files if successful, empty otherwise. Map keys
-     * are file paths (e.g., "com/example/GeneratedRules.java"), values are source
-     * code.
-     */
+    /// Returns the generated source files if successful, empty otherwise. Map keys
+    /// are file paths (e.g., "com/example/GeneratedRules.java"), values are source
+    /// code.
     Optional<Map<String, String>> getSourceFiles();
 
-    /**
-     * Returns error messages if failed, empty list otherwise.
-     */
+    /// Returns error messages if failed, empty list otherwise.
     List<String> getErrors();
 }

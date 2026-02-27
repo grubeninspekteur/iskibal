@@ -12,10 +12,8 @@ import org.junit.jupiter.api.Test;
 import work.spell.iskibal.testing.RuleTestBuilder;
 import work.spell.iskibal.testing.RuleTestResult;
 
-/**
- * End-to-end tests for navigation expressions. Tests property access, nested
- * navigation, and null-safe chains.
- */
+/// End-to-end tests for navigation expressions. Tests property access, nested
+/// navigation, and null-safe chains.
 class NavigationE2ETest {
 
     @Nested

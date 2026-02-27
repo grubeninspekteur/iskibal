@@ -26,10 +26,8 @@ import java.util.Locale;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Integration tests for the full parsing pipeline. Verifies that source code is
- * correctly transformed into the AST model.
- */
+/// Integration tests for the full parsing pipeline. Verifies that source code is
+/// correctly transformed into the AST model.
 class FullParseTest {
 
     private final IskaraParserImpl parser = new IskaraParserImpl();

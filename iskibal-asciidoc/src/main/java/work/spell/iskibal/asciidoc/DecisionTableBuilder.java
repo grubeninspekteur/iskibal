@@ -12,39 +12,33 @@ import work.spell.iskibal.model.RuleModule;
 import work.spell.iskibal.model.Rule.DecisionTableRule;
 import work.spell.iskibal.parser.api.ParseResult;
 
-/**
- * Builds {@link DecisionTableRule} instances from AsciiDoc tables.
- * <p>
- * Converts AsciiDoc table structure to Iskara decision table syntax and parses
- * it using the Iskara parser.
- */
+/// Builds [DecisionTableRule] instances from AsciiDoc tables.
+///
+/// Converts AsciiDoc table structure to Iskara decision table syntax and parses
+/// it using the Iskara parser.
 public class DecisionTableBuilder {
 
     private final ExpressionParser expressionParser;
 
-    /**
-     * Creates a DecisionTableBuilder with the given expression parser.
-     *
-     * @param expressionParser
-     *            the parser for cell expressions
-     */
+    /// Creates a DecisionTableBuilder with the given expression parser.
+    ///
+    /// @param expressionParser
+    ///            the parser for cell expressions
     public DecisionTableBuilder(ExpressionParser expressionParser) {
         this.expressionParser = expressionParser;
     }
 
-    /**
-     * Builds a DecisionTableRule from an AsciiDoc table.
-     *
-     * @param table
-     *            the AsciiDoc table
-     * @param id
-     *            the rule ID
-     * @param description
-     *            the rule description (from caption)
-     * @param aliases
-     *            resolved aliases for this table
-     * @return the built DecisionTableRule
-     */
+    /// Builds a DecisionTableRule from an AsciiDoc table.
+    ///
+    /// @param table
+    ///            the AsciiDoc table
+    /// @param id
+    ///            the rule ID
+    /// @param description
+    ///            the rule description (from caption)
+    /// @param aliases
+    ///            resolved aliases for this table
+    /// @return the built DecisionTableRule
     public DecisionTableRule build(Table table, String id, String description,
             Map<String, Expression.Block> aliases) {
 
@@ -66,9 +60,7 @@ public class DecisionTableBuilder {
                 "Failed to parse decision table '%s': %s".formatted(id, result.getDiagnostics()));
     }
 
-    /**
-     * Builds Iskara decision table source from AsciiDoc table structure.
-     */
+    /// Builds Iskara decision table source from AsciiDoc table structure.
     private String buildIskaraSource(Table table, String id, String description,
             Map<String, Expression.Block> aliases) {
         StringBuilder sb = new StringBuilder();
@@ -145,9 +137,7 @@ public class DecisionTableBuilder {
         return sb.toString();
     }
 
-    /**
-     * Expands colspans in a row to individual cells.
-     */
+    /// Expands colspans in a row to individual cells.
     private java.util.List<String> expandColspans(Row row) {
         java.util.List<String> cells = new ArrayList<>();
         for (Cell cell : row.getCells()) {
@@ -163,9 +153,7 @@ public class DecisionTableBuilder {
         return cells;
     }
 
-    /**
-     * Extracts cell texts from a row.
-     */
+    /// Extracts cell texts from a row.
     private java.util.List<String> extractCellTexts(Row row) {
         java.util.List<String> cells = new ArrayList<>();
         for (Cell cell : row.getCells()) {
@@ -174,9 +162,7 @@ public class DecisionTableBuilder {
         return cells;
     }
 
-    /**
-     * Formats a row as Iskara table syntax.
-     */
+    /// Formats a row as Iskara table syntax.
     private String formatRow(java.util.List<String> cells) {
         StringBuilder sb = new StringBuilder("| ");
         for (int i = 0; i < cells.size(); i++) {
@@ -189,9 +175,7 @@ public class DecisionTableBuilder {
         return sb.toString();
     }
 
-    /**
-     * Gets the text content of a cell, decoding HTML entities.
-     */
+    /// Gets the text content of a cell, decoding HTML entities.
     private String getCellText(Cell cell) {
         String text = cell.getText();
         if (text == null) {
@@ -215,9 +199,7 @@ public class DecisionTableBuilder {
         return text;
     }
 
-    /**
-     * Quotes an identifier if needed.
-     */
+    /// Quotes an identifier if needed.
     private String quoteIdIfNeeded(String id) {
         if (id.matches("[a-zA-Z_][a-zA-Z0-9_]*")) {
             return id;
@@ -225,9 +207,7 @@ public class DecisionTableBuilder {
         return "`" + id + "`";
     }
 
-    /**
-     * Converts a Block expression back to source code.
-     */
+    /// Converts a Block expression back to source code.
     private String blockToSource(Expression.Block block) {
         // Simple representation - for more complex blocks we'd need a proper
         // printer

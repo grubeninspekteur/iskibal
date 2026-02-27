@@ -1,9 +1,7 @@
 package work.spell.iskibal.e2e;
 
-/**
- * Test fixture class representing a customer for rule tests. Uses int for age
- * to test type coercion between int and BigDecimal.
- */
+/// Test fixture class representing a customer for rule tests. Uses int for age
+/// to test type coercion between int and BigDecimal.
 public class Customer {
 
     private final String name;
