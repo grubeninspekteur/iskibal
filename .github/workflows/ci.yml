@@ -7,6 +7,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    permissions:
+      checks: write
+      pull-requests: write
+
     steps:
       - uses: actions/checkout@v4
 
@@ -19,3 +23,9 @@ jobs:
 
       - name: Build and test
         run: ./mvnw --batch-mode -fae verify
+
+      - name: Publish test results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: '**/surefire-reports/*.xml'
