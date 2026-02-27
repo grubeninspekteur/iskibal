@@ -1,8 +1,8 @@
 package work.spell.iskibal.compiler.common.api;
 
-import java.util.ServiceLoader;
+import module java.base;
 
-import work.spell.iskibal.model.RuleModule;
+import module iskibal.rule.model;
 
 /// Semantic analyzer interface for validating a [RuleModule] against
 /// Iskara language rules.

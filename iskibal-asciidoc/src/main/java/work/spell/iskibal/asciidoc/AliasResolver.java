@@ -1,8 +1,6 @@
 package work.spell.iskibal.asciidoc;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import module java.base;
 
 import org.asciidoctor.ast.Block;
 import org.asciidoctor.ast.DescriptionList;
@@ -11,7 +9,7 @@ import org.asciidoctor.ast.Document;
 import org.asciidoctor.ast.ListItem;
 import org.asciidoctor.ast.StructuralNode;
 
-import work.spell.iskibal.model.Expression;
+import module iskibal.rule.model;
 
 /// Resolves alias definitions for decision tables.
 ///

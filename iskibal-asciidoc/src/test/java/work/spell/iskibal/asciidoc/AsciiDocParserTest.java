@@ -2,14 +2,14 @@ package work.spell.iskibal.asciidoc;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Locale;
+import module java.base;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import work.spell.iskibal.model.*;
-import work.spell.iskibal.parser.api.Parser;
+import module iskibal.parser;
+import module iskibal.rule.model;
 
 class AsciiDocParserTest {
 

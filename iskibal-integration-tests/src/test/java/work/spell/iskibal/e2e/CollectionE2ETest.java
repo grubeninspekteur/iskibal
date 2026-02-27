@@ -2,13 +2,8 @@ package work.spell.iskibal.e2e;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.List;
+import module java.base;
 
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

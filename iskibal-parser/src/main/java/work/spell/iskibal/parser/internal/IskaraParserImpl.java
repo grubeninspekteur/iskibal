@@ -2,7 +2,7 @@ package work.spell.iskibal.parser.internal;
 
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
-import work.spell.iskibal.model.RuleModule;
+import module iskibal.rule.model;
 import work.spell.iskibal.parser.IskaraLexer;
 import work.spell.iskibal.parser.IskaraParser;
 import work.spell.iskibal.parser.api.ParseOptions;
@@ -15,8 +15,7 @@ import work.spell.iskibal.parser.diagnostic.IskaraDiagnosticListener;
 import work.spell.iskibal.parser.visitor.ExpressionVisitor;
 import work.spell.iskibal.parser.visitor.RuleModuleVisitor;
 
-import java.util.List;
-import java.util.Set;
+import module java.base;
 
 /// Implementation of the Iskara parser using ANTLR4.
 public class IskaraParserImpl implements Parser {

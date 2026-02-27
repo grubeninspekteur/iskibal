@@ -2,32 +2,23 @@ package work.spell.iskibal.compiler.java;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
+import module java.base;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import module iskibal.rule.model;
 import work.spell.iskibal.compiler.java.api.CompilationResult;
 import work.spell.iskibal.compiler.java.api.JavaCompiler;
 import work.spell.iskibal.compiler.java.api.JavaCompilerOptions;
 import work.spell.iskibal.compiler.java.internal.JavaCompilerImpl;
-import work.spell.iskibal.model.DataTable;
-import work.spell.iskibal.model.Expression;
 import work.spell.iskibal.model.Expression.Assignment;
 import work.spell.iskibal.model.Expression.Binary;
 import work.spell.iskibal.model.Expression.Identifier;
 import work.spell.iskibal.model.Expression.Literal;
 import work.spell.iskibal.model.Expression.Navigation;
-import work.spell.iskibal.model.Fact;
-import work.spell.iskibal.model.Global;
-import work.spell.iskibal.model.Output;
-import work.spell.iskibal.model.Rule;
-import work.spell.iskibal.model.RuleModule;
-import work.spell.iskibal.model.Statement;
 
 class JavaCompilerTest {
 

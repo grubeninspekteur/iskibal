@@ -1,18 +1,12 @@
 package work.spell.iskibal.asciidoc;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import module java.base;
 
 import org.asciidoctor.ast.Cell;
 import org.asciidoctor.ast.Row;
 import org.asciidoctor.ast.Table;
 
-import work.spell.iskibal.model.DataTable;
-import work.spell.iskibal.model.Expression;
-import work.spell.iskibal.model.Fact;
-import work.spell.iskibal.model.Global;
-import work.spell.iskibal.model.Output;
+import module iskibal.rule.model;
 
 /// Parses AsciiDoc tables into Iskara model objects.
 ///

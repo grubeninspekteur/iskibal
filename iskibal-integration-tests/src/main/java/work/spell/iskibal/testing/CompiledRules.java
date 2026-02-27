@@ -1,10 +1,8 @@
 package work.spell.iskibal.testing;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import module java.base;
 
-import work.spell.iskibal.compiler.java.internal.codegen.JavaIdentifiers;
+import module iskibal.compiler.java;
 
 /// Wraps a compiled rules class for reflection-based execution.
 ///

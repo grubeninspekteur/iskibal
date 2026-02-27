@@ -1,14 +1,9 @@
 package work.spell.iskibal.compiler.common.internal.validators;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import module java.base;
 
+import module iskibal.rule.model;
 import work.spell.iskibal.compiler.common.api.SemanticDiagnostic;
-import work.spell.iskibal.model.DataTable;
-import work.spell.iskibal.model.Expression;
 import work.spell.iskibal.model.Expression.Assignment;
 import work.spell.iskibal.model.Expression.Binary;
 import work.spell.iskibal.model.Expression.Block;
@@ -19,11 +14,6 @@ import work.spell.iskibal.model.Expression.MessageSend.DefaultMessage;
 import work.spell.iskibal.model.Expression.MessageSend.KeywordMessage;
 import work.spell.iskibal.model.Expression.MessageSend.UnaryMessage;
 import work.spell.iskibal.model.Expression.Navigation;
-import work.spell.iskibal.model.Fact;
-import work.spell.iskibal.model.Output;
-import work.spell.iskibal.model.Rule;
-import work.spell.iskibal.model.RuleModule;
-import work.spell.iskibal.model.Statement;
 
 /// Validates assignment expressions - ensures facts are not assigned to and
 /// outputs are only assigned in then/else sections.

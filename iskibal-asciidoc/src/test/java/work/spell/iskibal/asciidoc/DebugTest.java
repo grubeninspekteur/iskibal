@@ -1,6 +1,6 @@
 package work.spell.iskibal.asciidoc;
 
-import java.util.Locale;
+import module java.base;
 
 import org.asciidoctor.Asciidoctor;
 import org.asciidoctor.Options;
@@ -12,8 +12,8 @@ import org.asciidoctor.ast.StructuralNode;
 import org.asciidoctor.ast.Table;
 import org.junit.jupiter.api.Test;
 
-import work.spell.iskibal.model.Expression;
-import work.spell.iskibal.parser.api.Parser;
+import module iskibal.parser;
+import module iskibal.rule.model;
 
 class DebugTest {
 

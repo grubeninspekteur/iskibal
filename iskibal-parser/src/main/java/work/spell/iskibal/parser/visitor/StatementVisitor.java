@@ -1,7 +1,6 @@
 package work.spell.iskibal.parser.visitor;
 
-import work.spell.iskibal.model.Expression;
-import work.spell.iskibal.model.Statement;
+import module iskibal.rule.model;
 import work.spell.iskibal.parser.IskaraParser;
 import work.spell.iskibal.parser.IskaraParserBaseVisitor;
 import work.spell.iskibal.parser.diagnostic.IskaraDiagnosticListener;

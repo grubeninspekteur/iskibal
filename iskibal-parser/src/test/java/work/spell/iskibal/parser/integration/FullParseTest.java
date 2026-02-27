@@ -1,10 +1,10 @@
 package work.spell.iskibal.parser.integration;
 
-import java.util.List;
+import module java.base;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import work.spell.iskibal.model.*;
+import module iskibal.rule.model;
 import work.spell.iskibal.model.Expression.Binary;
 import work.spell.iskibal.model.Expression.Binary.Operator;
 import work.spell.iskibal.model.Expression.Identifier;
@@ -20,9 +20,6 @@ import work.spell.iskibal.model.Statement.ExpressionStatement;
 import work.spell.iskibal.parser.api.ParseResult;
 import work.spell.iskibal.parser.api.SourceType;
 import work.spell.iskibal.parser.internal.IskaraParserImpl;
-
-import java.math.BigDecimal;
-import java.util.Locale;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

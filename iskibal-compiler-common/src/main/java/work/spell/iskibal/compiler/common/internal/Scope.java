@@ -1,8 +1,6 @@
 package work.spell.iskibal.compiler.common.internal;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import module java.base;
 
 /// Represents a scope in the symbol table. Scopes can be nested with parent
 /// lookups.

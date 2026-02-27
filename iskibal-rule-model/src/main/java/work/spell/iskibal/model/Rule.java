@@ -1,7 +1,6 @@
 package work.spell.iskibal.model;
 
-import java.util.List;
-import java.util.Map;
+import module java.base;
 
 import work.spell.iskibal.model.Expression.Block;
 

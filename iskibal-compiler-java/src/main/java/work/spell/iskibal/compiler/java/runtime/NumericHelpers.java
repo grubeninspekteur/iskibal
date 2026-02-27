@@ -1,7 +1,6 @@
 package work.spell.iskibal.compiler.java.runtime;
 
-import java.math.BigDecimal;
-import java.util.Objects;
+import module java.base;
 
 /// Runtime helper methods for type-safe numeric operations in generated rule
 /// code.

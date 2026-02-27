@@ -6,8 +6,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import work.spell.iskibal.parser.IskaraLexer;
 
-import java.util.ArrayList;
-import java.util.List;
+import module java.base;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;

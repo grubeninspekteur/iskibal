@@ -1,12 +1,8 @@
 package work.spell.iskibal.compiler.java.internal.codegen;
 
-import java.util.List;
-import java.util.Map;
+import module java.base;
 
-import work.spell.iskibal.model.DataTable;
-import work.spell.iskibal.model.Expression;
-import work.spell.iskibal.model.Rule;
-import work.spell.iskibal.model.Statement;
+import module iskibal.rule.model;
 
 /// Generates Java methods for Iskara rules.
 public final class RuleGenerator {

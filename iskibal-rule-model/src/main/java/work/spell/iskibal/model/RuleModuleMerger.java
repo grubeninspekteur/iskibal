@@ -1,6 +1,6 @@
 package work.spell.iskibal.model;
 
-import java.util.*;
+import module java.base;
 
 /// Merges multiple [RuleModule] instances into a single module.
 ///

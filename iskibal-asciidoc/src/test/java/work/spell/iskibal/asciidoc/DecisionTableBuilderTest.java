@@ -3,8 +3,7 @@ package work.spell.iskibal.asciidoc;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.util.Locale;
-import java.util.Map;
+import module java.base;
 
 import org.asciidoctor.Asciidoctor;
 import org.asciidoctor.Options;
@@ -15,9 +14,9 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import work.spell.iskibal.model.Expression;
+import module iskibal.parser;
+import module iskibal.rule.model;
 import work.spell.iskibal.model.Rule.DecisionTableRule;
-import work.spell.iskibal.parser.api.Parser;
 
 class DecisionTableBuilderTest {
 

@@ -1,8 +1,8 @@
 package work.spell.iskibal.compiler.java.types;
 
-import java.util.Objects;
+import module java.base;
 
-import work.spell.iskibal.model.Expression;
+import module iskibal.rule.model;
 
 /// Wraps an [Expression] with its resolved [JavaType].
 ///

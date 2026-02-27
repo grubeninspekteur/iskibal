@@ -1,7 +1,6 @@
 package work.spell.iskibal.model;
 
-import java.util.List;
-import java.util.Map;
+import module java.base;
 
 /// Represents a table of data that can be referenced from rules.
 public sealed interface DataTable permits DataTable.Default {

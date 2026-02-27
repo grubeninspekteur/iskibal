@@ -1,16 +1,12 @@
 package work.spell.iskibal.compiler.java.internal.codegen;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
+import module java.base;
 
+import module iskibal.rule.model;
 import work.spell.iskibal.compiler.java.api.JavaCompilerOptions;
 import work.spell.iskibal.compiler.java.types.JavaType;
 import work.spell.iskibal.compiler.java.types.JavaTypedExpression;
 import work.spell.iskibal.compiler.java.types.JavaTypeInferenceVisitor;
-import work.spell.iskibal.model.Expression;
 import work.spell.iskibal.model.Expression.Assignment;
 import work.spell.iskibal.model.Expression.Binary;
 import work.spell.iskibal.model.Expression.Block;
@@ -21,7 +17,6 @@ import work.spell.iskibal.model.Expression.MessageSend.DefaultMessage;
 import work.spell.iskibal.model.Expression.MessageSend.KeywordMessage;
 import work.spell.iskibal.model.Expression.MessageSend.UnaryMessage;
 import work.spell.iskibal.model.Expression.Navigation;
-import work.spell.iskibal.model.Statement;
 
 /// Generates Java code for Iskara expressions.
 public final class ExpressionGenerator {

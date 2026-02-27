@@ -1,15 +1,9 @@
 package work.spell.iskibal.asciidoc;
 
-import java.util.List;
-import java.util.Locale;
+import module java.base;
 
-import work.spell.iskibal.model.Expression;
-import work.spell.iskibal.model.RuleModule;
-import work.spell.iskibal.model.Statement;
-import work.spell.iskibal.parser.api.ParseOptions;
-import work.spell.iskibal.parser.api.ParseResult;
-import work.spell.iskibal.parser.api.Parser;
-import work.spell.iskibal.parser.api.SourceType;
+import module iskibal.parser;
+import module iskibal.rule.model;
 
 /// Helper for parsing Iskara expressions and statements from strings.
 ///

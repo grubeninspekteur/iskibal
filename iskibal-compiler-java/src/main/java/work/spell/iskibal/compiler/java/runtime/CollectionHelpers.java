@@ -1,10 +1,6 @@
 package work.spell.iskibal.compiler.java.runtime;
 
-import java.math.BigDecimal;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import module java.base;
 
 /// Runtime helper methods for collection operations in generated rule code.
 public final class CollectionHelpers {

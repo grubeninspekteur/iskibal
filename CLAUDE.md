@@ -51,6 +51,7 @@ Supporting types: `Fact`, `Global`, `Output`, `Import`, `DataTable` - all sealed
 
 ### Key Design Decisions
 
+- **Module imports (JEP 511)**: Use `import module <name>;` for all module dependencies — JDK modules (`java.base`, `java.compiler`) and project modules (`iskibal.rule.model`, `iskibal.parser`, etc.). Keep explicit imports only for: nested types (e.g. `Expression.Assignment`), same-module types (can't `import module` yourself), and disambiguation when two modules export the same simple name (e.g. `import javax.tools.ToolProvider;` alongside `import module java.compiler;` to resolve the clash with `java.util.spi.ToolProvider` from `java.base`). Third-party library imports (asciidoctor, antlr, junit, assertj) stay as explicit imports since those libraries are unnamed modules.
 - **BigDecimal for Numbers**: Uses `java.math.BigDecimal` for precision in numeric expressions
 - **Smalltalk-style Messaging**: `MessageSend` expression supports keyword-based method calls
 - **Java Module System**: Uses JPMS with explicit exports (`module iskibal.rule.model`)

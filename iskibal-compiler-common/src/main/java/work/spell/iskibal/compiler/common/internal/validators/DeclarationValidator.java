@@ -1,17 +1,9 @@
 package work.spell.iskibal.compiler.common.internal.validators;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import module java.base;
 
+import module iskibal.rule.model;
 import work.spell.iskibal.compiler.common.api.SemanticDiagnostic;
-import work.spell.iskibal.model.DataTable;
-import work.spell.iskibal.model.Fact;
-import work.spell.iskibal.model.Global;
-import work.spell.iskibal.model.Output;
-import work.spell.iskibal.model.Rule;
-import work.spell.iskibal.model.RuleModule;
 
 /// Validates uniqueness of declarations within a rule module.
 public final class DeclarationValidator {

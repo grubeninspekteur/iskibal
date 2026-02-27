@@ -1,7 +1,6 @@
 package work.spell.iskibal.testing;
 
-import java.util.List;
-import java.util.Optional;
+import module java.base;
 
 /// Result of building and compiling a rule test.
 public sealed interface RuleTestResult permits RuleTestResult.Success, RuleTestResult.ParseFailure,

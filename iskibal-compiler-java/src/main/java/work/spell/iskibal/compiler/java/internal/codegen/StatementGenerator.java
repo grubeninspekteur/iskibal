@@ -1,8 +1,8 @@
 package work.spell.iskibal.compiler.java.internal.codegen;
 
-import java.util.List;
+import module java.base;
 
-import work.spell.iskibal.model.Statement;
+import module iskibal.rule.model;
 
 /// Generates Java code for Iskara statements.
 public final class StatementGenerator {

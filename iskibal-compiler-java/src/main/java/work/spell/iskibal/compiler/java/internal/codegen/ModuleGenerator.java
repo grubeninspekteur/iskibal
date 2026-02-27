@@ -1,23 +1,12 @@
 package work.spell.iskibal.compiler.java.internal.codegen;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import module java.base;
 
+import module iskibal.rule.model;
 import work.spell.iskibal.compiler.java.api.JavaCompilerOptions;
 import work.spell.iskibal.compiler.java.types.JavaTypeInferenceContext;
 import work.spell.iskibal.compiler.java.types.JavaTypeInferenceVisitor;
 import work.spell.iskibal.compiler.java.types.JavaTypeResolver;
-import work.spell.iskibal.model.DataTable;
-import work.spell.iskibal.model.Expression;
-import work.spell.iskibal.model.Fact;
-import work.spell.iskibal.model.Global;
-import work.spell.iskibal.model.Output;
-import work.spell.iskibal.model.Rule;
-import work.spell.iskibal.model.RuleModule;
 
 /// Generates a complete Java class for a RuleModule.
 public final class ModuleGenerator {

@@ -2,8 +2,7 @@ package work.spell.iskibal.asciidoc;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Locale;
-import java.util.Map;
+import module java.base;
 
 import org.asciidoctor.Asciidoctor;
 import org.asciidoctor.Options;
@@ -12,8 +11,8 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import work.spell.iskibal.model.Expression;
-import work.spell.iskibal.parser.api.Parser;
+import module iskibal.parser;
+import module iskibal.rule.model;
 
 class AliasResolverTest {
 

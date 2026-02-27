@@ -1,16 +1,14 @@
 package work.spell.iskibal.asciidoc;
 
-import java.util.ArrayList;
-import java.util.Map;
+import module java.base;
 
 import org.asciidoctor.ast.Cell;
 import org.asciidoctor.ast.Row;
 import org.asciidoctor.ast.Table;
 
-import work.spell.iskibal.model.Expression;
-import work.spell.iskibal.model.RuleModule;
+import module iskibal.parser;
+import module iskibal.rule.model;
 import work.spell.iskibal.model.Rule.DecisionTableRule;
-import work.spell.iskibal.parser.api.ParseResult;
 
 /// Builds [DecisionTableRule] instances from AsciiDoc tables.
 ///

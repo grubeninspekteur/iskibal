@@ -1,8 +1,6 @@
 package work.spell.iskibal.compiler.java.api;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import module java.base;
 
 /// Result of Java compilation, containing generated source files.
 public sealed interface CompilationResult permits CompilationResult.Success, CompilationResult.Failure {

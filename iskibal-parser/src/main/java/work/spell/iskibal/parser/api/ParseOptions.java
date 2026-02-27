@@ -1,6 +1,6 @@
 package work.spell.iskibal.parser.api;
 
-import java.util.Locale;
+import module java.base;
 
 /// Options for parsing Iskara source code.
 ///

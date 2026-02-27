@@ -1,9 +1,6 @@
 package work.spell.iskibal.model;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import module java.base;
 
 /// Expressions form the actual executable parts of rules and statements.
 public sealed interface Expression permits Expression.Identifier, Expression.Literal, Expression.MessageSend,

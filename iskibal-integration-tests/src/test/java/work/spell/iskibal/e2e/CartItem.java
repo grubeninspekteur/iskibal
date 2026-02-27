@@ -1,6 +1,6 @@
 package work.spell.iskibal.e2e;
 
-import java.math.BigDecimal;
+import module java.base;
 
 /// Test fixture class representing a cart item for collection tests.
 public class CartItem {

@@ -1,6 +1,6 @@
 package work.spell.iskibal.model;
 
-import java.util.List;
+import module java.base;
 
 /// Root element of a rule source. A module groups together all declarations and
 /// rules that belong to one rule file or logical unit.

@@ -1,15 +1,10 @@
 package work.spell.iskibal.compiler.common.internal.validators;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import module java.base;
 
+import module iskibal.rule.model;
 import work.spell.iskibal.compiler.common.api.SemanticDiagnostic;
-import work.spell.iskibal.model.Expression;
 import work.spell.iskibal.model.Expression.Binary;
-import work.spell.iskibal.model.Rule;
-import work.spell.iskibal.model.RuleModule;
-import work.spell.iskibal.model.Statement;
 
 /// Validates rule section constraints - ensures rules have required sections.
 public final class SectionValidator {

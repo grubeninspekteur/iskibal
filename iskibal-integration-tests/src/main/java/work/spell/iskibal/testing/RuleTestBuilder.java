@@ -1,19 +1,10 @@
 package work.spell.iskibal.testing;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import work.spell.iskibal.compiler.common.api.AnalysisResult;
-import work.spell.iskibal.compiler.common.api.SemanticAnalyzer;
-import work.spell.iskibal.compiler.common.internal.SemanticAnalyzerImpl;
-import work.spell.iskibal.compiler.java.api.CompilationResult;
-import work.spell.iskibal.compiler.java.api.JavaCompiler;
-import work.spell.iskibal.compiler.java.api.JavaCompilerOptions;
-import work.spell.iskibal.compiler.java.internal.JavaCompilerImpl;
-import work.spell.iskibal.model.RuleModule;
-import work.spell.iskibal.parser.api.ParseResult;
-import work.spell.iskibal.parser.api.Parser;
-import work.spell.iskibal.parser.internal.IskaraParserImpl;
+import module java.base;
+import module iskibal.compiler.common;
+import module iskibal.compiler.java;
+import module iskibal.parser;
+import module iskibal.rule.model;
 
 /// Fluent builder for end-to-end rule tests.
 ///

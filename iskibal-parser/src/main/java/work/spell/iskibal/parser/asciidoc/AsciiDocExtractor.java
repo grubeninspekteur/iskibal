@@ -1,9 +1,6 @@
 package work.spell.iskibal.parser.asciidoc;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import module java.base;
 
 /// Extracts Iskara code blocks from AsciiDoc documents.
 ///

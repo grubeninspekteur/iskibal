@@ -3,7 +3,7 @@ package work.spell.iskibal.model;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.util.List;
+import module java.base;
 
 import org.junit.jupiter.api.Test;
 

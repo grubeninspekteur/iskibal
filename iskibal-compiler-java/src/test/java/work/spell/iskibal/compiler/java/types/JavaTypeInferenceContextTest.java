@@ -2,21 +2,18 @@ package work.spell.iskibal.compiler.java.types;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.List;
+import module java.base;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import module iskibal.rule.model;
 import work.spell.iskibal.compiler.java.types.JavaType.ClassType;
 import work.spell.iskibal.compiler.java.types.JavaType.PrimitiveType;
 import work.spell.iskibal.compiler.java.types.JavaType.UnknownType;
 import work.spell.iskibal.model.Expression.Literal;
-import work.spell.iskibal.model.Fact;
-import work.spell.iskibal.model.Global;
-import work.spell.iskibal.model.Output;
-import work.spell.iskibal.model.RuleModule;
 
 /// Tests for JavaTypeInferenceContext.
 class JavaTypeInferenceContextTest {

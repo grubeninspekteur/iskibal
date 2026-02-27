@@ -2,13 +2,12 @@ package work.spell.iskibal.parser.visitor;
 
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
-import work.spell.iskibal.model.DataTable;
-import work.spell.iskibal.model.Expression;
+import module iskibal.rule.model;
 import work.spell.iskibal.parser.IskaraLexer;
 import work.spell.iskibal.parser.IskaraParser;
 import work.spell.iskibal.parser.diagnostic.IskaraDiagnosticListener;
 
-import java.util.*;
+import module java.base;
 
 /// Visitor that handles data table parsing and builds DataTable AST nodes.
 public class TableVisitor {

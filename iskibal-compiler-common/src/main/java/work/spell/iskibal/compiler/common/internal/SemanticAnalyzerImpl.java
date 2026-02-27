@@ -1,8 +1,8 @@
 package work.spell.iskibal.compiler.common.internal;
 
-import java.util.ArrayList;
-import java.util.List;
+import module java.base;
 
+import module iskibal.rule.model;
 import work.spell.iskibal.compiler.common.api.AnalysisResult;
 import work.spell.iskibal.compiler.common.api.SemanticAnalyzer;
 import work.spell.iskibal.compiler.common.api.SemanticDiagnostic;
@@ -10,7 +10,6 @@ import work.spell.iskibal.compiler.common.internal.validators.AssignmentValidato
 import work.spell.iskibal.compiler.common.internal.validators.DeclarationValidator;
 import work.spell.iskibal.compiler.common.internal.validators.ReferenceValidator;
 import work.spell.iskibal.compiler.common.internal.validators.SectionValidator;
-import work.spell.iskibal.model.RuleModule;
 
 /// Implementation of the semantic analyzer that validates a RuleModule against
 /// Iskara language rules.

@@ -1,10 +1,6 @@
 package work.spell.iskibal.asciidoc;
 
-import java.util.ArrayList;
-import java.util.Locale;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import module java.base;
 
 import org.asciidoctor.ast.DescriptionList;
 import org.asciidoctor.ast.DescriptionListEntry;
@@ -13,19 +9,10 @@ import org.asciidoctor.ast.ListItem;
 import org.asciidoctor.ast.StructuralNode;
 import org.asciidoctor.ast.Table;
 
-import work.spell.iskibal.model.DataTable;
+import module iskibal.parser;
+import module iskibal.rule.model;
 import work.spell.iskibal.model.Expression.Block;
-import work.spell.iskibal.model.Fact;
-import work.spell.iskibal.model.Global;
-import work.spell.iskibal.model.Import;
-import work.spell.iskibal.model.Output;
-import work.spell.iskibal.model.Rule;
 import work.spell.iskibal.model.Rule.DecisionTableRule;
-import work.spell.iskibal.model.RuleModule;
-import work.spell.iskibal.parser.api.ParseOptions;
-import work.spell.iskibal.parser.api.ParseResult;
-import work.spell.iskibal.parser.api.Parser;
-import work.spell.iskibal.parser.api.SourceType;
 
 /// Builds a [RuleModule] from an AsciidoctorJ [Document].
 ///

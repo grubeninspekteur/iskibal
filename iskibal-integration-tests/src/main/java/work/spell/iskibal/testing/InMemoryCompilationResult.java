@@ -1,7 +1,6 @@
 package work.spell.iskibal.testing;
 
-import java.util.List;
-import java.util.Optional;
+import module java.base;
 
 /// Result of in-memory Java compilation.
 public sealed interface InMemoryCompilationResult

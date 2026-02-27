@@ -2,30 +2,22 @@ package work.spell.iskibal.compiler.common;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.math.BigDecimal;
-import java.util.List;
+import module java.base;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import module iskibal.rule.model;
 import work.spell.iskibal.compiler.common.api.AnalysisResult;
 import work.spell.iskibal.compiler.common.api.SemanticAnalyzer;
 import work.spell.iskibal.compiler.common.api.SemanticDiagnostic;
 import work.spell.iskibal.compiler.common.internal.SemanticAnalyzerImpl;
-import work.spell.iskibal.model.DataTable;
-import work.spell.iskibal.model.Expression;
 import work.spell.iskibal.model.Expression.Assignment;
 import work.spell.iskibal.model.Expression.Binary;
 import work.spell.iskibal.model.Expression.Identifier;
 import work.spell.iskibal.model.Expression.Literal;
-import work.spell.iskibal.model.Fact;
-import work.spell.iskibal.model.Global;
-import work.spell.iskibal.model.Output;
-import work.spell.iskibal.model.Rule;
-import work.spell.iskibal.model.RuleModule;
-import work.spell.iskibal.model.Statement;
 
 class SemanticAnalyzerTest {
 

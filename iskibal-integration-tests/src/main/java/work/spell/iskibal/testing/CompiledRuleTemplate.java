@@ -1,6 +1,6 @@
 package work.spell.iskibal.testing;
 
-import java.util.List;
+import module java.base;
 
 /// Result of compiling a rule source into a reusable template.
 ///

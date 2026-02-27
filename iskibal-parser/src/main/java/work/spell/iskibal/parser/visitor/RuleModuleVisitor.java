@@ -1,12 +1,12 @@
 package work.spell.iskibal.parser.visitor;
 
-import work.spell.iskibal.model.*;
+import module iskibal.rule.model;
 import work.spell.iskibal.model.Expression.Block;
 import work.spell.iskibal.parser.IskaraParser;
 import work.spell.iskibal.parser.IskaraParserBaseVisitor;
 import work.spell.iskibal.parser.diagnostic.IskaraDiagnosticListener;
 
-import java.util.*;
+import module java.base;
 
 /// Visitor that builds a complete RuleModule from the parse tree.
 public class RuleModuleVisitor extends IskaraParserBaseVisitor<RuleModule> {

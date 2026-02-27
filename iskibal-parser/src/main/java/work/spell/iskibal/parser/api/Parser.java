@@ -1,9 +1,8 @@
 package work.spell.iskibal.parser.api;
 
-import work.spell.iskibal.model.RuleModule;
+import module iskibal.rule.model;
 
-import java.util.ServiceLoader;
-import java.util.Set;
+import module java.base;
 
 /// Parser interface for parsing Iskara rule sources into a [RuleModule].
 ///

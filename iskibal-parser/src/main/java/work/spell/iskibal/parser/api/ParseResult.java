@@ -2,9 +2,7 @@ package work.spell.iskibal.parser.api;
 
 import work.spell.iskibal.parser.diagnostic.Diagnostic;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.function.Function;
+import module java.base;
 
 /// Result of a parse operation, either success with a value and optional
 /// warnings, or failure with a list of errors.

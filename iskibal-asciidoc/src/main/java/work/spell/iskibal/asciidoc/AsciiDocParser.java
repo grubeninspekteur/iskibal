@@ -1,27 +1,21 @@
 package work.spell.iskibal.asciidoc;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Locale;
+import module java.base;
 
 import org.asciidoctor.Asciidoctor;
 import org.asciidoctor.Options;
 import org.asciidoctor.SafeMode;
 
-import work.spell.iskibal.model.RuleModule;
-import work.spell.iskibal.model.RuleModuleMerger;
-import work.spell.iskibal.parser.diagnostic.Diagnostic;
-import work.spell.iskibal.parser.diagnostic.SourceLocation;
+import module iskibal.parser;
+import module iskibal.rule.model;
 
 /// Main entry point for parsing AsciiDoc documents containing Iskara rules.
 ///
 /// This parser uses AsciidoctorJ to parse AsciiDoc documents and extract Iskara
 /// rules from annotated blocks. It handles:
 /// - Include directives (via AsciidoctorJ)
-/// - Rule blocks ([source,iskara,.rule])
-/// - Import definition lists ([.imports])
+/// - Rule blocks (`[source,iskara,.rule]`)
+/// - Import definition lists (`[.imports]`)
 /// - Fact/Global/Output tables
 /// - Data tables
 /// - Decision tables with aliases

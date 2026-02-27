@@ -1,14 +1,8 @@
 package work.spell.iskibal.compiler.java.types;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import module java.base;
 
-import work.spell.iskibal.model.DataTable;
-import work.spell.iskibal.model.Fact;
-import work.spell.iskibal.model.Global;
-import work.spell.iskibal.model.Output;
-import work.spell.iskibal.model.RuleModule;
+import module iskibal.rule.model;
 
 /// Tracks type information during type inference.
 ///

@@ -2,8 +2,7 @@ package work.spell.iskibal.asciidoc;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.List;
-import java.util.Locale;
+import module java.base;
 
 import org.asciidoctor.Asciidoctor;
 import org.asciidoctor.ast.Document;
@@ -13,8 +12,8 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import work.spell.iskibal.model.*;
-import work.spell.iskibal.parser.api.Parser;
+import module iskibal.parser;
+import module iskibal.rule.model;
 
 class TableParserTest {
 

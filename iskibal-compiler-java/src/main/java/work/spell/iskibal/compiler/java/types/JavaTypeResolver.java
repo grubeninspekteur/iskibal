@@ -1,15 +1,6 @@
 package work.spell.iskibal.compiler.java.types;
 
-import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.WildcardType;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
+import module java.base;
 
 import work.spell.iskibal.compiler.java.types.JavaType.ClassType;
 import work.spell.iskibal.compiler.java.types.JavaType.PrimitiveType;

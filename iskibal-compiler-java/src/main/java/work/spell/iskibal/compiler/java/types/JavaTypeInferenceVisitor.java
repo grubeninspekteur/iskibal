@@ -1,13 +1,10 @@
 package work.spell.iskibal.compiler.java.types;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import module java.base;
 
+import module iskibal.rule.model;
 import work.spell.iskibal.compiler.java.types.JavaType.ClassType;
 import work.spell.iskibal.compiler.java.types.JavaType.UnknownType;
-import work.spell.iskibal.model.Expression;
 import work.spell.iskibal.model.Expression.Assignment;
 import work.spell.iskibal.model.Expression.Binary;
 import work.spell.iskibal.model.Expression.Block;
@@ -15,7 +12,6 @@ import work.spell.iskibal.model.Expression.Identifier;
 import work.spell.iskibal.model.Expression.Literal;
 import work.spell.iskibal.model.Expression.MessageSend;
 import work.spell.iskibal.model.Expression.Navigation;
-import work.spell.iskibal.model.Statement;
 
 /// Walks the AST and infers Java types for expressions.
 ///

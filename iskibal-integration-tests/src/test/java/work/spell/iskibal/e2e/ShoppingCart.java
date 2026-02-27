@@ -1,6 +1,6 @@
 package work.spell.iskibal.e2e;
 
-import java.util.List;
+import module java.base;
 
 /// Test fixture class representing a shopping cart for collection tests.
 public class ShoppingCart {

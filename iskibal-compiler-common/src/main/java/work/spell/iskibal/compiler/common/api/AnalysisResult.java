@@ -1,10 +1,8 @@
 package work.spell.iskibal.compiler.common.api;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.function.Function;
+import module java.base;
 
-import work.spell.iskibal.model.RuleModule;
+import module iskibal.rule.model;
 
 /// Result of semantic analysis, either success with optional warnings, or
 /// failure with a list of errors.

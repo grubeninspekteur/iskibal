@@ -1,16 +1,13 @@
 package work.spell.iskibal.compiler.java.internal;
 
-import java.util.List;
-import java.util.Map;
+import module java.base;
 
-import work.spell.iskibal.compiler.common.api.AnalysisResult;
-import work.spell.iskibal.compiler.common.api.SemanticAnalyzer;
-import work.spell.iskibal.compiler.common.api.SemanticDiagnostic;
+import module iskibal.compiler.common;
+import module iskibal.rule.model;
 import work.spell.iskibal.compiler.java.api.CompilationResult;
 import work.spell.iskibal.compiler.java.api.JavaCompiler;
 import work.spell.iskibal.compiler.java.api.JavaCompilerOptions;
 import work.spell.iskibal.compiler.java.internal.codegen.ModuleGenerator;
-import work.spell.iskibal.model.RuleModule;
 
 /// Implementation of the Java compiler that generates Java source code from a
 /// RuleModule.

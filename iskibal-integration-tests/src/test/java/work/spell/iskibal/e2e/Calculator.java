@@ -1,6 +1,6 @@
 package work.spell.iskibal.e2e;
 
-import java.math.BigDecimal;
+import module java.base;
 
 /// Test fixture class representing a calculator for messaging tests.
 public class Calculator {

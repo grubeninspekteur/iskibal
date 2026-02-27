@@ -1,7 +1,6 @@
 package work.spell.iskibal.compiler.java.types;
 
-import java.util.List;
-import java.util.Objects;
+import module java.base;
 
 /// Represents Java types used during type inference and code generation.
 ///
