@@ -1,0 +1,108 @@
+= Order Validation Rules
+:description: E-commerce order validation rulebase.
+
+include::_imports.adoc[leveloffset=+1]
+
+include::_facts_and_outputs.adoc[leveloffset=+1]
+
+include::_data_tables.adoc[leveloffset=+1]
+
+== Eligibility
+
+// Simple rule with when/then/else and comma operator for conditions.
+.ELIG_001: Age eligibility check
+[source,iskara,.rule]
+----
+when
+    customer.age >= 18,
+    order.lines size > 0
+then
+    eligible := "yes"
+else
+    eligible := "no"
+end
+----
+
+== Pricing
+
+// Simple rule with let, navigation, collection operations, and template strings.
+.PRICE_001: Calculate total price
+[source,iskara,.rule]
+----
+when
+    order.lines exists
+then
+    /* Calculate the sum of line prices */
+    let lineTotal := order.lines.product.price sum
+    totalPrice := lineTotal
+    message := $"Your order total is ${lineTotal}"
+end
+----
+
+// Simple rule using a data table lookup.
+.DISC_001: Apply category discount
+[source,iskara,.rule]
+----
+when
+    order.lines exists
+then
+    let firstCategory := (order.lines at: 0).product.category
+    discountPercent := CategoryDiscounts at: firstCategory
+end
+----
+
+// Simple rule using globals with @ syntax.
+.TAX_001: Calculate final price with tax
+[source,iskara,.rule]
+----
+when
+    totalPrice > 0
+then
+    let afterDiscount := totalPrice - (totalPrice * discountPercent / 100)
+    finalPrice := afterDiscount * @taxRate
+end
+----
+
+== Customer Categorization
+
+// Decision table with aliases, multiple WHEN columns, parameterized THEN alias.
+[.decision-table#CUST_CAT]
+.Categorize customer
+|===
+| ID 2+| WHEN | THEN
+
+| h| customer.age h| customer.loyaltyPoints h| #setCategory
+| SENIOR_VIP  | >= 60 | >= 500  | "Senior VIP"
+| SENIOR      | >= 60 | < 500   | "Senior"
+| LOYAL       | < 60  | >= 1000 | "Loyal"
+| REGULAR     | < 60  | < 1000  | "Regular"
+|===
+
+[.aliases,for="CUST_CAT"]
+setCategory::
++
+[source,iskara]
+----
+[:param | customerCategory := param]
+----
+
+== Coupons
+
+// Template rule with inline data table for coupon codes.
+// No caption — the template rule header is inside the source block.
+[source,iskara,.rule]
+----
+template rule COUPON "Apply coupon code discount"
+data table {
+    | code       | bonus |
+    | ---------- | ----- |
+    | "SAVE10"   | 10    |
+    | "SAVE20"   | 20    |
+    | "VIP50"    | 50    |
+}
+when
+    order.couponCode = code
+then
+    discountPercent := bonus
+end
+----

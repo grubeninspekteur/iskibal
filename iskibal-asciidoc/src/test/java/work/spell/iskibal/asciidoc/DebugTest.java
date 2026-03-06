@@ -304,6 +304,61 @@ class DebugTest {
         }
     }
 
+    @Test
+    void debugNestedSectionWithTables() {
+        // Simulate what happens when a document includes a file with sections and tables
+        String adoc = """
+                = Main Doc
+
+                == Included Section
+
+                === Facts
+
+                [.facts,cols="1,1,3"]
+                |===
+                | Fact name | Type | Description
+
+                | order | OrderContext | The order
+                |===
+
+                === Outputs
+
+                [.outputs,cols="1,1,1,3"]
+                |===
+                | Output name | Type | Initial value | Description
+
+                | total | BigDecimal | 0 | The total
+                |===
+
+                == Rules
+
+                .RULE_001: Check
+                [source,iskara,.rule]
+                ----
+                when
+                    true
+                then
+                    total := 1
+                end
+                ----
+                """;
+
+        try (Asciidoctor asciidoctor = Asciidoctor.Factory.create()) {
+            Document doc = asciidoctor.load(adoc, Options.builder().build());
+            System.out.println("=== Block Tree ===");
+            printStructure(doc, 0);
+
+            // Now parse with our parser
+            AsciiDocParser parser = new AsciiDocParser(Parser.load(), Locale.getDefault());
+            AsciiDocParser.ParseResult result = parser.parse(adoc);
+            System.out.println("\n=== Parse Result ===");
+            System.out.println("facts=" + result.module().facts().size());
+            System.out.println("outputs=" + result.module().outputs().size());
+            System.out.println("rules=" + result.module().rules().size());
+            parser.close();
+        }
+    }
+
     private void printStructure(StructuralNode node, int indent) {
         String prefix = "  ".repeat(indent);
         System.out.println(prefix + node.getClass().getSimpleName() +

@@ -205,24 +205,74 @@ public class DecisionTableBuilder {
         return "`" + id + "`";
     }
 
-    /// Converts a Block expression back to source code.
+    /// Converts a Block expression back to Iskara source code.
     private String blockToSource(Expression.Block block) {
-        // Simple representation - for more complex blocks we'd need a proper
-        // printer
         StringBuilder sb = new StringBuilder("[");
         if (!block.parameters().isEmpty()) {
-            sb.append(":");
-            for (int i = 0; i < block.parameters().size(); i++) {
-                if (i > 0) {
-                    sb.append(" :");
-                }
-                sb.append(block.parameters().get(i));
+            for (String param : block.parameters()) {
+                sb.append(":").append(param).append(" ");
             }
-            sb.append(" | ");
+            sb.append("| ");
         }
-        // For now, just mark that there's content
-        sb.append("/* alias content */");
+        boolean first = true;
+        for (Statement stmt : block.statements()) {
+            if (!first) {
+                sb.append("\n");
+            }
+            first = false;
+            sb.append(statementToSource(stmt));
+        }
         sb.append("]");
         return sb.toString();
+    }
+
+    private String statementToSource(Statement stmt) {
+        return switch (stmt) {
+            case Statement.ExpressionStatement es -> expressionToSource(es.expression());
+            case Statement.LetStatement ls -> "let " + ls.name() + " := " + expressionToSource(ls.expression());
+        };
+    }
+
+    private String expressionToSource(Expression expr) {
+        return switch (expr) {
+            case Expression.Identifier id -> id.name();
+            case Expression.Literal.StringLiteral s -> "\"" + s.value().replace("\"", "\\\"") + "\"";
+            case Expression.Literal.NumberLiteral n -> n.value().toPlainString();
+            case Expression.Literal.BooleanLiteral b -> b.value() ? "true" : "false";
+            case Expression.Literal.NullLiteral _ -> "null";
+            case Expression.Literal.ListLiteral _ -> "#()";
+            case Expression.Literal.SetLiteral _ -> "#{}";
+            case Expression.Literal.MapLiteral _ -> "#[]";
+            case Expression.Assignment a -> expressionToSource(a.target()) + " := " + expressionToSource(a.value());
+            case Expression.Binary b -> expressionToSource(b.left()) + " " + operatorToSource(b.operator()) + " "
+                    + expressionToSource(b.right());
+            case Expression.Navigation nav -> expressionToSource(nav.receiver()) + "."
+                    + String.join(".", nav.names());
+            case Expression.MessageSend.UnaryMessage um -> expressionToSource(um.receiver()) + " " + um.selector();
+            case Expression.MessageSend.KeywordMessage km -> {
+                StringBuilder sb = new StringBuilder(expressionToSource(km.receiver()));
+                for (var part : km.parts()) {
+                    sb.append(" ").append(part.keyword()).append(": ").append(expressionToSource(part.argument()));
+                }
+                yield sb.toString();
+            }
+            case Expression.MessageSend.DefaultMessage dm -> expressionToSource(dm.receiver()) + "!";
+            case Expression.Block b -> blockToSource(b);
+        };
+    }
+
+    private String operatorToSource(Expression.Binary.Operator op) {
+        return switch (op) {
+            case PLUS -> "+";
+            case MINUS -> "-";
+            case MULTIPLY -> "*";
+            case DIVIDE -> "/";
+            case EQUALS -> "=";
+            case NOT_EQUALS -> "~=";
+            case GREATER_THAN -> ">";
+            case GREATER_EQUALS -> ">=";
+            case LESS_THAN -> "<";
+            case LESS_EQUALS -> "<=";
+        };
     }
 }

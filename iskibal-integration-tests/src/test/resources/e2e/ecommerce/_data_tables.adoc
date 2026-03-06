@@ -1,0 +1,10 @@
+= Data Tables
+
+[.data-table#CategoryDiscounts]
+|===
+| category | discountPercent
+
+| "electronics" | 5
+| "clothing"    | 10
+| "food"        | 0
+|===

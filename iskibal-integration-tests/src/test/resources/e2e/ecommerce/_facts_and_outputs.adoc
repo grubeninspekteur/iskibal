@@ -1,0 +1,34 @@
+= Facts, Outputs and Globals
+
+== Facts
+
+[.facts,cols="1,1,3"]
+|===
+| Fact name | Type | Description
+
+| order | OrderContext | The order being validated.
+| customer | CustomerProfile | The customer placing the order.
+|===
+
+== Outputs
+
+[.outputs,cols="1,1,1,3"]
+|===
+| Output name | Type | Initial value | Description
+
+| eligible | String | "pending" | Whether the customer is eligible to order.
+| totalPrice | BigDecimal | 0 | Total price of the order before discounts.
+| discountPercent | BigDecimal | 0 | Discount percentage to apply.
+| finalPrice | BigDecimal | 0 | Final price after discount.
+| customerCategory | String | "unknown" | Category assigned to the customer.
+| message | String | "" | A message for the customer.
+|===
+
+== Globals
+
+[.globals,cols="1,1,3"]
+|===
+| Global name | Type | Description
+
+| taxRate | BigDecimal | The applicable tax rate as a multiplier (e.g. 1.19 for 19% VAT).
+|===

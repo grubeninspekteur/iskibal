@@ -25,6 +25,11 @@ then:
 Data required by the rules can be defined using structural blocks that are independent of the rule listings.
 This allows data to be re-used, included from other files and even generated.
 
+IMPORTANT: When combining roles with named attributes in AsciiDoc attribute lists, the role shorthand (`.rolename`) must come _before_ any named attributes like `cols=`.
+For example, use `[.facts,cols="1,1,3"]` instead of `[cols="1,1,3",.facts]`.
+AsciidoctorJ silently drops the role when it appears after a named attribute.
+Alternatively, use the long form `role="facts"` which is position-independent.
+
 == Imports
 
 Imports map identifiers used inside the rules to classes of the target language.
@@ -44,7 +49,7 @@ Facts provide the named objects that are available to all rules.
 They can be declared either as a definition list or as a three column table with the role `facts`.
 The columns are *Fact name*, *Type* and an optional *Description*.
 
-[cols="1,1,3",.facts]
+[.facts,cols="1,1,3"]
 |===
 | Fact name | Type | Description
 
@@ -58,7 +63,7 @@ Outputs are similar to facts but are produced by the rule execution.
 They are written as a four column table with the role `outputs`.
 The columns are *Output name*, *Type*, *Initial value* and an optional *Description*.
 
-[cols="1,1,1,3",.outputs]
+[.outputs,cols="1,1,1,3"]
 |===
 | Output name | Type | Initial value | Description
 
@@ -109,17 +114,22 @@ has birthday::
 +
 [source,iskara]
 ----
-Customer.dateOfBirth = Today
+[Customer.dateOfBirth = Today]
 ----
 offerCar::
 +
 [source,iskara]
 ----
-let color := param
-messages add: $"Did you know you can get a birthday paint in ${color} for your car?"
+[:param |
+    let color := param
+    messages add: $"Did you know you can get a birthday paint in ${color} for your car?"
+]
 ----
 
-Identifiers do not need to be quoted in the definition list.
+Alias bodies use standard Iskara block syntax.
+Aliases that do not receive a cell value use `[ ... ]` (statement block).
+Aliases that receive a cell value as a parameter use `[:param | ... ]` (explicit parameter block).
+See the <<Iskara_Language_Reference.adoc#_blocks,Blocks>> section in the language reference.
 
 == Includes and modularization
 

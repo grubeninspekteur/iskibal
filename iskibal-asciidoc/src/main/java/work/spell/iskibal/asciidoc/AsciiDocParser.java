@@ -83,8 +83,11 @@ public class AsciiDocParser implements AutoCloseable {
     public ParseResult parse(String content, Options options) {
         try {
             var document = asciidoctor.load(content, options);
-            RuleModule module = builder.build(document);
-            return new ParseResult(module, java.util.List.of());
+            AsciiDocRuleModuleBuilder.BuildResult buildResult = builder.build(document);
+            if (buildResult.hasErrors()) {
+                return new ParseResult(null, buildResult.diagnostics());
+            }
+            return new ParseResult(buildResult.module(), buildResult.diagnostics());
         } catch (Exception e) {
             return new ParseResult(null,
                     java.util.List.of(Diagnostic.error(e.getMessage(), SourceLocation.at("<string>", 0, 0))));

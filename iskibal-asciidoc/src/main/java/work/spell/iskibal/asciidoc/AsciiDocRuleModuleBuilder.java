@@ -35,6 +35,7 @@ public class AsciiDocRuleModuleBuilder {
     private final AliasResolver aliasResolver;
     private final Parser iskaraParser;
     private final Locale locale;
+    private final java.util.List<Diagnostic> diagnostics = new ArrayList<>();
 
     /// Creates an AsciiDocRuleModuleBuilder with the default locale.
     public AsciiDocRuleModuleBuilder() {
@@ -65,12 +66,26 @@ public class AsciiDocRuleModuleBuilder {
         this.aliasResolver = new AliasResolver(expressionParser);
     }
 
+    /// Result of building a [RuleModule] from an AsciiDoc document.
+    ///
+    /// @param module
+    ///            the built RuleModule
+    /// @param diagnostics
+    ///            any warnings or errors encountered during building
+    public record BuildResult(RuleModule module, java.util.List<Diagnostic> diagnostics) {
+        /// Returns true if there are any errors.
+        public boolean hasErrors() {
+            return diagnostics.stream().anyMatch(d -> d.severity() == Diagnostic.Severity.ERROR);
+        }
+    }
+
     /// Builds a RuleModule from an AsciiDoc document.
     ///
     /// @param document
     ///            the parsed AsciiDoc document
-    /// @return the built RuleModule
-    public RuleModule build(Document document) {
+    /// @return the build result containing the module and any diagnostics
+    public BuildResult build(Document document) {
+        diagnostics.clear();
         java.util.List<Import> imports = new ArrayList<>();
         java.util.List<Fact> facts = new ArrayList<>();
         java.util.List<Global> globals = new ArrayList<>();
@@ -80,8 +95,29 @@ public class AsciiDocRuleModuleBuilder {
 
         processBlocks(document, document, imports, facts, globals, outputs, dataTables, rules);
 
-        return new RuleModule.Default(imports, facts, globals, outputs, dataTables, rules);
+        // Resolve import aliases in fact/global/output types
+        Map<String, String> aliasMap = new HashMap<>();
+        for (Import imp : imports) {
+            aliasMap.put(imp.alias(), imp.type());
+        }
+        facts = facts.stream()
+                .map(f -> new Fact.Definition(f.name(), resolveType(f.type(), aliasMap), f.description()))
+                .collect(java.util.stream.Collectors.toList());
+        globals = globals.stream()
+                .map(g -> new Global.Definition(g.name(), resolveType(g.type(), aliasMap), g.description()))
+                .collect(java.util.stream.Collectors.toList());
+        outputs = outputs.stream()
+                .map(o -> new Output.Definition(o.name(), resolveType(o.type(), aliasMap), o.initialValue(),
+                        o.description()))
+                .collect(java.util.stream.Collectors.toList());
+
+        RuleModule module = new RuleModule.Default(imports, facts, globals, outputs, dataTables, rules);
+        return new BuildResult(module, java.util.List.copyOf(diagnostics));
     }
+
+    /// Known roles that trigger special processing.
+    private static final Set<String> KNOWN_ROLES = Set.of("rule", "imports", "facts", "globals", "outputs",
+            "data-table", "decision-table", "aliases");
 
     /// Recursively processes blocks in the document.
     private void processBlocks(Document document, StructuralNode node,
@@ -89,7 +125,7 @@ public class AsciiDocRuleModuleBuilder {
             java.util.List<Output> outputs, java.util.List<DataTable> dataTables, java.util.List<Rule> rules) {
 
         for (StructuralNode child : node.getBlocks()) {
-            String role = getPrimaryRole(child);
+            String role = findKnownRole(child);
 
             if (role != null) {
                 switch (role) {
@@ -152,13 +188,22 @@ public class AsciiDocRuleModuleBuilder {
         }
     }
 
-    /// Gets the primary role from a block's roles list.
-    private String getPrimaryRole(StructuralNode block) {
+    /// Finds the first known Iskara role from a block's roles list.
+    ///
+    /// Searches all roles rather than just the first one, since the role
+    /// position in AsciiDoc attribute lists can vary (e.g., `[.facts]` vs
+    /// `[cols="1,1,3",.facts]`).
+    private String findKnownRole(StructuralNode block) {
         java.util.List<String> roles = block.getRoles();
         if (roles == null || roles.isEmpty()) {
             return null;
         }
-        return roles.getFirst();
+        for (String role : roles) {
+            if (KNOWN_ROLES.contains(role)) {
+                return role;
+            }
+        }
+        return null;
     }
 
     /// Checks if a block is an Iskara source block.
@@ -206,6 +251,18 @@ public class AsciiDocRuleModuleBuilder {
             return result.getValue().get().rules().getFirst();
         }
 
+        // Collect parse errors as diagnostics
+        String ruleLabel = id != null ? id : source.lines().findFirst().orElse("<unknown>");
+        if (!result.isSuccess()) {
+            for (Diagnostic d : result.getDiagnostics()) {
+                diagnostics.add(Diagnostic.error(
+                        "Rule '" + ruleLabel + "': " + d.message(), d.location()));
+            }
+        } else {
+            diagnostics.add(Diagnostic.error(
+                    "Rule '" + ruleLabel + "': parsed successfully but produced no rules",
+                    SourceLocation.at("<asciidoc>", 0, 0)));
+        }
         return null;
     }
 
@@ -326,6 +383,20 @@ public class AsciiDocRuleModuleBuilder {
             return content != null ? content.toString() : null;
         }
         return null;
+    }
+
+    /// Resolves a type name against import aliases. Handles collection type
+    /// suffixes (`[]` for lists, `{}` for sets).
+    private String resolveType(String type, Map<String, String> aliases) {
+        if (type.endsWith("[]")) {
+            String baseType = type.substring(0, type.length() - 2);
+            return aliases.getOrDefault(baseType, baseType) + "[]";
+        }
+        if (type.endsWith("{}")) {
+            String baseType = type.substring(0, type.length() - 2);
+            return aliases.getOrDefault(baseType, baseType) + "{}";
+        }
+        return aliases.getOrDefault(type, type);
     }
 
     private ParseOptions parseOptions() {

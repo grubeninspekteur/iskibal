@@ -30,7 +30,11 @@ public final class ModuleGenerator {
         sb.append("import java.math.BigDecimal;\n");
         sb.append("import java.util.Objects;\n");
         sb.append("import static work.spell.iskibal.compiler.java.runtime.NumericHelpers.*;\n");
-        sb.append("import static work.spell.iskibal.compiler.java.runtime.CollectionHelpers.*;\n\n");
+        sb.append("import static work.spell.iskibal.compiler.java.runtime.CollectionHelpers.*;\n");
+        for (Import imp : module.imports()) {
+            sb.append("import ").append(imp.type()).append(";\n");
+        }
+        sb.append("\n");
 
         // Class declaration
         sb.append("public class ").append(options.className()).append(" {\n\n");

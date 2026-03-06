@@ -1,0 +1,9 @@
+= Imports
+
+[.imports]
+====
+OrderContext:: work.spell.iskibal.e2e.OrderContext
+CustomerProfile:: work.spell.iskibal.e2e.CustomerProfile
+OrderLine:: work.spell.iskibal.e2e.OrderLine
+Product:: work.spell.iskibal.e2e.Product
+====
