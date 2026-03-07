@@ -108,9 +108,8 @@ public class DecisionTableBuilder {
         }
         sb.append(" |\n");
 
-        // Data rows
-        for (Row dataRow : dataRows) {
-            java.util.List<String> dataCells = extractCellTexts(dataRow);
+        // Data rows — expand rowspans so repeated values are filled in
+        for (java.util.List<String> dataCells : expandRowspans(dataRows, structureCells.size())) {
             sb.append(formatRow(dataCells));
         }
 
@@ -149,6 +148,52 @@ public class DecisionTableBuilder {
             }
         }
         return cells;
+    }
+
+    /// Expands rowspans across a list of rows, duplicating the spanned cell's
+    /// value into every row it covers.
+    private java.util.List<java.util.List<String>> expandRowspans(java.util.List<Row> rows, int numCols) {
+        String[] spanText = new String[numCols];
+        int[] spanRemaining = new int[numCols];
+
+        java.util.List<java.util.List<String>> result = new ArrayList<>();
+        for (Row row : rows) {
+            String[] rowCells = new String[numCols];
+            int col = 0;
+
+            for (Cell cell : row.getCells()) {
+                // Skip columns occupied by active rowspans, consuming them as we go
+                while (col < numCols && spanRemaining[col] > 0) {
+                    rowCells[col] = spanText[col];
+                    spanRemaining[col]--;
+                    col++;
+                }
+                if (col >= numCols) break;
+
+                String text = getCellText(cell);
+                int colspan = Math.max(1, cell.getColspan());
+                int rowspan = Math.max(1, cell.getRowspan());
+                for (int c = 0; c < colspan && col + c < numCols; c++) {
+                    rowCells[col + c] = text;
+                    if (rowspan > 1) {
+                        spanText[col + c] = text;
+                        spanRemaining[col + c] = rowspan - 1;
+                    }
+                }
+                col += colspan;
+            }
+            // Fill any trailing columns with active spans, consuming them
+            while (col < numCols) {
+                if (spanRemaining[col] > 0) {
+                    rowCells[col] = spanText[col];
+                    spanRemaining[col]--;
+                }
+                col++;
+            }
+
+            result.add(java.util.Arrays.asList(rowCells));
+        }
+        return result;
     }
 
     /// Extracts cell texts from a row.

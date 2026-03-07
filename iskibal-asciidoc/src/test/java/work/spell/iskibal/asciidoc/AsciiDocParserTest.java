@@ -234,6 +234,55 @@ class AsciiDocParserTest {
     }
 
     @Test
+    void parsesDecisionTableWithRowspan() {
+        String adoc = """
+                [.decision-table#CUST_CAT]
+                .Categorize customer
+                |===
+                | ID 2+| WHEN | THEN
+
+                | h| customer.age h| customer.loyaltyPoints h| #setCategory
+                | SENIOR_VIP .2+.^| >= 60 | >= 500  | "Senior VIP"
+                | SENIOR                  | < 500   | "Senior"
+                | LOYAL      .2+.^| < 60  | >= 1000 | "Loyal"
+                | REGULAR                 | < 1000  | "Regular"
+                |===
+
+                [.aliases,for="CUST_CAT"]
+                setCategory::
+                +
+                [source,iskara]
+                ----
+                [:param | customerCategory := param]
+                ----
+                """;
+
+        AsciiDocParser.ParseResult result = parser.parse(adoc);
+
+        assertThat(result.isSuccess()).isTrue();
+        Rule.DecisionTableRule dtRule = (Rule.DecisionTableRule) result.module().rules().getFirst();
+        assertThat(dtRule.rows()).hasSize(4);
+
+        // Both SENIOR_VIP and SENIOR share the spanned age condition (>= 60),
+        // meaning the rowspan cell must appear in both rows
+        var seniorVipWhen = dtRule.rows().get(0).when();
+        var seniorWhen = dtRule.rows().get(1).when();
+        var loyalWhen = dtRule.rows().get(2).when();
+        var regularWhen = dtRule.rows().get(3).when();
+
+        assertThat(seniorVipWhen).hasSize(2);
+        assertThat(seniorWhen).hasSize(2);
+        assertThat(loyalWhen).hasSize(2);
+        assertThat(regularWhen).hasSize(2);
+
+        // The first when condition for both SENIOR_VIP and SENIOR must be the same
+        // expression (age >= 60), demonstrating the rowspan was duplicated
+        assertThat(seniorWhen.getFirst()).isEqualTo(seniorVipWhen.getFirst());
+        // Likewise for LOYAL and REGULAR (age < 60)
+        assertThat(regularWhen.getFirst()).isEqualTo(loyalWhen.getFirst());
+    }
+
+    @Test
     void assigningTwoRolesToBlockShouldRaiseError() {
         String adoc = """
                 [.facts.outputs,cols="1,1,3"]

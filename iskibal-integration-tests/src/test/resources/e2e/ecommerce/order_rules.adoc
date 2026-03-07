@@ -72,10 +72,10 @@ end
 | ID 2+| WHEN | THEN
 
 | h| customer.age h| customer.loyaltyPoints h| #setCategory
-| SENIOR_VIP  | >= 60 | >= 500  | "Senior VIP"
-| SENIOR      | >= 60 | < 500   | "Senior"
-| LOYAL       | < 60  | >= 1000 | "Loyal"
-| REGULAR     | < 60  | < 1000  | "Regular"
+| SENIOR_VIP .2+.^| >= 60 | >= 500  | "Senior VIP"
+| SENIOR                  | < 500   | "Senior"
+| LOYAL      .2+.^| < 60  | >= 1000 | "Loyal"
+| REGULAR                 | < 1000  | "Regular"
 |===
 
 [.aliases,for="CUST_CAT"]
