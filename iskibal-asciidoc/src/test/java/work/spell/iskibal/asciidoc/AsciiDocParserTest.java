@@ -13,6 +13,7 @@ class AsciiDocParserTest {
 
     @BeforeAll
     static void setup() {
+        System.setProperty("jruby.compile.mode", "JIT");
         parser = new AsciiDocParser(Parser.load(), Locale.getDefault());
     }
 

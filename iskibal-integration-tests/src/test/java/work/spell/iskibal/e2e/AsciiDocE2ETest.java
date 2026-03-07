@@ -31,6 +31,7 @@ class AsciiDocE2ETest {
 
     @BeforeAll
     static void setupParser() {
+        System.setProperty("jruby.compile.mode", "JIT");
         sharedParser = new AsciiDocParser(Locale.US);
     }
 
