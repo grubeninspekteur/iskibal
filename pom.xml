@@ -25,6 +25,36 @@
     <subproject>iskibal-maven-plugin-tests</subproject>
   </subprojects>
 
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>work.spell.iskibal</groupId>
+        <artifactId>iskibal-rule-model</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>work.spell.iskibal</groupId>
+        <artifactId>iskibal-parser</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>work.spell.iskibal</groupId>
+        <artifactId>iskibal-compiler-common</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>work.spell.iskibal</groupId>
+        <artifactId>iskibal-compiler-java</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jspecify</groupId>
+        <artifactId>jspecify</artifactId>
+        <version>1.0.0</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
   <build>
     <pluginManagement>
       <plugins>

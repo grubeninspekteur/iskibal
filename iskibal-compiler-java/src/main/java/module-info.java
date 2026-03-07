@@ -1,6 +1,7 @@
 module iskibal.compiler.java {
     requires iskibal.rule.model;
     requires iskibal.compiler.common;
+    requires static org.jspecify;
 
     exports work.spell.iskibal.compiler.java.api;
     exports work.spell.iskibal.compiler.java.runtime;

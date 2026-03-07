@@ -1,5 +1,7 @@
 package work.spell.iskibal.model;
 
+import org.jspecify.annotations.Nullable;
+
 /// Globals provide additional state shared across rule executions.
 public sealed interface Global permits Global.Definition {
 
@@ -10,9 +12,9 @@ public sealed interface Global permits Global.Definition {
     String type();
 
     /// optional description
-    String description();
+    @Nullable String description();
 
     /// Default global declaration.
-    record Definition(String name, String type, String description) implements Global {
+    record Definition(String name, String type, @Nullable String description) implements Global {
     }
 }

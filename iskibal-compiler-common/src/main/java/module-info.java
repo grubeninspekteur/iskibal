@@ -1,5 +1,6 @@
 module iskibal.compiler.common {
     requires iskibal.rule.model;
+    requires static org.jspecify;
 
     exports work.spell.iskibal.compiler.common.api;
     exports work.spell.iskibal.compiler.common.internal to iskibal.integration.tests;

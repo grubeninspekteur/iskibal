@@ -2,6 +2,8 @@ package work.spell.iskibal.compiler.java.types;
 
 import module java.base;
 
+import org.jspecify.annotations.Nullable;
+
 /// Represents Java types used during type inference and code generation.
 ///
 /// This is a Java-specific type model used internally by the Java compiler to
@@ -82,8 +84,8 @@ public sealed interface JavaType
             return booleanType;
         }
 
-        /// Returns the primitive type for the given name, or null if not a primitive.
-        public static PrimitiveType forName(String name) {
+        /// Returns the primitive type for the given name, or `null` if not a primitive.
+        public static @Nullable PrimitiveType forName(String name) {
             for (PrimitiveType type : values()) {
                 if (type.name.equals(name)) {
                     return type;
@@ -229,7 +231,7 @@ public sealed interface JavaType
     }
 
     /// Represents an unknown or unresolved type.
-    record UnknownType(String hint) implements JavaType {
+    record UnknownType(@Nullable String hint) implements JavaType {
 
         /// Singleton instance for types with no hint.
         public static final UnknownType INSTANCE = new UnknownType(null);

@@ -1,5 +1,7 @@
 package work.spell.iskibal.model;
 
+import org.jspecify.annotations.Nullable;
+
 /// A fact describes an input object that is available to all rules.
 public sealed interface Fact permits Fact.Definition {
 
@@ -10,9 +12,9 @@ public sealed interface Fact permits Fact.Definition {
     String type();
 
     /// optional description to aid documentation
-    String description();
+    @Nullable String description();
 
     /// Default fact declaration.
-    record Definition(String name, String type, String description) implements Fact {
+    record Definition(String name, String type, @Nullable String description) implements Fact {
     }
 }

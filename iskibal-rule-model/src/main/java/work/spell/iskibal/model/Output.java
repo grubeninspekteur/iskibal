@@ -1,5 +1,7 @@
 package work.spell.iskibal.model;
 
+import org.jspecify.annotations.Nullable;
+
 /// Outputs represent data produced by rule execution.
 public sealed interface Output permits Output.Definition {
 
@@ -9,13 +11,14 @@ public sealed interface Output permits Output.Definition {
     /// fully qualified type
     String type();
 
-    /// initial value assigned before rule execution
-    Expression initialValue();
+    /// initial value assigned before rule execution, or `null` if none
+    @Nullable Expression initialValue();
 
     /// optional description
-    String description();
+    @Nullable String description();
 
     /// Default output declaration.
-    record Definition(String name, String type, Expression initialValue, String description) implements Output {
+    record Definition(String name, String type, @Nullable Expression initialValue,
+            @Nullable String description) implements Output {
     }
 }

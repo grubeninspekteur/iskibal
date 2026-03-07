@@ -1,5 +1,7 @@
 package work.spell.iskibal.compiler.common.api;
 
+import org.jspecify.annotations.Nullable;
+
 /// Represents a semantic diagnostic message.
 ///
 /// @param severity
@@ -7,8 +9,9 @@ package work.spell.iskibal.compiler.common.api;
 /// @param message
 ///            the diagnostic message
 /// @param elementName
-///            the name of the element where the diagnostic occurred (optional)
-public record SemanticDiagnostic(Severity severity, String message, String elementName) {
+///            the name of the element where the diagnostic occurred, or `null`
+///            if not applicable
+public record SemanticDiagnostic(Severity severity, String message, @Nullable String elementName) {
     public enum Severity {
         ERROR, WARNING
     }

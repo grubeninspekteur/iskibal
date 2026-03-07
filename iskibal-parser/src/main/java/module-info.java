@@ -1,6 +1,7 @@
 module iskibal.parser {
     requires iskibal.rule.model;
     requires org.antlr.antlr4.runtime;
+    requires static org.jspecify;
 
     exports work.spell.iskibal.parser.api;
     exports work.spell.iskibal.parser.diagnostic;

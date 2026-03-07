@@ -1,5 +1,7 @@
 package work.spell.iskibal.compiler.java.api;
 
+import org.jspecify.annotations.Nullable;
+
 /// Options for Java code generation.
 ///
 /// @param packageName
@@ -9,10 +11,10 @@ package work.spell.iskibal.compiler.java.api;
 /// @param generateNullChecks
 ///            whether to generate null safety checks for navigation expressions
 /// @param typeClassLoader
-///            the class loader to use for resolving types (null to disable type
-///            inference)
+///            the class loader to use for resolving types, or `null` to disable
+///            type inference
 public record JavaCompilerOptions(String packageName, String className, boolean generateNullChecks,
-        ClassLoader typeClassLoader) {
+        @Nullable ClassLoader typeClassLoader) {
 
     /// Creates default options with no package and "GeneratedRules" class name.
     public static JavaCompilerOptions defaults() {
