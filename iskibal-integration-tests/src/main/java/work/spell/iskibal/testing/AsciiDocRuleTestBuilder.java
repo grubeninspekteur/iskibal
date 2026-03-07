@@ -15,6 +15,7 @@ public class AsciiDocRuleTestBuilder {
     private final Path file;
     private final List<Object> facts = new ArrayList<>();
     private final List<Object> globals = new ArrayList<>();
+    private AsciiDocParser sharedParser;
     private String packageName = "";
     private String className = "GeneratedRules";
 
@@ -25,6 +26,12 @@ public class AsciiDocRuleTestBuilder {
     /// Creates a new builder for the given AsciiDoc file.
     public static AsciiDocRuleTestBuilder forFile(Path file) {
         return new AsciiDocRuleTestBuilder(file);
+    }
+
+    /// Sets a shared [AsciiDocParser] to avoid creating a new Asciidoctor instance per build.
+    public AsciiDocRuleTestBuilder withParser(AsciiDocParser parser) {
+        this.sharedParser = parser;
+        return this;
     }
 
     public AsciiDocRuleTestBuilder withPackage(String packageName) {
@@ -51,13 +58,22 @@ public class AsciiDocRuleTestBuilder {
     public RuleTestResult build() {
         // Stage 1: Parse AsciiDoc
         RuleModule module;
-        try (var parser = new AsciiDocParser(Locale.US)) {
+        AsciiDocParser parser = sharedParser;
+        boolean ownsParser = parser == null;
+        if (ownsParser) {
+            parser = new AsciiDocParser(Locale.US);
+        }
+        try {
             AsciiDocParser.ParseResult parseResult = parser.parseFile(file);
             if (!parseResult.isSuccess()) {
                 List<String> errors = parseResult.diagnostics().stream().map(Object::toString).toList();
                 return new RuleTestResult.ParseFailure(errors);
             }
             module = parseResult.module();
+        } finally {
+            if (ownsParser) {
+                parser.close();
+            }
         }
 
         // Stage 2: Semantic analysis

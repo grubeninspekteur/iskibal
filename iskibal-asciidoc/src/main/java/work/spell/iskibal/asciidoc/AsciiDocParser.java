@@ -59,9 +59,25 @@ public class AsciiDocParser implements AutoCloseable {
     ///            the locale for number parsing
     public AsciiDocParser(work.spell.iskibal.parser.api.Parser parser, Locale locale) {
         this.locale = locale;
-        this.asciidoctor = Asciidoctor.Factory.create();
+        this.asciidoctor = createAsciidoctor();
         this.builder = new AsciiDocRuleModuleBuilder(parser, locale);
         this.merger = new RuleModuleMerger();
+    }
+
+    private static Asciidoctor createAsciidoctor() {
+        // Disable JRuby JIT compilation to improve startup time.
+        // See https://docs.asciidoctor.org/asciidoctorj/latest/guides/optimization/
+        String previous = System.getProperty("jruby.compile.mode");
+        if (previous == null) {
+            System.setProperty("jruby.compile.mode", "OFF");
+        }
+        try {
+            return Asciidoctor.Factory.create();
+        } finally {
+            if (previous == null) {
+                System.clearProperty("jruby.compile.mode");
+            }
+        }
     }
 
     /// Parses an AsciiDoc document from a string.

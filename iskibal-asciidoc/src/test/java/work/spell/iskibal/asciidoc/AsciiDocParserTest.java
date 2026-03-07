@@ -9,16 +9,15 @@ import static org.assertj.core.api.Assertions.*;
 
 class AsciiDocParserTest {
 
-    private AsciiDocParser parser;
+    private static AsciiDocParser parser;
 
-    @BeforeEach
-    void setup() {
-        // Use ServiceLoader via the Parser interface
+    @BeforeAll
+    static void setup() {
         parser = new AsciiDocParser(Parser.load(), Locale.getDefault());
     }
 
-    @AfterEach
-    void teardown() {
+    @AfterAll
+    static void teardown() {
         if (parser != null) {
             parser.close();
         }

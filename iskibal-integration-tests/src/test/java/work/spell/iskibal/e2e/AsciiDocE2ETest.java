@@ -4,10 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import module java.base;
 
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import work.spell.iskibal.asciidoc.AsciiDocParser;
 import work.spell.iskibal.testing.AsciiDocRuleTestBuilder;
 import work.spell.iskibal.testing.RuleTestResult;
 
@@ -24,9 +27,23 @@ class AsciiDocE2ETest {
 
     private static final Path RULES_DIR = Path.of("src/test/resources/e2e/ecommerce");
     private static final Path RULES_FILE = RULES_DIR.resolve("order_rules.adoc");
+    private static AsciiDocParser sharedParser;
+
+    @BeforeAll
+    static void setupParser() {
+        sharedParser = new AsciiDocParser(Locale.US);
+    }
+
+    @AfterAll
+    static void teardownParser() {
+        if (sharedParser != null) {
+            sharedParser.close();
+        }
+    }
 
     private RuleTestResult buildRules(OrderContext order, CustomerProfile customer, BigDecimal taxRate) {
         return AsciiDocRuleTestBuilder.forFile(RULES_FILE)
+                .withParser(sharedParser)
                 .withFact(order)
                 .withFact(customer)
                 .withGlobal(taxRate)

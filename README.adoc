@@ -65,3 +65,11 @@ Iskibal as a Babylonian king is a reference to the JDK project https://openjdk.o
 == How to build
 
 You need Maven 4 to build the code.
+
+=== Performance tips
+
+AsciidoctorJ uses JRuby internally, which can be slow to start up.
+The `AsciiDocParser` automatically sets `jruby.compile.mode=OFF` to disable JRuby JIT compilation, which improves startup time (see https://docs.asciidoctor.org/asciidoctorj/latest/guides/optimization/[AsciidoctorJ Optimization Guide]).
+
+When using `AsciiDocParser` in tests, reuse a single instance across all tests instead of creating a new one per test method.
+Creating an Asciidoctor instance is expensive (~2–3s), so sharing one instance can dramatically reduce test execution time.
