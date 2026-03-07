@@ -1,15 +1,11 @@
 package work.spell.iskibal.asciidoc;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import module java.base;
-
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
 import module iskibal.parser;
 import module iskibal.rule.model;
+import module java.base;
+import org.junit.jupiter.api.*;
+
+import static org.assertj.core.api.Assertions.*;
 
 class AsciiDocParserTest {
 
@@ -75,7 +71,7 @@ class AsciiDocParserTest {
                 [.facts]
                 |===
                 | Fact name | Type | Description
-
+                
                 | vehicle | Vehicle | The vehicle
                 |===
                 """;
@@ -93,7 +89,7 @@ class AsciiDocParserTest {
                 [.outputs]
                 |===
                 | Output name | Type | Initial value | Description
-
+                
                 | errors | String[] | [] | Error list
                 |===
                 """;
@@ -111,7 +107,7 @@ class AsciiDocParserTest {
                 [.data-table#vehicle-limits]
                 |===
                 | Type | Max Weight
-
+                
                 | Car | 1500
                 | Truck | 5000
                 |===
@@ -128,19 +124,19 @@ class AsciiDocParserTest {
     void parsesCompleteDocument() {
         String adoc = """
                 = Rule Document
-
+                
                 [.imports]
                 ====
                 Vehicle:: org.acme.Vehicle
                 ====
-
+                
                 [.facts]
                 |===
                 | Fact name | Type | Description
-
+                
                 | vehicle | Vehicle | The vehicle to check
                 |===
-
+                
                 .RULE-001: Speed check
                 [source,iskara,.rule]
                 ----
@@ -149,7 +145,7 @@ class AsciiDocParserTest {
                 then:
                     errors add: "Speeding"
                 ----
-
+                
                 .RULE-002: Weight check
                 [source,iskara,.rule]
                 ----
@@ -183,11 +179,11 @@ class AsciiDocParserTest {
     void handlesDocumentWithoutRules() {
         String adoc = """
                 = Documentation
-
+                
                 This is just documentation without any rules.
-
+                
                 == Section
-
+                
                 Some more text.
                 """;
 
@@ -201,18 +197,18 @@ class AsciiDocParserTest {
     void parsesDecisionTableWithExternalizedConditions() {
         String adoc = """
                 = Discount Rules
-
+                
                 [.decision-table#DISCOUNTS]
                 .Customer discounts
                 |===
                 | ID 2+| WHEN | THEN
-
+                
                 | h| #hasBirthday h| age h| discount
-
+                
                 | BIRTHDAY | * | | 10
                 | SENIOR | | >= 65 | 15
                 |===
-
+                
                 [.aliases,for="DISCOUNTS"]
                 hasBirthday::
                 +
@@ -235,5 +231,25 @@ class AsciiDocParserTest {
         assertThat(dtRule.description()).isEqualTo("Customer discounts");
         assertThat(dtRule.rows()).hasSize(2);
         assertThat(dtRule.aliases()).containsKey("hasBirthday");
+    }
+
+    @Test
+    void assigningTwoRolesToBlockShouldRaiseError() {
+        String adoc = """
+                [.facts.outputs,cols="1,1,3"]
+                |===
+                | Fact name | Type | Description
+                
+                | vehicleCrossingTheBorder | Vehicle | The vehicle that arrived at the border checkpoint.
+                | prompt | Prompt | Allows to ask the user for input.
+                |===
+                """;
+
+        AsciiDocParser.ParseResult result = parser.parse(adoc);
+
+        assertThat(result.isSuccess()).isFalse();
+        assertThat(result.diagnostics()).singleElement().satisfies(diagnostics -> {
+            assertThat(diagnostics.message()).contains("Duplicate role assignment \"facts\", \"outputs\"");
+        });
     }
 }

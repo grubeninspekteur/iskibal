@@ -188,22 +188,37 @@ public class AsciiDocRuleModuleBuilder {
         }
     }
 
-    /// Finds the first known Iskara role from a block's roles list.
+    /// Finds the single known Iskara role from a block's roles list.
     ///
     /// Searches all roles rather than just the first one, since the role
     /// position in AsciiDoc attribute lists can vary (e.g., `[.facts]` vs
-    /// `[cols="1,1,3",.facts]`).
+    /// `[cols="1,1,3",.facts]`). If multiple known roles are found, a
+    /// diagnostic error is reported and `null` is returned.
     private String findKnownRole(StructuralNode block) {
         java.util.List<String> roles = block.getRoles();
         if (roles == null || roles.isEmpty()) {
             return null;
         }
-        for (String role : roles) {
-            if (KNOWN_ROLES.contains(role)) {
-                return role;
-            }
+        // A single role string may contain multiple roles concatenated with spaces
+        // (e.g., AsciiDoc shorthand `.facts.outputs` produces "facts outputs")
+        java.util.List<String> expandedRoles = roles.stream()
+                .flatMap(r -> java.util.Arrays.stream(r.split("\\s+")))
+                .filter(r -> !r.isBlank())
+                .toList();
+        java.util.List<String> knownRolesFound = expandedRoles.stream()
+                .filter(KNOWN_ROLES::contains)
+                .toList();
+        if (knownRolesFound.size() > 1) {
+            String roleList = knownRolesFound.stream()
+                    .map(r -> "\"" + r + "\"")
+                    .collect(java.util.stream.Collectors.joining(", "));
+            diagnostics.add(Diagnostic.error(
+                    "Duplicate role assignment " + roleList,
+                    SourceLocation.at("<asciidoc>", block.getSourceLocation() != null
+                            ? block.getSourceLocation().getLineNumber() : 0, 0)));
+            return null;
         }
-        return null;
+        return knownRolesFound.isEmpty() ? null : knownRolesFound.getFirst();
     }
 
     /// Checks if a block is an Iskara source block.

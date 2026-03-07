@@ -100,3 +100,6 @@ Documentation for the Iskara rule language is in `documentation/examples/specifi
 Larger changes (especially architectural ones) should be drafted as plans. These can be stored in `.agent-plans`. Move completed plans to `.agent-plans/archive`. If the user tells you to "resume plan", resume the plan in `.agent-plans`.
 
 If plans get really large, split them into subplans.
+
+## Debug Output
+Whenever you make changes to the codebase for temporary workarounds or debug output, add a `// TODO DEBUG` comment above it.
