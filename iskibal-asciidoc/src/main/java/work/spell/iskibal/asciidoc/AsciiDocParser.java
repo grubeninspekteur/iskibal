@@ -67,16 +67,35 @@ public class AsciiDocParser implements AutoCloseable {
     private static Asciidoctor createAsciidoctor() {
         // Disable JRuby JIT compilation to improve startup time.
         // See https://docs.asciidoctor.org/asciidoctorj/latest/guides/optimization/
-        String previous = System.getProperty("jruby.compile.mode");
-        if (previous == null) {
-            System.setProperty("jruby.compile.mode", "OFF");
-        }
-        try {
-            return Asciidoctor.Factory.create();
-        } finally {
-            if (previous == null) {
-                System.clearProperty("jruby.compile.mode");
+        return runWithTemporarySystemProperties(Map.of(
+                "jruby.compat.version", "RUBY1_9",
+                "jruby.compile.mode", "OFF"
+        ),
+                Asciidoctor.Factory::create);
+    }
+
+    private static <T> T runWithTemporarySystemProperties(Map<String, String> systemProperties, Supplier<T> guardedCode) {
+        Map<String, String> previousSystemProperties = new HashMap<>();
+
+        systemProperties.forEach((name, newValue) -> {
+            String previous = System.getProperty(name);
+            if (previous != null) {
+                previousSystemProperties.put(name, previous);
             }
+            System.setProperty(name, newValue);
+        });
+
+        try {
+            return guardedCode.get();
+        } finally {
+            systemProperties.forEach((name, __) -> {
+                String previous = previousSystemProperties.get(name);
+                if (previous != null) {
+                    System.setProperty(name, previous);
+                } else {
+                    System.clearProperty(name);
+                }
+            });
         }
     }
 

@@ -236,7 +236,7 @@ You need Maven 4 (the included `mvnw` wrapper will download it automatically) an
 === Performance note
 
 AsciidoctorJ (used by `iskibal-asciidoc`) starts JRuby internally, which can be slow.
-The parser sets `jruby.compile.mode=OFF` to disable JRuby JIT compilation, which improves startup time significantly.
+The parser sets `jruby.compile.mode=OFF` to disable JRuby JIT compilation, and `jruby.compat.version=RUBY1_9`, both improving startup time significantly.
 In tests, reuse a single `AsciiDocParser` instance across all test methods rather than creating one per test.
 
 == Name origin
