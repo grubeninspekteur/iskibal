@@ -19,33 +19,26 @@ public final class ModuleGenerator {
 
     /// Generates Java source code for the rule module.
     public String generate(RuleModule module) {
-        StringBuilder sb = new StringBuilder();
+        RuleClassWriter writer = new RuleClassWriter();
 
-        // Package declaration
         if (options.packageName() != null && !options.packageName().isEmpty()) {
-            sb.append("package ").append(options.packageName()).append(";\n\n");
+            writer.packageDecl(options.packageName());
         }
 
-        // Imports
-        sb.append("import java.math.BigDecimal;\n");
-        sb.append("import java.util.Objects;\n");
-        sb.append("import static work.spell.iskibal.compiler.java.runtime.NumericHelpers.*;\n");
-        sb.append("import static work.spell.iskibal.compiler.java.runtime.CollectionHelpers.*;\n");
+        writer.importLine("java.math.BigDecimal")
+                .importLine("java.util.Objects")
+                .importLine("static work.spell.iskibal.compiler.java.runtime.NumericHelpers.*")
+                .importLine("static work.spell.iskibal.compiler.java.runtime.CollectionHelpers.*");
         for (Import imp : module.imports()) {
-            sb.append("import ").append(imp.type()).append(";\n");
+            writer.importLine(imp.type());
         }
-        sb.append("\n");
+        writer.blankLine();
 
-        // Class declaration
-        sb.append("public class ").append(options.className()).append(" {\n\n");
+        writer.beginClass(options.className());
 
-        // Generate fields
-        generateFields(sb, module);
+        generateFields(writer, module);
+        generateConstructor(writer, module);
 
-        // Generate constructor
-        generateConstructor(sb, module);
-
-        // Create generators
         Set<String> globalNames = new HashSet<>();
         for (Global g : module.globals()) {
             globalNames.add(g.name());
@@ -57,7 +50,6 @@ public final class ModuleGenerator {
             outputTypes.put(o.name(), o.type());
         }
 
-        // Create type inference visitor if type inference is enabled
         JavaTypeInferenceVisitor typeVisitor = null;
         if (options.typeInferenceEnabled()) {
             JavaTypeResolver resolver = new JavaTypeResolver(options.typeClassLoader());
@@ -70,56 +62,40 @@ public final class ModuleGenerator {
         StatementGenerator stmtGen = new StatementGenerator(exprGen);
         RuleGenerator ruleGen = new RuleGenerator(stmtGen, exprGen);
 
-        // Generate rule methods
         for (Rule rule : module.rules()) {
-            sb.append(ruleGen.generate(rule));
-            sb.append("\n");
+            ruleGen.generate(rule, writer);
         }
 
-        // Generate evaluate method
-        generateEvaluateMethod(sb, module, ruleGen);
+        generateEvaluateMethod(writer, module, ruleGen);
+        generateOutputGetters(writer, module);
 
-        // Generate output getters
-        generateOutputGetters(sb, module);
-
-        sb.append("}\n");
-        return sb.toString();
+        writer.endClass();
+        return writer.build();
     }
 
-    private void generateFields(StringBuilder sb, RuleModule module) {
-        // Facts (final fields)
+    private void generateFields(RuleClassWriter writer, RuleModule module) {
         for (Fact fact : module.facts()) {
-            sb.append("\tprivate final ").append(fact.type()).append(" ")
-                    .append(JavaIdentifiers.sanitize(fact.name())).append(";\n");
+            writer.finalField(fact.type(), JavaIdentifiers.sanitize(fact.name()));
         }
-
-        // Globals (final fields)
         for (Global global : module.globals()) {
-            sb.append("\tprivate final ").append(global.type()).append(" ")
-                    .append(JavaIdentifiers.sanitize(global.name())).append(";\n");
+            writer.finalField(global.type(), JavaIdentifiers.sanitize(global.name()));
         }
-
-        // Outputs (mutable fields with initial values)
         for (Output output : module.outputs()) {
-            sb.append("\tprivate ").append(output.type()).append(" ")
-                    .append(JavaIdentifiers.sanitize(output.name())).append(";\n");
+            writer.mutableField(output.type(), JavaIdentifiers.sanitize(output.name()));
         }
-
-        // Data tables (final fields initialized inline from literal values)
         if (!module.dataTables().isEmpty()) {
             ExpressionGenerator litGen = new ExpressionGenerator(options, Set.of(), Set.of());
             for (DataTable table : module.dataTables()) {
-                generateDataTableField(sb, table, litGen);
+                generateDataTableField(writer, table, litGen);
             }
         }
-
         if (!module.facts().isEmpty() || !module.globals().isEmpty() || !module.outputs().isEmpty()
                 || !module.dataTables().isEmpty()) {
-            sb.append("\n");
+            writer.blankLine();
         }
     }
 
-    private void generateDataTableField(StringBuilder sb, DataTable table, ExpressionGenerator exprGen) {
+    private void generateDataTableField(RuleClassWriter writer, DataTable table, ExpressionGenerator exprGen) {
         if (table.rows().isEmpty()) {
             return;
         }
@@ -127,49 +103,49 @@ public final class ModuleGenerator {
         List<String> columns = new ArrayList<>(table.rows().getFirst().values().keySet());
 
         if (columns.size() == 2) {
-            // Two-column table: Map<Object, Object> keyed by first column
             String keyCol = columns.get(0);
             String valueCol = columns.get(1);
-            sb.append("\tprivate final java.util.Map<Object, Object> ").append(table.id())
-                    .append(" = java.util.Map.ofEntries(\n");
+            StringBuilder value = new StringBuilder("java.util.Map.ofEntries(\n");
             for (int i = 0; i < table.rows().size(); i++) {
                 DataTable.Row row = table.rows().get(i);
-                sb.append("\t\t\tjava.util.Map.entry(").append(exprGen.generate(row.values().get(keyCol))).append(", ")
+                value.append("\t\t\tjava.util.Map.entry(")
+                        .append(exprGen.generate(row.values().get(keyCol))).append(", ")
                         .append(exprGen.generate(row.values().get(valueCol))).append(")");
                 if (i < table.rows().size() - 1) {
-                    sb.append(",");
+                    value.append(",");
                 }
-                sb.append("\n");
+                value.append("\n");
             }
-            sb.append("\t\t);\n");
+            value.append("\t\t)");
+            writer.finalFieldWithValue("java.util.Map<Object, Object>", table.id(), value.toString());
         } else {
-            // Multi-column table: List<Map<String, Object>>
-            sb.append("\tprivate final java.util.List<java.util.Map<String, Object>> ").append(table.id())
-                    .append(" = java.util.List.of(\n");
+            StringBuilder value = new StringBuilder("java.util.List.of(\n");
             for (int i = 0; i < table.rows().size(); i++) {
                 DataTable.Row row = table.rows().get(i);
-                sb.append("\t\t\tjava.util.Map.ofEntries(\n");
+                value.append("\t\t\tjava.util.Map.ofEntries(\n");
                 List<Map.Entry<String, Expression>> entries = new ArrayList<>(row.values().entrySet());
                 for (int j = 0; j < entries.size(); j++) {
                     Map.Entry<String, Expression> entry = entries.get(j);
-                    sb.append("\t\t\t\tjava.util.Map.entry(\"").append(entry.getKey()).append("\", ")
+                    value.append("\t\t\t\tjava.util.Map.entry(\"").append(entry.getKey()).append("\", ")
                             .append(exprGen.generate(entry.getValue())).append(")");
                     if (j < entries.size() - 1) {
-                        sb.append(",");
+                        value.append(",");
                     }
-                    sb.append("\n");
+                    value.append("\n");
                 }
-                sb.append("\t\t\t)");
+                value.append("\t\t\t)");
                 if (i < table.rows().size() - 1) {
-                    sb.append(",");
+                    value.append(",");
                 }
-                sb.append("\n");
+                value.append("\n");
             }
-            sb.append("\t\t);\n");
+            value.append("\t\t)");
+            writer.finalFieldWithValue("java.util.List<java.util.Map<String, Object>>", table.id(),
+                    value.toString());
         }
     }
 
-    private void generateConstructor(StringBuilder sb, RuleModule module) {
+    private void generateConstructor(RuleClassWriter writer, RuleModule module) {
         Set<String> globalNames = new HashSet<>();
         for (Global g : module.globals()) {
             globalNames.add(g.name());
@@ -181,7 +157,6 @@ public final class ModuleGenerator {
 
         ExpressionGenerator exprGen = new ExpressionGenerator(options, globalNames, outputNames);
 
-        // Constructor parameters: facts + globals
         List<String> params = new ArrayList<>();
         for (Fact fact : module.facts()) {
             params.add(fact.type() + " " + JavaIdentifiers.sanitize(fact.name()));
@@ -190,55 +165,38 @@ public final class ModuleGenerator {
             params.add(global.type() + " " + JavaIdentifiers.sanitize(global.name()));
         }
 
-        sb.append("\tpublic ").append(options.className()).append("(");
-        sb.append(String.join(", ", params));
-        sb.append(") {\n");
-
-        // Assign facts
-        for (Fact fact : module.facts()) {
-            String sanitized = JavaIdentifiers.sanitize(fact.name());
-            sb.append("\t\tthis.").append(sanitized).append(" = ").append(sanitized).append(";\n");
-        }
-
-        // Assign globals
-        for (Global global : module.globals()) {
-            String sanitized = JavaIdentifiers.sanitize(global.name());
-            sb.append("\t\tthis.").append(sanitized).append(" = ").append(sanitized).append(";\n");
-        }
-
-        // Initialize outputs
-        for (Output output : module.outputs()) {
-            if (output.initialValue() != null) {
-                sb.append("\t\tthis.").append(JavaIdentifiers.sanitize(output.name())).append(" = ");
-                sb.append(exprGen.generate(output.initialValue())).append(";\n");
+        writer.constructor(options.className(), params, body -> {
+            for (Fact fact : module.facts()) {
+                String s = JavaIdentifiers.sanitize(fact.name());
+                body.assign("this." + s, s);
             }
-        }
-
-        sb.append("\t}\n\n");
+            for (Global global : module.globals()) {
+                String s = JavaIdentifiers.sanitize(global.name());
+                body.assign("this." + s, s);
+            }
+            for (Output output : module.outputs()) {
+                if (output.initialValue() != null) {
+                    body.assign("this." + JavaIdentifiers.sanitize(output.name()),
+                            exprGen.generate(output.initialValue()));
+                }
+            }
+        });
     }
 
-    private void generateEvaluateMethod(StringBuilder sb, RuleModule module, RuleGenerator ruleGen) {
-        sb.append("\t/**\n");
-        sb.append("\t * Evaluates all rules in order.\n");
-        sb.append("\t */\n");
-        sb.append("\tpublic void evaluate() {\n");
-
-        for (Rule rule : module.rules()) {
-            for (String methodName : ruleGen.getMethodNames(rule)) {
-                sb.append("\t\t").append(methodName).append("();\n");
+    private void generateEvaluateMethod(RuleClassWriter writer, RuleModule module, RuleGenerator ruleGen) {
+        writer.evaluateMethod(body -> {
+            for (Rule rule : module.rules()) {
+                for (String methodName : ruleGen.getMethodNames(rule)) {
+                    body.callMethod(methodName);
+                }
             }
-        }
-
-        sb.append("\t}\n\n");
+        });
     }
 
-    private void generateOutputGetters(StringBuilder sb, RuleModule module) {
+    private void generateOutputGetters(RuleClassWriter writer, RuleModule module) {
         for (Output output : module.outputs()) {
             String sanitized = JavaIdentifiers.sanitize(output.name());
-            String capitalizedName = JavaIdentifiers.capitalize(sanitized);
-            sb.append("\tpublic ").append(output.type()).append(" get").append(capitalizedName).append("() {\n");
-            sb.append("\t\treturn this.").append(sanitized).append(";\n");
-            sb.append("\t}\n\n");
+            writer.getter(output.type(), sanitized, JavaIdentifiers.capitalize(sanitized));
         }
     }
 }
