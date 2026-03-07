@@ -1,0 +1,316 @@
+= Rulebase Authoring Best Practices
+:toc: left
+:toc-title: Contents
+
+This document gives practical guidance on writing and organizing Iskibal rule sources.
+It assumes familiarity with the link:Iskara_Language_Reference.adoc[Iskara Language Reference] and link:AsciiDoc_plus_Iskara.adoc[AsciiDoc plus Iskara].
+
+The central goal of Iskibal is a rulebase that business stakeholders can read without help, and that developers can maintain without pain.
+These practices exist to keep both audiences happy.
+
+== Organizing files
+
+=== Split by concern, not by rule count
+
+Put each logical area of the domain in its own file.
+A single file that contains discount rules, shipping rules, fraud detection rules, and customer categorization is hard to navigate and produces merge conflicts whenever any two of those areas change simultaneously.
+
+Prefer a structure like:
+
+----
+src/main/iskibal/
+  _imports.adoc
+  _facts_and_outputs.adoc
+  _data_tables.adoc
+  discount_rules.adoc
+  shipping_rules.adoc
+  fraud_rules.adoc
+----
+
+The underscore prefix is a convention for files that are included by others rather than compiled directly.
+Place shared declarations -- imports, facts, outputs, globals, and reference data tables -- in their own files and bring them into each rule file with `include::`:
+
+[source,asciidoc]
+----
+= Discount Rules
+
+include::_imports.adoc[leveloffset=+1]
+include::_facts_and_outputs.adoc[leveloffset=+1]
+include::_data_tables.adoc[leveloffset=+1]
+
+== Volume discounts
+...
+----
+
+This means that when the set of facts changes, only one file needs updating.
+
+=== Group rules into sections within a file
+
+Use AsciiDoc headings to group related rules inside a file.
+A reader scanning the document should be able to understand the intent of each group before reading any rule source.
+
+[source,asciidoc]
+----
+== Eligibility checks
+
+These rules determine whether the customer is allowed to place an order at all.
+...
+
+== Pricing
+
+These rules calculate the order total, apply discounts, and add tax.
+...
+----
+
+== Writing for two audiences
+
+=== Explain intent in prose, hide implementation in collapsible blocks
+
+The Iskara source block is the authoritative definition of a rule, but it is not always the easiest thing for a business reader to interpret.
+AsciiDoc's collapsible blocks let you present the intent in plain language while keeping the rule source accessible to developers without removing it from the document.
+
+[source,asciidoc]
+....
+=== Free shipping for large orders
+
+Customers whose order total reaches the free-shipping threshold pay no shipping fee.
+The threshold is configured in the xref:_data_tables.adoc[shipping data table].
+
+[%collapsible]
+.Rule source
+====
+.SHIP_FREE: Free shipping for large orders
+[source,iskara,.rule]
+----
+when
+    order.total >= ShippingThresholds at: "minimum"
+then
+    freeShipping := "yes"
+    shippingCost := 0
+end
+----
+====
+....
+
+When rendered, the prose is visible immediately and the rule source is a click away.
+This keeps the document readable for business review sessions while ensuring the rule source is never out of sync with its description -- it is the same file.
+
+=== Document the why, not just the what
+
+The rule source already says _what_ the rule does.
+The surrounding AsciiDoc text should say _why_ the rule exists and what business decision it encodes.
+Reference the requirement, ticket, or policy document that motivated the rule:
+
+[source,asciidoc]
+----
+=== Senior citizen discount
+
+Customers aged 60 or above receive a 15% discount on all orders.
+This implements the pricing policy agreed in Q3 2024 (see JIRA-4471).
+----
+
+A future maintainer who needs to change or remove the rule will know what they are changing and why.
+
+== Keeping decision tables manageable
+
+=== Prefer narrow, focused tables
+
+A decision table with ten or more columns is almost always capturing too many concerns at once.
+Each additional column makes it harder to scan which conditions belong together and which rows are actually distinct.
+
+As a rule of thumb, if a table does not fit comfortably in a terminal window at 120 characters, it is too wide.
+Consider splitting it into two tables that each address one aspect of the same decision.
+
+=== Move long expressions into aliases
+
+Table cells should be short enough to read at a glance.
+Anything longer than a brief expression belongs in an alias, defined in the `aliases` block after the table.
+This also lets you give the expression a business-friendly name in the column header.
+
+A column header like `Customer.loyaltyPoints` is a technical detail.
+A header like `#isLoyal` that expands to the actual check is far easier to scan across all rows.
+
+[source,asciidoc]
+....
+[#DISC,decision-table]
+.Apply discount tier
+|===
+| ID        | WHEN        | WHEN         | THEN
+
+| h| #isVIP h| #isLoyal h| #applyDiscount
+| DISC_VIP  | *  |    | 20
+| DISC_LOYAL |   | *  | 10
+|===
+
+[.aliases,for="DISC"]
+isVIP::
++
+[source,iskara]
+----
+[customer.loyaltyPoints >= 1000]
+----
+isLoyal::
++
+[source,iskara]
+----
+[customer.loyaltyPoints >= 500]
+----
+applyDiscount::
++
+[source,iskara]
+----
+[:percent | discountPercent := percent]
+----
+....
+
+The table now communicates the business logic clearly.
+The alias definitions below it contain the technical detail, readable when needed but out of the way when scanning the table.
+
+=== Use template rules for repeating patterns
+
+When you find yourself writing several rules that differ only in a few constant values, a template rule with a data table is cleaner than repeating the same structure.
+It also prevents the values from diverging accidentally.
+
+Prefer:
+
+[source,iskara]
+----
+template rule COUPON "Apply coupon code discount"
+data table {
+    | code       | bonus |
+    | ---------- | ----- |
+    | "SAVE10"   | 10    |
+    | "SAVE20"   | 20    |
+    | "VIP50"    | 50    |
+}
+when
+    order.couponCode = code
+then
+    discountPercent := bonus
+end
+----
+
+Over three near-identical simple rules.
+
+=== Put reference data in data tables, not inline maps
+
+Inline map literals in a rule condition look like an implementation trick and are hard to update without touching the rule itself.
+Extract them into a named data table so that business stakeholders can find and update the values without reading Iskara syntax.
+
+Avoid:
+
+[source,iskara]
+----
+when
+    let limit := #["bicycle": 10, "car": 1000, "truck": 3000] at: vehicle.type
+    vehicle.weight > limit
+----
+
+Prefer:
+
+[source,iskara]
+----
+data table WeightLimits {
+    | Vehicle type | Weight limit |
+    | ------------ | ------------ |
+    | "bicycle"    | 10           |
+    | "car"        | 1000         |
+    | "truck"      | 3000         |
+}
+
+rule VEHICLE_OVERWEIGHT "Vehicle exceeds type weight limit"
+when
+    let limit := WeightLimits at: vehicle.type
+    vehicle.weight > limit
+then
+    errors add: $"Vehicle exceeds the weight limit of ${limit} kg."
+end
+----
+
+== Moving complexity to Java
+
+=== Rules should read as business sentences
+
+If a condition requires multi-step computation -- date arithmetic, collection processing, statistical aggregation -- the rule itself is probably not the right place for it.
+When a `when` section looks like a small program, it defeats the purpose of having readable rule sources.
+
+Move the logic into a Java method on the fact type or into a global helper, and give it a name that describes its business meaning:
+
+Avoid:
+
+[source,iskara]
+----
+when
+    order.lines where: [:l | l.product.category = "Electronics"] size >= 3,
+    order.lines where: [:l | l.product.category = "Electronics"] .product.price sum >= 500
+----
+
+Prefer, with a Java method `hasSignificantElectronicsContent()` on the `Order` type:
+
+[source,iskara]
+----
+when
+    order hasSignificantElectronicsContent
+----
+
+The rule expresses a business concept.
+The Java method handles the mechanics.
+The Java method can also be unit tested independently.
+
+=== Use globals for services, not for complex rule logic
+
+Globals exist for shared, stateful objects like clocks, loggers, and configuration services.
+They are appropriate for things like `@Clock now` or `@Config maximumOrderValue`.
+They are not the right place to encode business logic; that belongs in the rule conditions and consequences themselves, or in well-named Java methods on the fact types.
+
+== Naming and identifiers
+
+=== Use structured rule IDs
+
+A rule ID that encodes a domain prefix and a sequence number is easier to find in logs, audit trails, and references in other documents.
+
+Prefer `DISC-001`, `SHIP-003`, `FRAUD-012` over `vipDiscount`, `Rule1`, or `DiscountRule`.
+
+The sequence number does not need to be contiguous.
+Leaving gaps (`DISC-001`, `DISC-005`, `DISC-010`) gives room to insert rules later without renumbering.
+
+=== Always add a human-readable description
+
+Every rule ID should be followed by a quoted description.
+The description appears in logs and error messages and is the first thing a business stakeholder will read when a rule fires unexpectedly.
+
+[source,iskara]
+----
+rule DISC-001 "VIP customers receive a 20% discount"
+----
+
+=== Upper-case facts, outputs, and globals
+
+Facts, outputs, and globals declared with an upper-case first letter are visually distinct from locally declared variables, which always start with a lower-case letter.
+This distinction matters when reading a rule and trying to understand what comes from the outside world and what is computed locally.
+
+Prefer `Customer`, `Order`, `TaxRate` over `customer`, `order`, `taxRate` for top-level declarations.
+
+== Rule ordering
+
+The Java compiler executes rules in the order they appear in the source.
+A later rule can read outputs written by an earlier rule.
+Use this to decompose multi-step calculations across rules rather than putting everything in a single `then` section.
+
+Place rules that produce intermediate outputs before rules that consume them.
+Group rules by their place in the calculation chain rather than by arbitrary ordering.
+
+If a rule should only ever fire after another rule has set a specific output, make that dependency explicit by checking the output value in the `when` section of the dependent rule:
+
+[source,iskara]
+----
+rule TAX-001 "Apply VAT to final price"
+when
+    totalPrice > 0
+then
+    finalPrice := totalPrice * @VatRate
+end
+----
+
+This rule only fires when `totalPrice` has been set to a non-zero value by a preceding rule.
+The ordering is both enforced by the condition and communicated to the reader.

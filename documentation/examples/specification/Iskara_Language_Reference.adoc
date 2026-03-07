@@ -11,7 +11,7 @@ The document assumes familiarities with programming concepts.
 == Rule Engine Semantics
 
 Iskara is not a rule engine.
-Nevertheless, since Iskara also shaped the Iskibal rule model design, we need to enforce some properties that need to be rule compiler has to maintain.
+Nevertheless, since Iskara also shaped the Iskibal rule model design, we need to enforce some properties that a rule compiler has to maintain.
 We describe these in the form of "A rule engine _must_..." or "A rule compiler _must_...", though these statements are interchangeable; in the end, the rule compiler decides how to best map the rule model semantics to code of the target rule engine.
 
 There are also "soft" requirements that follow RFC nomenclature (_should_, _may_).
@@ -648,7 +648,7 @@ when:
     Customer.dateOfBirth = p at: "Date of birth"
     ] exists
 then:
-  Discounts add: "Birthday disocunt" withPercent: 15
+  Discounts add: "Birthday discount" withPercent: 15
 ----
 
 ==== Local data tables
@@ -680,7 +680,7 @@ when:
   Customer.familyName = `Family Name`,
   Customer.dateOfBirth = `Date of birth`
 then:
-  Discounts add: "Birthday disocunt" withPercent: 15
+  Discounts add: "Birthday discount" withPercent: 15
 ----
 
 It is up to the rule compiler or engine how to implement a template rule, but each entry of a template rule data table _must_ lead to a distinct rule being fired, with its own unique rule ID.
@@ -766,10 +766,3 @@ then:
 end
 ----
 
-NOTE: The Iskibal rule model has a function to transform a decision table to individual rules transparently, so rule compilers that do not want to treat decision tables differently can get the transpiled rules.
-
-=== Match mode
-
-<<template_rules>> and <<decision_tables>> can lead to multiple entries of a table matching, each match executing a consequence.
-This is not always what you want.
-For example, what if a customer should only get one discount?

@@ -120,8 +120,7 @@ offerCar::
 +
 [source,iskara]
 ----
-[:param |
-    let color := param
+[:color |
     messages add: $"Did you know you can get a birthday paint in ${color} for your car?"
 ]
 ----

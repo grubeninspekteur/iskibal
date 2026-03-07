@@ -1,75 +1,245 @@
 = Iskibal
+:toc: left
+:toc-title: Contents
 
 Iskibal is a Java business rules compiler.
-It transforms business rules written in one language (for example AsciiDoc with embedded _Iskara_) into a rule model, which can then be transformed into an interpretable rule format of an existing rule engine like Drools.
+It transforms business rules written in _Iskara_ (optionally embedded in AsciiDoc) into a rule model, which is then compiled to Java source code.
 
 Iskibal is _not_ a rule engine.
-It does not define how rules are interpreted.
+It produces plain Java classes that you instantiate, populate with data, and call.
 
-Iskibal has three parts:
+== Motivation
 
-. _Rule source parser:_ Parses a _rule source_ like AsciiDoc with embedded rule language into a _rule model_.
-. _Rule model:_ A representation of a rule in a Java tree of objects.
-. _Rule compiler:_ Transforms a _rule model_ into the target language (native Java, Drools, Rulebook...).
+Many teams settle on spreadsheet-based decision tables or graphical rule notation because business stakeholders can read them easily.
+The problem is that spreadsheets are nearly impossible to merge: two developers editing the same file at once will face a painful manual reconciliation.
+Classic rule languages like DRL are mergeable, but lose the benefit of spreadsheets, and show too many implementation details.
 
-All parts can be freely exchanged by implementations, as long as they adhere to the Iskibal API.
-Implementations are loaded using the service loader mechanism.
+Iskibal takes a different approach.
+Rules are written as AsciiDoc documents with embedded Iskara source blocks and standard AsciiDoc tables for decision tables.
+AsciiDoc renders to a clean, readable document for business review -- the same tables and structure they expect -- while remaining plain text that version control can diff and merge line by line.
+Concurrent work on separate rules in the same file is straightforward; only edits to the same table row at the same time create conflicts, which is the same situation as any other text-based source file.
 
-== Development goals
+The developer side of the deal is also improved: facts, outputs, and rule conditions reference real Java types, so IDEs can check usages, and the compiled output is ordinary Java that can be debugged normally.
 
-* Rules written as code blocks inside AsciiDoc documents in a readable and customizable language
-** Customizable: It should be possible to translate keywords and replace entire sentences, similar to how the Gherkin language in Cucumber is built. Maybe we can simply use Gherkin itself and extend it a bit by adding custom parsed expressions?
-** It should be possible to refence AsciiDoc tables as decision tables
-* Rules are compiled to native, easily debuggable Java source code
-** Debugging is one of the major pain points of Drools.
-** Direct reference to classes allows us to check usages
-** If dynamically interpreted rules are required, an alternative runtime compilation mode could be added, but that probably becomes less important in modern cloud deployments
-* Rule evaluation should be cached. If a semantically equivalent condition is evaluated, it is reused for the current run
-** This may need reordering, e.g., `car.numberOfWheels = 4 and car.color = Color.BLACK` is equivalent to `car.color = Color.BLACK and car.numberOfWheels = 4`
+== How it works
 
-== Why?
+Iskibal operates as a three-step pipeline:
 
-* Spreadsheet (Excel) and DMN rule bases are nice for the business side to read, but hard to work with as a developer, and basically impossible to solve merge conflicts in, leading to errors.
-* Rule languages like DRL are easy to merge, but difficult for the business side to read. It is possible to add a DSL with Drools, but it's a complicated mess to do so. Plus, DRL has no forma for embedded decision tables.
-* Most IDEs have plugins that display the document in realtime, meaning we can see the tables rendered live.
+. *Rule source parser* -- Reads `.iskara` files (pure Iskara) or `.adoc` files (AsciiDoc with embedded Iskara blocks) and produces a rule model.
+. *Rule model* -- A tree of Java objects representing the parsed rule structure, independent of any particular source format or target language.
+. *Rule compiler* -- Transforms the rule model into Java source code.
 
-* We get documentation for free, and encourage users to write explanations, reasonings etc. for rules. We can even link Jira tickets for example.
-** It is also possible to embed Java code files for things we externalize, so we can show how more complicated rules are evaluated. They could be hidden using https://docs.asciidoctor.org/asciidoc/latest/blocks/collapsible/[Collapsible Blocks].
+All three parts are loaded via the Java `ServiceLoader` mechanism and can be replaced with custom implementations.
 
-== Caveats
-* Asciidoc tables are not easily read if they have too may columns, that's why spreadsheet decision tables are so popular. However, I'd argue that if you have more than 7 columns, the brain can't read the rules comfortably anyways.
-** Encourage to use references in tables (placeholders to the actual condition) so they are short and readable. Or use AsciiDoc document attributes to expand the full condition on rendering.
+== Quick start
 
-== Ideas how it could work / design
+=== 1. Add the Maven plugin
 
-CAUTION: TODO
+Add the Iskibal Maven plugin to your `pom.xml`.
+It runs during the `generate-sources` phase and adds the output directory as a compile source root automatically.
 
-* A rule base is an AsciiDoc document. It can be comprised of multiple files by including them.
-** Only files ending in `rule.adoc` will be checked for rule interpretation (check if possible with Asciidoctor).
-* We use https://docs.asciidoctor.org/asciidoc/latest/attributes/role/[roles] to give blocks special meanings, for example for mapping fact types to Java types via imports, or decision tables.
-* We use source code blocks with a supported rule language to define the actual rule, for example the _Iskira_ language that (optionally) comes with Iskibal.
-* Attribute substitutions can be used to reuse conditions transparently so they become part of the code block. (Or should we use description lists? See example below.)
-* Anything without a role is not interpreted, so you are free to document your rules however you like.
-* The rules are parsed into a model which a parser can then use to produce artifacts like: Java code, bytecode, DRL, rule engine calls like https://github.com/deliveredtechnologies/rulebook[Rulebook].
-** Input format (e.g. Asciidoc) -> parsed rule model -> rule compiler
-** Even though Rulebook is no longer maintained, I would like to start with this target format because it would allow me to have a simple working rule engine I can experiment with as the output format.
-* Eventually we could build our own rule engine.
+[source,xml]
+----
+<plugin>
+  <groupId>work.spell.iskibal</groupId>
+  <artifactId>iskibal-maven-plugin</artifactId>
+  <version>0.1.0-SNAPSHOT</version>
+  <executions>
+    <execution>
+      <goals>
+        <goal>generate</goal>
+      </goals>
+      <configuration>
+        <packageName>com.example.rules.generated</packageName>
+      </configuration>
+    </execution>
+  </executions>
+</plugin>
+----
 
-TODO: How to define decision table references in a language independent way? Generating one rule per line would be overkill, wouldn't it? And some decision tables could be folded into constants. Maybe the rule compiler should decide and not the parser.
+You also need a runtime dependency on the Java compiler support library, which the generated code imports:
 
+[source,xml]
+----
+<dependency>
+  <groupId>work.spell.iskibal</groupId>
+  <artifactId>iskibal-compiler-java</artifactId>
+  <version>0.1.0-SNAPSHOT</version>
+</dependency>
+----
+
+=== 2. Write rule sources
+
+By default, the plugin scans `src/main/iskibal/` for `.iskara` and `.adoc` files.
+
+==== Pure Iskara (`.iskara`)
+
+[source,iskara]
+----
+facts {
+    customer: com.example.Customer
+}
+outputs {
+    discountPercent: BigDecimal := 0
+    tier: String := "standard"
+}
+
+rule VIP "VIP customer gets 20% discount"
+when
+    customer.loyaltyPoints >= 1000
+then
+    discountPercent := 20
+    tier := "vip"
+end
+
+rule LOYAL "Loyal customer gets 10% discount"
+when
+    customer.loyaltyPoints >= 500,
+    customer.loyaltyPoints < 1000
+then
+    discountPercent := 10
+    tier := "loyal"
+end
+----
+
+==== AsciiDoc with embedded Iskara (`.adoc`)
+
+Facts, outputs, and globals can be declared as AsciiDoc tables and definition lists.
+Rules appear as source blocks with the `iskara` language tag and the `.rule` role.
+
+[source,asciidoc]
+....
+= Shipping Rules
+
+[.facts,cols="1,1,3"]
+|===
+| Fact name | Type | Description
+
+| order | com.example.Order | The order being shipped.
+|===
+
+[.outputs,cols="1,1,1,3"]
+|===
+| Output name | Type | Initial value | Description
+
+| freeShipping | String | "no" | Whether shipping is free.
+| shippingCost | BigDecimal | 10 | Default shipping cost.
+|===
+
+.SHIP_FREE: Free shipping for large orders
+[source,iskara,.rule]
+----
+when
+    order.total >= 50
+then
+    freeShipping := "yes"
+    shippingCost := 0
+end
+----
+....
+
+=== 3. Use the generated class
+
+Each source file produces one Java class whose name is derived from the filename in PascalCase.
+For example, `discount_rules.iskara` produces `DiscountRules`.
+
+Facts are passed to the constructor.
+Call `evaluate()` to fire all matching rules.
+Outputs are then available via getters.
+
+[source,java]
+----
+var customer = new Customer("Alice", 1500);
+var rules = new DiscountRules(customer);
+
+rules.evaluate();
+
+BigDecimal discount = rules.getDiscountPercent(); // 20
+String tier = rules.getTier();                   // "vip"
+----
+
+== Maven plugin reference
+
+[cols="1,1,3"]
+|===
+| Parameter | Default | Description
+
+| `sourceDirectory`
+| `${project.basedir}/src/main/iskibal`
+| Directory scanned for `.iskara` and `.adoc` rule source files.
+
+| `outputDirectory`
+| `${project.build.directory}/generated-sources/iskibal`
+| Directory where generated Java source files are written.
+
+| `packageName`
+| _(unnamed package)_
+| Java package name for all generated classes.
+
+| `generateNullChecks`
+| `true`
+| Whether to generate null-safety guards for navigation expressions (e.g. `passport.address.street` returns `null` rather than throwing if `address` is null).
+
+| `skip`
+| `false`
+| Set to `true` to skip the goal entirely. Can also be set via the `iskibal.skip` property.
+|===
+
+The goal binds to `generate-sources` by default.
+
+== Modules
+
+[cols="1,3"]
+|===
+| Artifact | Purpose
+
+| `iskibal-rule-model`
+| The rule model: sealed interfaces and records representing the parsed rule structure.
+
+| `iskibal-parser`
+| Parses `.iskara` source text into a rule model.
+
+| `iskibal-asciidoc`
+| Parses AsciiDoc documents with embedded Iskara blocks and structural fact/output tables.
+
+| `iskibal-compiler-common`
+| Shared compiler infrastructure: semantic analysis API.
+
+| `iskibal-compiler-java`
+| Compiles a rule model to Java source code. Also provides the runtime support classes referenced by generated code.
+
+| `iskibal-maven-plugin`
+| Maven plugin that drives the full parse-analyze-compile pipeline during a build.
+|===
+
+== Language reference
+
+Full language documentation is in `documentation/examples/specification/`:
+
+- link:documentation/examples/specification/Iskara_Language_Reference.adoc[Iskara Language Reference] -- Iskara language syntax: types, expressions, messages, rules, data tables, decision tables.
+- link:documentation/examples/specification/AsciiDoc_plus_Iskara.adoc[AsciiDoc plus Iskara] -- How to embed Iskara rule sources in AsciiDoc documents using standard AsciiDoc structures.
+- link:documentation/examples/specification/Rulebase_Authoring_Best_Practices.adoc[Rulebase Authoring Best Practices] -- How to organize, write, and maintain rule sources so they serve both business and developer readers.
+
+== Building from source
+
+You need Maven 4 (the included `mvnw` wrapper will download it automatically) and a JDK 25.
+
+[source,bash]
+----
+# Build everything and install to local repository
+./mvnw clean install
+
+# Build a specific module
+./mvnw clean package -pl iskibal-maven-plugin -am
+----
+
+=== Performance note
+
+AsciidoctorJ (used by `iskibal-asciidoc`) starts JRuby internally, which can be slow.
+The parser sets `jruby.compile.mode=OFF` to disable JRuby JIT compilation, which improves startup time significantly.
+In tests, reuse a single `AsciiDocParser` instance across all test methods rather than creating one per test.
 
 == Name origin
 
-Iskibal as a Babylonian king is a reference to the JDK project https://openjdk.org/projects/babylon/[Project Babylon], which aims to bring code models and code reflection to the Java language.
-
-== How to build
-
-You need Maven 4 to build the code.
-
-=== Performance tips
-
-AsciidoctorJ uses JRuby internally, which can be slow to start up.
-The `AsciiDocParser` automatically sets `jruby.compile.mode=OFF` to disable JRuby JIT compilation, which improves startup time (see https://docs.asciidoctor.org/asciidoctorj/latest/guides/optimization/[AsciidoctorJ Optimization Guide]).
-
-When using `AsciiDocParser` in tests, reuse a single instance across all tests instead of creating a new one per test method.
-Creating an Asciidoctor instance is expensive (~2–3s), so sharing one instance can dramatically reduce test execution time.
+Iskibal was a Babylonian king.
+The name is a reference to https://openjdk.org/projects/babylon/[OpenJDK Project Babylon], which aims to bring code models and code reflection to the Java language.
