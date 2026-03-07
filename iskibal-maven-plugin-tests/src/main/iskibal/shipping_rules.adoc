@@ -1,0 +1,27 @@
+= Shipping Rules
+
+[.facts,cols="1,1,3"]
+|===
+| Fact name | Type | Description
+
+| order | work.spell.iskibal.mavenplugin.tests.Order | The order being shipped.
+|===
+
+[.outputs,cols="1,1,1,3"]
+|===
+| Output name | Type | Initial value | Description
+
+| freeShipping | String | "no" | Whether shipping is free.
+| shippingCost | BigDecimal | 10 | Default shipping cost.
+|===
+
+.SHIP_FREE: Free shipping for large orders
+[source,iskara,.rule]
+----
+when
+    order.total >= 50
+then
+    freeShipping := "yes"
+    shippingCost := 0
+end
+----

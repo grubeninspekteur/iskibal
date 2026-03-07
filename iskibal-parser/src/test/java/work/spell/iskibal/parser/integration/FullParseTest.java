@@ -18,7 +18,6 @@ import work.spell.iskibal.model.Expression.Navigation;
 import work.spell.iskibal.model.Rule.SimpleRule;
 import work.spell.iskibal.model.Statement.ExpressionStatement;
 import work.spell.iskibal.parser.api.ParseResult;
-import work.spell.iskibal.parser.api.SourceType;
 import work.spell.iskibal.parser.internal.IskaraParserImpl;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -613,15 +612,6 @@ class FullParseTest {
             assertThat(result.isSuccess()).isTrue();
         }
 
-        @Test
-        void supportsIskaraSourceType() {
-            assertThat(parser.supportedSourceTypes()).contains(SourceType.ISKARA);
-        }
-
-        @Test
-        void supportsAsciidocSourceType() {
-            assertThat(parser.supportedSourceTypes()).contains(SourceType.ASCIIDOC);
-        }
     }
 
     @Nested

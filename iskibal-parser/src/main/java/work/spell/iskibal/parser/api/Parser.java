@@ -29,9 +29,6 @@ public interface Parser {
         return parse(source, ParseOptions.defaults());
     }
 
-    /// Returns the set of source types this parser supports.
-    Set<SourceType> supportedSourceTypes();
-
     /// Loads a parser using the ServiceLoader mechanism.
     ///
     /// @return a parser instance

@@ -1,0 +1,90 @@
+<project xmlns="http://maven.apache.org/POM/4.1.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.1.0 http://maven.apache.org/xsd/maven-4.1.0.xsd">
+
+  <parent>
+    <groupId>work.spell.iskibal</groupId>
+    <artifactId>iskibal-parent</artifactId>
+  </parent>
+
+  <artifactId>iskibal-maven-plugin</artifactId>
+  <packaging>maven-plugin</packaging>
+  <name>Iskibal Maven Plugin</name>
+  <description>Maven plugin that compiles Iskara rule sources (.iskara, .adoc) to Java source code.</description>
+
+  <properties>
+    <maven.version>3.9.9</maven.version>
+    <maven.plugin.tools.version>3.15.1</maven.plugin.tools.version>
+  </properties>
+
+  <dependencies>
+    <!-- Iskibal pipeline -->
+    <dependency>
+      <groupId>work.spell.iskibal</groupId>
+      <artifactId>iskibal-rule-model</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>work.spell.iskibal</groupId>
+      <artifactId>iskibal-parser</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>work.spell.iskibal</groupId>
+      <artifactId>iskibal-asciidoc</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>work.spell.iskibal</groupId>
+      <artifactId>iskibal-compiler-common</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>work.spell.iskibal</groupId>
+      <artifactId>iskibal-compiler-java</artifactId>
+    </dependency>
+
+    <!-- Maven plugin API (provided by Maven at runtime) -->
+    <dependency>
+      <groupId>org.apache.maven</groupId>
+      <artifactId>maven-plugin-api</artifactId>
+      <version>${maven.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.maven</groupId>
+      <artifactId>maven-core</artifactId>
+      <version>${maven.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.maven.plugin-tools</groupId>
+      <artifactId>maven-plugin-annotations</artifactId>
+      <version>${maven.plugin.tools.version}</version>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-plugin-plugin</artifactId>
+        <version>${maven.plugin.tools.version}</version>
+        <dependencies>
+          <!-- Force ASM 9.8+ to support Java 25 class files (class version 69).
+               ASM 9.7.1 (used by maven-plugin-tools 3.15.1) only defines up to V24. -->
+          <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm</artifactId>
+            <version>9.8</version>
+          </dependency>
+        </dependencies>
+        <executions>
+          <execution>
+            <id>default-descriptor</id>
+            <goals>
+              <goal>descriptor</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

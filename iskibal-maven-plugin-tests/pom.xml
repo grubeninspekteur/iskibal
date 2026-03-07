@@ -1,0 +1,71 @@
+<project xmlns="http://maven.apache.org/POM/4.1.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.1.0 http://maven.apache.org/xsd/maven-4.1.0.xsd">
+
+  <parent>
+    <groupId>work.spell.iskibal</groupId>
+    <artifactId>iskibal-parent</artifactId>
+  </parent>
+
+  <artifactId>iskibal-maven-plugin-tests</artifactId>
+  <name>Iskibal Maven Plugin Tests</name>
+  <description>
+    Tests the iskibal-maven-plugin by applying it during the build and verifying the generated rule classes.
+    Build this module with the full reactor (mvn install) so the plugin is installed before this module uses it.
+  </description>
+
+  <properties>
+    <junit.version>5.11.0</junit.version>
+  </properties>
+
+  <dependencies>
+    <!-- Runtime helpers imported by generated rule code -->
+    <dependency>
+      <groupId>work.spell.iskibal</groupId>
+      <artifactId>iskibal-compiler-java</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <version>3.26.3</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <!-- Generate Java rule classes from .iskara sources -->
+      <plugin>
+        <groupId>work.spell.iskibal</groupId>
+        <artifactId>iskibal-maven-plugin</artifactId>
+        <version>${project.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+            <configuration>
+              <packageName>work.spell.iskibal.mavenplugin.tests.generated</packageName>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- Tests reference generated classes directly; no module path needed -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <useModulePath>false</useModulePath>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

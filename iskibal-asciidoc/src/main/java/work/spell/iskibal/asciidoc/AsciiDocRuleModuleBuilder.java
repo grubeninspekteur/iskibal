@@ -94,6 +94,6 @@ public class AsciiDocRuleModuleBuilder {
     }
 
     private ParseOptions parseOptions() {
-        return new ParseOptions(locale, SourceType.ISKARA, "<asciidoc>");
+        return new ParseOptions(locale, "<asciidoc>");
     }
 }

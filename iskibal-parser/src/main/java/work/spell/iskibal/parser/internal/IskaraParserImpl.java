@@ -8,8 +8,6 @@ import work.spell.iskibal.parser.IskaraParser;
 import work.spell.iskibal.parser.api.ParseOptions;
 import work.spell.iskibal.parser.api.ParseResult;
 import work.spell.iskibal.parser.api.Parser;
-import work.spell.iskibal.parser.api.SourceType;
-import work.spell.iskibal.parser.asciidoc.AsciiDocExtractor;
 import work.spell.iskibal.parser.diagnostic.Diagnostic;
 import work.spell.iskibal.parser.diagnostic.IskaraDiagnosticListener;
 import work.spell.iskibal.parser.visitor.ExpressionVisitor;
@@ -20,18 +18,9 @@ import module java.base;
 /// Implementation of the Iskara parser using ANTLR4.
 public class IskaraParserImpl implements Parser {
 
-    private static final Set<SourceType> SUPPORTED_SOURCE_TYPES = Set.of(SourceType.ISKARA, SourceType.ASCIIDOC);
-
     @Override
     public ParseResult<RuleModule> parse(String source, ParseOptions options) {
-        // Handle AsciiDoc extraction if needed
-        String iskaraSource = source;
-        if (options.sourceType() == SourceType.ASCIIDOC) {
-            AsciiDocExtractor extractor = new AsciiDocExtractor();
-            iskaraSource = extractor.extractIskara(source);
-        }
-
-        return parseIskara(iskaraSource, options);
+        return parseIskara(source, options);
     }
 
     private ParseResult<RuleModule> parseIskara(String source, ParseOptions options) {
@@ -82,8 +71,4 @@ public class IskaraParserImpl implements Parser {
         }
     }
 
-    @Override
-    public Set<SourceType> supportedSourceTypes() {
-        return SUPPORTED_SOURCE_TYPES;
-    }
 }

@@ -1,0 +1,24 @@
+facts {
+    customer: work.spell.iskibal.mavenplugin.tests.Customer
+}
+outputs {
+    discountPercent: BigDecimal := 0
+    tier: String := "standard"
+}
+
+rule VIP "VIP customer gets 20% discount"
+when
+    customer.loyaltyPoints >= 1000
+then
+    discountPercent := 20
+    tier := "vip"
+end
+
+rule LOYAL "Loyal customer gets 10% discount"
+when
+    customer.loyaltyPoints >= 500,
+    customer.loyaltyPoints < 1000
+then
+    discountPercent := 10
+    tier := "loyal"
+end

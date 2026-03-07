@@ -22,7 +22,9 @@ jobs:
           cache: 'maven'
 
       - name: Build and test
-        run: ./mvnw --batch-mode -fae verify
+        # install (not verify) is required so the iskibal-maven-plugin is
+        # installed to the local repository before iskibal-maven-plugin-tests uses it.
+        run: ./mvnw --batch-mode -fae install
 
       - name: Publish test results
         uses: EnricoMi/publish-unit-test-result-action@v2
