@@ -44,6 +44,7 @@ out/
 *.iml
 *.ipr
 *.iws
+iskibal-intellij-plugin/.intellijPlatform/
 
 ##############################
 ## Eclipse

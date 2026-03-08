@@ -252,6 +252,12 @@ The goal binds to `generate-sources` by default.
 
 | `iskibal-maven-plugin`
 | Maven plugin that drives the full parse-analyze-compile pipeline during a build.
+
+| `iskibal-lsp`
+| Language Server Protocol (LSP) server providing diagnostics and code completion for `.iskara` files. Works with any LSP-capable editor (VS Code, Neovim, etc.).
+
+| `iskibal-intellij-plugin`
+| IntelliJ IDEA plugin (standalone Gradle project) for `.iskara` files: syntax highlighting, parser diagnostics, code completion, brace matching, code folding, and commenting.
 |===
 
 == Language reference
@@ -261,6 +267,46 @@ Full language documentation is in `documentation/examples/specification/`:
 - link:documentation/examples/specification/Iskara_Language_Reference.adoc[Iskara Language Reference] -- Iskara language syntax: types, expressions, messages, rules, data tables, decision tables.
 - link:documentation/examples/specification/AsciiDoc_plus_Iskara.adoc[AsciiDoc plus Iskara] -- How to embed Iskara rule sources in AsciiDoc documents using standard AsciiDoc structures.
 - link:documentation/examples/specification/Rulebase_Authoring_Best_Practices.adoc[Rulebase Authoring Best Practices] -- How to organize, write, and maintain rule sources so they serve both business and developer readers.
+
+
+== IDE support
+
+=== IntelliJ IDEA
+
+The `iskibal-intellij-plugin` directory contains a standalone Gradle project.
+It is not published to the JetBrains Marketplace yet; build and install it locally:
+
+[source,bash]
+----
+cd iskibal-intellij-plugin
+./gradlew buildPlugin
+----
+
+The plugin ZIP is produced in `build/distributions/`.
+Install it via _Settings > Plugins > gear icon > Install Plugin from Disk_.
+
+To launch a sandbox IDE with the plugin pre-installed:
+
+[source,bash]
+----
+./gradlew runIde
+----
+
+Features: syntax highlighting, parser diagnostics, code completion (keywords and declared names), brace matching, code folding, line/block commenting, and a configurable color scheme.
+
+=== Language Server Protocol (LSP)
+
+The `iskibal-lsp` module provides a Language Server Protocol server.
+Build the fat JAR:
+
+[source,bash]
+----
+./mvnw package -pl iskibal-lsp -am -q -DskipTests
+----
+
+The server communicates via JSON-RPC over stdin/stdout.
+
+There is no VS Code plugin yet to communicate with the LSP.
 
 == Building from source
 
