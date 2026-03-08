@@ -29,15 +29,8 @@ public final class AssignmentValidator {
     public List<SemanticDiagnostic> validate(RuleModule module) {
         diagnostics.clear();
 
-        Set<String> factNames = new HashSet<>();
-        for (Fact fact : module.facts()) {
-            factNames.add(fact.name());
-        }
-
-        Set<String> outputNames = new HashSet<>();
-        for (Output output : module.outputs()) {
-            outputNames.add(output.name());
-        }
+        Set<String> factNames = module.facts().stream().map(Fact::name).collect(Collectors.toUnmodifiableSet());
+        Set<String> outputNames = module.outputs().stream().map(Output::name).collect(Collectors.toUnmodifiableSet());
 
         for (Rule rule : module.rules()) {
             validateRule(rule, factNames, outputNames);

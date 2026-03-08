@@ -312,7 +312,7 @@ public final class ExpressionGenerator {
                 methodName.append(part.keyword());
                 first = false;
             } else {
-                methodName.append(capitalize(part.keyword()));
+                methodName.append(JavaIdentifiers.capitalize(part.keyword()));
                 args.append(", ");
             }
             args.append(generate(part.argument()));
@@ -416,12 +416,12 @@ public final class ExpressionGenerator {
         sb.append(receiver);
         for (int i = 0; i < nav.names().size() - 1; i++) {
             String name = nav.names().get(i);
-            sb.append(".get").append(capitalize(name)).append("()");
+            sb.append(".get").append(JavaIdentifiers.capitalize(name)).append("()");
         }
 
         // Use setter for the last property
         String lastName = nav.names().getLast();
-        sb.append(".set").append(capitalize(lastName)).append("(").append(valueCode).append(")");
+        sb.append(".set").append(JavaIdentifiers.capitalize(lastName)).append("(").append(valueCode).append(")");
 
         return sb.toString();
     }
@@ -629,7 +629,7 @@ public final class ExpressionGenerator {
             return name + "()";
         }
         // Bean accessor: getName()
-        return "get" + capitalize(name) + "()";
+        return "get" + JavaIdentifiers.capitalize(name) + "()";
     }
 
     private String generateBlock(Block block) {
@@ -724,10 +724,4 @@ public final class ExpressionGenerator {
                 "\\t");
     }
 
-    private static String capitalize(String s) {
-        if (s == null || s.isEmpty()) {
-            return s;
-        }
-        return Character.toUpperCase(s.charAt(0)) + s.substring(1);
-    }
 }

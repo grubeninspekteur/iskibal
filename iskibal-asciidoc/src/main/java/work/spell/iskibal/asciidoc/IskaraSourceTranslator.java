@@ -158,36 +158,20 @@ public class IskaraSourceTranslator {
 
     /// Translates a facts table to Iskara source.
     private void translateFacts(Table table, StringBuilder sb) {
-        List<Row> bodyRows = table.getBody();
-        if (bodyRows == null || bodyRows.isEmpty()) return;
-
-        sb.append("\nfacts {\n");
-        for (Row row : bodyRows) {
-            List<Cell> cells = row.getCells();
-            if (cells.size() >= 2) {
-                String name = getCellText(cells.get(0)).trim();
-                String type = getCellText(cells.get(1)).trim();
-                if (name.isBlank() || type.isBlank()) continue;
-
-                sb.append("  ").append(name).append(": ").append(type);
-                if (cells.size() > 2) {
-                    String desc = getCellText(cells.get(2)).trim();
-                    if (!desc.isBlank()) {
-                        sb.append(" \"").append(escapeString(desc)).append("\"");
-                    }
-                }
-                sb.append("\n");
-            }
-        }
-        sb.append("}\n");
+        translateNameTypeSection("facts", table, sb);
     }
 
     /// Translates a globals table to Iskara source.
     private void translateGlobals(Table table, StringBuilder sb) {
+        translateNameTypeSection("globals", table, sb);
+    }
+
+    /// Translates a `name: type` declaration table (facts or globals) to Iskara source.
+    private void translateNameTypeSection(String keyword, Table table, StringBuilder sb) {
         List<Row> bodyRows = table.getBody();
         if (bodyRows == null || bodyRows.isEmpty()) return;
 
-        sb.append("\nglobals {\n");
+        sb.append("\n").append(keyword).append(" {\n");
         for (Row row : bodyRows) {
             List<Cell> cells = row.getCells();
             if (cells.size() >= 2) {

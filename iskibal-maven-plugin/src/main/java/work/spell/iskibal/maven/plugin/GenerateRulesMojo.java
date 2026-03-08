@@ -89,8 +89,10 @@ public class GenerateRulesMojo extends AbstractMojo {
         SemanticAnalyzer analyzer = SemanticAnalyzer.load();
         JavaCompiler compiler = JavaCompiler.load();
 
-        for (Path sourceFile : sourceFiles) {
-            processFile(sourceFile, parser, analyzer, compiler);
+        try (AsciiDocParser adocParser = new AsciiDocParser()) {
+            for (Path sourceFile : sourceFiles) {
+                processFile(sourceFile, parser, analyzer, compiler, adocParser);
+            }
         }
 
         project.addCompileSourceRoot(outputDirectory.getAbsolutePath());
@@ -102,14 +104,14 @@ public class GenerateRulesMojo extends AbstractMojo {
             return paths.filter(Files::isRegularFile).filter(p -> {
                 String name = p.getFileName().toString();
                 return name.endsWith(".iskara") || name.endsWith(".adoc");
-            }).collect(Collectors.toList());
+            }).toList();
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to scan source directory: " + sourceDirectory, e);
         }
     }
 
-    private void processFile(Path sourceFile, Parser parser, SemanticAnalyzer analyzer, JavaCompiler compiler)
-            throws MojoExecutionException, MojoFailureException {
+    private void processFile(Path sourceFile, Parser parser, SemanticAnalyzer analyzer, JavaCompiler compiler,
+            AsciiDocParser adocParser) throws MojoExecutionException, MojoFailureException {
         String fileName = sourceFile.getFileName().toString();
         boolean isAsciiDoc = fileName.endsWith(".adoc");
         getLog().info("Compiling rule source: " + sourceFile);
@@ -117,15 +119,12 @@ public class GenerateRulesMojo extends AbstractMojo {
         // Parse
         RuleModule module;
         if (isAsciiDoc) {
-            try (AsciiDocParser adocParser = new AsciiDocParser()) {
-                AsciiDocParser.ParseResult adocResult = adocParser.parseFile(sourceFile);
-                if (!adocResult.isSuccess()) {
-                    String errors = adocResult.diagnostics().stream().map(Object::toString)
-                            .collect(Collectors.joining("\n  "));
-                    throw new MojoFailureException("Parse errors in " + fileName + ":\n  " + errors);
-                }
-                module = adocResult.module();
+            AsciiDocParser.ParseResult adocResult = adocParser.parseFile(sourceFile);
+            if (!adocResult.isSuccess()) {
+                throw new MojoFailureException("Parse errors in " + fileName + ":\n  "
+                        + formatErrors(adocResult.diagnostics()));
             }
+            module = adocResult.module();
         } else {
             String content;
             try {
@@ -135,9 +134,8 @@ public class GenerateRulesMojo extends AbstractMojo {
             }
             ParseResult<RuleModule> parseResult = parser.parse(content, ParseOptions.iskara(fileName));
             if (!parseResult.isSuccess()) {
-                String errors = parseResult.getDiagnostics().stream().map(Object::toString)
-                        .collect(Collectors.joining("\n  "));
-                throw new MojoFailureException("Parse errors in " + fileName + ":\n  " + errors);
+                throw new MojoFailureException("Parse errors in " + fileName + ":\n  "
+                        + formatErrors(parseResult.getDiagnostics()));
             }
             module = parseResult.getValue().orElseThrow();
         }
@@ -145,9 +143,8 @@ public class GenerateRulesMojo extends AbstractMojo {
         // Semantic analysis
         AnalysisResult analysisResult = analyzer.analyze(module);
         if (!analysisResult.isSuccess()) {
-            String errors = analysisResult.getDiagnostics().stream().map(Object::toString)
-                    .collect(Collectors.joining("\n  "));
-            throw new MojoFailureException("Semantic errors in " + fileName + ":\n  " + errors);
+            throw new MojoFailureException("Semantic errors in " + fileName + ":\n  "
+                    + formatErrors(analysisResult.getDiagnostics()));
         }
 
         // Code generation
@@ -172,6 +169,10 @@ public class GenerateRulesMojo extends AbstractMojo {
             }
             getLog().info("Generated: " + outputFile);
         }
+    }
+
+    private static String formatErrors(List<?> diagnostics) {
+        return diagnostics.stream().map(Object::toString).collect(Collectors.joining("\n  "));
     }
 
     /// Derives a PascalCase Java class name from a source filename.
