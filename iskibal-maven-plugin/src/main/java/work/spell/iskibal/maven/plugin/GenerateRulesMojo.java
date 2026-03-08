@@ -57,6 +57,12 @@ public class GenerateRulesMojo extends AbstractMojo {
     @Parameter(defaultValue = "true", property = "iskibal.generateNullChecks")
     private boolean generateNullChecks;
 
+    /// Whether to generate a `RuleListener` field and inject listener call sites so
+    /// rule firing can be observed at runtime. When enabled, the generated class
+    /// constructor gains a `RuleListener` parameter as its last argument.
+    @Parameter(defaultValue = "false", property = "iskibal.diagnostics")
+    private boolean diagnostics;
+
     /// Whether to skip execution of this goal.
     @Parameter(defaultValue = "false", property = "iskibal.skip")
     private boolean skip;
@@ -149,7 +155,8 @@ public class GenerateRulesMojo extends AbstractMojo {
 
         // Code generation
         String className = deriveClassName(fileName);
-        JavaCompilerOptions options = new JavaCompilerOptions(packageName, className, generateNullChecks, null);
+        JavaCompilerOptions options = new JavaCompilerOptions(packageName, className, generateNullChecks, null,
+                diagnostics);
         CompilationResult codegenResult = compiler.compile(module, options);
 
         if (!codegenResult.isSuccess()) {

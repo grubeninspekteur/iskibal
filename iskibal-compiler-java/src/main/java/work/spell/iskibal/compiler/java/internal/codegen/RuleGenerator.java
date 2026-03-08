@@ -3,16 +3,20 @@ package work.spell.iskibal.compiler.java.internal.codegen;
 import module java.base;
 
 import module iskibal.rule.model;
+import work.spell.iskibal.compiler.java.api.JavaCompilerOptions;
 
 /// Generates Java methods for Iskara rules.
 public final class RuleGenerator {
 
     private final StatementGenerator statementGenerator;
     private final ExpressionGenerator expressionGenerator;
+    private final boolean diagnosticsEnabled;
 
-    public RuleGenerator(StatementGenerator statementGenerator, ExpressionGenerator expressionGenerator) {
+    public RuleGenerator(StatementGenerator statementGenerator, ExpressionGenerator expressionGenerator,
+            JavaCompilerOptions options) {
         this.statementGenerator = statementGenerator;
         this.expressionGenerator = expressionGenerator;
+        this.diagnosticsEnabled = options.diagnosticsEnabled();
     }
 
     /// Generates Java method(s) for a rule, writing them into `writer`.
@@ -31,13 +35,24 @@ public final class RuleGenerator {
                 writeLetStatements(rule.when(), body);
                 String condition = generateCondition(rule.when());
                 if (!rule.elseStatements().isEmpty()) {
-                    body.ifElseBlock(condition,
-                            then -> statementGenerator.generate(rule.then(), then),
-                            else_ -> statementGenerator.generate(rule.elseStatements(), else_));
+                    body.ifElseBlock(condition, then -> {
+                        if (diagnosticsEnabled) {
+                            then.listenerCall(rule.id(), description);
+                        }
+                        statementGenerator.generate(rule.then(), then);
+                    }, else_ -> statementGenerator.generate(rule.elseStatements(), else_));
                 } else {
-                    body.ifBlock(condition, then -> statementGenerator.generate(rule.then(), then));
+                    body.ifBlock(condition, then -> {
+                        if (diagnosticsEnabled) {
+                            then.listenerCall(rule.id(), description);
+                        }
+                        statementGenerator.generate(rule.then(), then);
+                    });
                 }
             } else {
+                if (diagnosticsEnabled) {
+                    body.listenerCall(rule.id(), description);
+                }
                 statementGenerator.generate(rule.then(), body);
             }
         });
@@ -54,6 +69,7 @@ public final class RuleGenerator {
             String methodName = toMethodName(rule.id()) + "_" + rowIndex;
             String description = (rule.description().isEmpty() ? rule.id() : rule.description())
                     + " (row " + (rowIndex + 1) + ")";
+            String rowId = rule.id() + "_" + rowIndex;
             rowIndex++;
 
             writer.ruleMethod(methodName, description, body -> {
@@ -62,9 +78,16 @@ public final class RuleGenerator {
                 }
                 if (!rule.when().isEmpty()) {
                     writeLetStatements(rule.when(), body);
-                    body.ifBlock(generateCondition(rule.when()),
-                            then -> statementGenerator.generate(rule.then(), then));
+                    body.ifBlock(generateCondition(rule.when()), then -> {
+                        if (diagnosticsEnabled) {
+                            then.listenerCall(rowId, description);
+                        }
+                        statementGenerator.generate(rule.then(), then);
+                    });
                 } else {
+                    if (diagnosticsEnabled) {
+                        body.listenerCall(rowId, description);
+                    }
                     statementGenerator.generate(rule.then(), body);
                 }
             });
@@ -73,12 +96,20 @@ public final class RuleGenerator {
 
     private void generateDecisionTableRule(Rule.DecisionTableRule rule, RuleClassWriter writer) {
         for (Rule.DecisionTableRule.Row row : rule.rows()) {
-            writer.ruleMethod(toMethodName(row.id()), "Decision table row: " + row.id(), body -> {
+            String description = "Decision table row: " + row.id();
+            writer.ruleMethod(toMethodName(row.id()), description, body -> {
                 if (!row.when().isEmpty()) {
                     writeLetStatements(row.when(), body);
-                    body.ifBlock(generateCondition(row.when()),
-                            then -> statementGenerator.generate(row.then(), then));
+                    body.ifBlock(generateCondition(row.when()), then -> {
+                        if (diagnosticsEnabled) {
+                            then.listenerCall(row.id(), description);
+                        }
+                        statementGenerator.generate(row.then(), then);
+                    });
                 } else {
+                    if (diagnosticsEnabled) {
+                        body.listenerCall(row.id(), description);
+                    }
                     statementGenerator.generate(row.then(), body);
                 }
             });

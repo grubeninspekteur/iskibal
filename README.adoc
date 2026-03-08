@@ -57,13 +57,13 @@ It runs during the `generate-sources` phase and adds the output directory as a c
 </plugin>
 ----
 
-You also need a runtime dependency on the Java compiler support library, which the generated code imports:
+You also need a runtime dependency on the Iskibal runtime library, which the generated code imports:
 
 [source,xml]
 ----
 <dependency>
   <groupId>work.spell.iskibal</groupId>
-  <artifactId>iskibal-compiler-java</artifactId>
+  <artifactId>iskibal-runtime</artifactId>
   <version>0.1.0-SNAPSHOT</version>
 </dependency>
 ----
@@ -158,6 +158,41 @@ BigDecimal discount = rules.getDiscountPercent(); // 20
 String tier = rules.getTier();                   // "vip"
 ----
 
+=== 4. Observe rule execution (optional)
+
+Enable diagnostics mode in the plugin to get a `RuleListener` hook into every rule evaluation:
+
+[source,xml]
+----
+<configuration>
+  <packageName>com.example.rules.generated</packageName>
+  <diagnostics>true</diagnostics>
+</configuration>
+----
+
+When `diagnostics` is `true`, the generated class constructor gains a `RuleListener` parameter as its last argument.
+Implement the `RuleListener` interface (from `iskibal-runtime`) to observe which rules fire:
+
+[source,java]
+----
+import work.spell.iskibal.runtime.RuleEvent;
+import work.spell.iskibal.runtime.RuleListener;
+
+RuleListener listener = event -> switch (event) {
+    case RuleEvent.RuleFired(var id, var desc) ->
+        System.out.println("Rule fired: " + id + " – " + desc);
+};
+
+var customer = new Customer("Alice", 1500);
+var rules = new DiscountRules(customer, listener);
+
+rules.evaluate();
+// Output: Rule fired: VIP – VIP customer gets 20% discount
+----
+
+The listener is called only for rules whose `when` condition is satisfied, immediately before the `then` block executes.
+Rules that do not match produce no listener calls.
+
 == Maven plugin reference
 
 [cols="1,1,3"]
@@ -179,6 +214,10 @@ String tier = rules.getTier();                   // "vip"
 | `generateNullChecks`
 | `true`
 | Whether to generate null-safety guards for navigation expressions (e.g. `passport.address.street` returns `null` rather than throwing if `address` is null).
+
+| `diagnostics`
+| `false`
+| Whether to enable diagnostics mode. When `true`, the generated class accepts a `RuleListener` as its last constructor argument and calls it each time a rule's condition is met. Useful for tracing, auditing, and testing which rules fire for a given input.
 
 | `skip`
 | `false`
@@ -205,8 +244,11 @@ The goal binds to `generate-sources` by default.
 | `iskibal-compiler-common`
 | Shared compiler infrastructure: semantic analysis API.
 
+| `iskibal-runtime`
+| Minimal runtime library required by generated rule classes: numeric and collection helpers, and the `RuleListener` interface for diagnostics mode.
+
 | `iskibal-compiler-java`
-| Compiles a rule model to Java source code. Also provides the runtime support classes referenced by generated code.
+| Compiles a rule model to Java source code.
 
 | `iskibal-maven-plugin`
 | Maven plugin that drives the full parse-analyze-compile pipeline during a build.

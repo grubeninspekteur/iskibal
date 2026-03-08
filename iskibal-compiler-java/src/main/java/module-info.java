@@ -4,7 +4,6 @@ module iskibal.compiler.java {
     requires static org.jspecify;
 
     exports work.spell.iskibal.compiler.java.api;
-    exports work.spell.iskibal.compiler.java.runtime;
     exports work.spell.iskibal.compiler.java.types;
     exports work.spell.iskibal.compiler.java.internal to iskibal.integration.tests;
     exports work.spell.iskibal.compiler.java.internal.codegen to iskibal.integration.tests;

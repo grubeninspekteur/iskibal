@@ -40,6 +40,13 @@ final class BodyWriter {
         return this;
     }
 
+    /// Writes `this.__ruleListener.onEvent(new RuleEvent.RuleFired("ruleId", "description"));`.
+    BodyWriter listenerCall(String ruleId, String description) {
+        sb.append(indent).append("this.__ruleListener.onEvent(new RuleEvent.RuleFired(\"").append(ruleId)
+                .append("\", \"").append(description).append("\"));\n");
+        return this;
+    }
+
     /// Writes `if (condition) { ... }`.
     BodyWriter ifBlock(String condition, Consumer<BodyWriter> then) {
         sb.append(indent).append("if (").append(condition).append(") {\n");

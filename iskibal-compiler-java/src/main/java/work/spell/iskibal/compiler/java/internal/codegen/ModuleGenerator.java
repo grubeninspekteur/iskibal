@@ -27,8 +27,12 @@ public final class ModuleGenerator {
 
         writer.importLine("java.math.BigDecimal")
                 .importLine("java.util.Objects")
-                .importLine("static work.spell.iskibal.compiler.java.runtime.NumericHelpers.*")
-                .importLine("static work.spell.iskibal.compiler.java.runtime.CollectionHelpers.*");
+                .importLine("static work.spell.iskibal.runtime.NumericHelpers.*")
+                .importLine("static work.spell.iskibal.runtime.CollectionHelpers.*");
+        if (options.diagnosticsEnabled()) {
+            writer.importLine("work.spell.iskibal.runtime.RuleEvent");
+            writer.importLine("work.spell.iskibal.runtime.RuleListener");
+        }
         for (Import imp : module.imports()) {
             writer.importLine(imp.type());
         }
@@ -60,7 +64,7 @@ public final class ModuleGenerator {
         ExpressionGenerator exprGen = new ExpressionGenerator(options, globalNames, outputNames, outputTypes,
                 typeVisitor);
         StatementGenerator stmtGen = new StatementGenerator(exprGen);
-        RuleGenerator ruleGen = new RuleGenerator(stmtGen, exprGen);
+        RuleGenerator ruleGen = new RuleGenerator(stmtGen, exprGen, options);
 
         for (Rule rule : module.rules()) {
             ruleGen.generate(rule, writer);
@@ -83,6 +87,9 @@ public final class ModuleGenerator {
         for (Output output : module.outputs()) {
             writer.mutableField(output.type(), JavaIdentifiers.sanitize(output.name()));
         }
+        if (options.diagnosticsEnabled()) {
+            writer.finalField("RuleListener", "__ruleListener");
+        }
         if (!module.dataTables().isEmpty()) {
             ExpressionGenerator litGen = new ExpressionGenerator(options, Set.of(), Set.of());
             for (DataTable table : module.dataTables()) {
@@ -90,7 +97,7 @@ public final class ModuleGenerator {
             }
         }
         if (!module.facts().isEmpty() || !module.globals().isEmpty() || !module.outputs().isEmpty()
-                || !module.dataTables().isEmpty()) {
+                || !module.dataTables().isEmpty() || options.diagnosticsEnabled()) {
             writer.blankLine();
         }
     }
@@ -164,6 +171,9 @@ public final class ModuleGenerator {
         for (Global global : module.globals()) {
             params.add(global.type() + " " + JavaIdentifiers.sanitize(global.name()));
         }
+        if (options.diagnosticsEnabled()) {
+            params.add("RuleListener __ruleListener");
+        }
 
         writer.constructor(options.className(), params, body -> {
             for (Fact fact : module.facts()) {
@@ -173,6 +183,9 @@ public final class ModuleGenerator {
             for (Global global : module.globals()) {
                 String s = JavaIdentifiers.sanitize(global.name());
                 body.assign("this." + s, s);
+            }
+            if (options.diagnosticsEnabled()) {
+                body.assign("this.__ruleListener", "__ruleListener");
             }
             for (Output output : module.outputs()) {
                 if (output.initialValue() != null) {

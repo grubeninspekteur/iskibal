@@ -1,4 +1,4 @@
-package work.spell.iskibal.compiler.java.runtime;
+package work.spell.iskibal.runtime;
 
 import module java.base;
 

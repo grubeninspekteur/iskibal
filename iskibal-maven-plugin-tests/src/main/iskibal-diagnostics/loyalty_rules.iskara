@@ -1,0 +1,24 @@
+facts {
+    customer: work.spell.iskibal.mavenplugin.tests.Customer
+}
+outputs {
+    status: String := "regular"
+    bonus: BigDecimal := 0
+}
+
+rule PLATINUM "Platinum loyalty (2000+ points)"
+when
+    customer.loyaltyPoints >= 2000
+then
+    status := "platinum"
+    bonus := 50
+end
+
+rule GOLD "Gold loyalty (1000–1999 points)"
+when
+    customer.loyaltyPoints >= 1000,
+    customer.loyaltyPoints < 2000
+then
+    status := "gold"
+    bonus := 20
+end

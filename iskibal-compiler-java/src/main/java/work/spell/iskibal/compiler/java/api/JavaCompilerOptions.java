@@ -13,30 +13,38 @@ import org.jspecify.annotations.Nullable;
 /// @param typeClassLoader
 ///            the class loader to use for resolving types, or `null` to disable
 ///            type inference
+/// @param diagnosticsEnabled
+///            whether to generate a `RuleListener` field and inject listener
+///            call sites so rule firing can be observed at runtime
 public record JavaCompilerOptions(String packageName, String className, boolean generateNullChecks,
-        @Nullable ClassLoader typeClassLoader) {
+        @Nullable ClassLoader typeClassLoader, boolean diagnosticsEnabled) {
 
     /// Creates default options with no package and "GeneratedRules" class name.
     public static JavaCompilerOptions defaults() {
-        return new JavaCompilerOptions("", "GeneratedRules", true, null);
+        return new JavaCompilerOptions("", "GeneratedRules", true, null, false);
     }
 
     /// Creates options with the specified package and class name, with null checks
     /// enabled.
     public static JavaCompilerOptions of(String packageName, String className) {
-        return new JavaCompilerOptions(packageName, className, true, null);
+        return new JavaCompilerOptions(packageName, className, true, null, false);
     }
 
     /// Creates options with the specified package, class name, and null check
     /// setting.
     public static JavaCompilerOptions of(String packageName, String className, boolean generateNullChecks) {
-        return new JavaCompilerOptions(packageName, className, generateNullChecks, null);
+        return new JavaCompilerOptions(packageName, className, generateNullChecks, null, false);
     }
 
     /// Creates options with type inference enabled using the specified class loader.
     public static JavaCompilerOptions withTypeInference(String packageName, String className,
             ClassLoader typeClassLoader) {
-        return new JavaCompilerOptions(packageName, className, true, typeClassLoader);
+        return new JavaCompilerOptions(packageName, className, true, typeClassLoader, false);
+    }
+
+    /// Creates options with diagnostics (rule listener) enabled.
+    public static JavaCompilerOptions withDiagnostics(String packageName, String className) {
+        return new JavaCompilerOptions(packageName, className, true, null, true);
     }
 
     /// Returns true if type inference is enabled.

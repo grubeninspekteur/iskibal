@@ -3,6 +3,7 @@ module iskibal.integration.tests {
     requires iskibal.parser;
     requires iskibal.compiler.common;
     requires iskibal.compiler.java;
+    requires iskibal.runtime;
     requires iskibal.asciidoc;
     requires java.compiler;
 

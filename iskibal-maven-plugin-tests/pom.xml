@@ -22,7 +22,7 @@
     <!-- Runtime helpers imported by generated rule code -->
     <dependency>
       <groupId>work.spell.iskibal</groupId>
-      <artifactId>iskibal-compiler-java</artifactId>
+      <artifactId>iskibal-runtime</artifactId>
     </dependency>
 
     <dependency>
@@ -48,11 +48,23 @@
         <version>${project.version}</version>
         <executions>
           <execution>
+            <id>generate-rules</id>
             <goals>
               <goal>generate</goal>
             </goals>
             <configuration>
               <packageName>work.spell.iskibal.mavenplugin.tests.generated</packageName>
+            </configuration>
+          </execution>
+          <execution>
+            <id>generate-diagnostics-rules</id>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+            <configuration>
+              <sourceDirectory>${project.basedir}/src/main/iskibal-diagnostics</sourceDirectory>
+              <packageName>work.spell.iskibal.mavenplugin.tests.generated</packageName>
+              <diagnostics>true</diagnostics>
             </configuration>
           </execution>
         </executions>

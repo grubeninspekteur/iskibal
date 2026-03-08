@@ -224,6 +224,58 @@ class JavaCompilerTest {
     }
 
     @Nested
+    @DisplayName("Diagnostics Mode")
+    class DiagnosticsMode {
+
+        @Test
+        @DisplayName("Generates RuleListener field and constructor parameter when diagnostics enabled")
+        void generatesListenerFieldAndParam() {
+            var module = new RuleModule.Default(
+                    List.of(), List.of(new Fact.Definition("item", "Item", "")), List.of(),
+                    List.of(new Output.Definition("discount", "BigDecimal", new Literal.NumberLiteral(BigDecimal.ZERO),
+                            "")),
+                    List.of(),
+                    List.of(new Rule.SimpleRule("R1", "My rule",
+                            List.of(new Statement.ExpressionStatement(new Binary(new Identifier("item"),
+                                    Binary.Operator.NOT_EQUALS, new Literal.NullLiteral()))),
+                            List.of(new Statement.ExpressionStatement(
+                                    new Assignment(new Identifier("discount"), new Literal.NumberLiteral(BigDecimal.TEN)))),
+                            List.of())));
+
+            var diagnosticsOptions = JavaCompilerOptions.withDiagnostics("com.example.rules", "GeneratedRules");
+            CompilationResult result = compiler.compile(module, diagnosticsOptions);
+
+            assertThat(result.isSuccess()).isTrue();
+            String source = result.getSourceFiles().orElseThrow().values().iterator().next();
+            assertThat(source).contains("import work.spell.iskibal.runtime.RuleEvent;");
+            assertThat(source).contains("import work.spell.iskibal.runtime.RuleListener;");
+            assertThat(source).contains("private final RuleListener __ruleListener;");
+            assertThat(source).contains("RuleListener __ruleListener");
+            assertThat(source).contains("this.__ruleListener.onEvent(new RuleEvent.RuleFired(\"R1\", \"My rule\"))");
+        }
+
+        @Test
+        @DisplayName("Does not generate listener code without diagnostics enabled")
+        void noListenerCodeWithoutDiagnostics() {
+            var module = new RuleModule.Default(List.of(), List.of(), List.of(),
+                    List.of(new Output.Definition("result", "BigDecimal", new Literal.NumberLiteral(BigDecimal.ZERO),
+                            "")),
+                    List.of(),
+                    List.of(new Rule.SimpleRule("R1", "Rule", List.of(),
+                            List.of(new Statement.ExpressionStatement(
+                                    new Assignment(new Identifier("result"), new Literal.NumberLiteral(BigDecimal.ONE)))),
+                            List.of())));
+
+            CompilationResult result = compiler.compile(module, options);
+
+            assertThat(result.isSuccess()).isTrue();
+            String source = result.getSourceFiles().orElseThrow().values().iterator().next();
+            assertThat(source).doesNotContain("RuleListener");
+            assertThat(source).doesNotContain("__ruleListener");
+        }
+    }
+
+    @Nested
     @DisplayName("Output Generation")
     class OutputGeneration {
 

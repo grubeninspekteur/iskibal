@@ -5,6 +5,9 @@ import module iskibal.compiler.common;
 import module iskibal.compiler.java;
 import module iskibal.parser;
 import module iskibal.rule.model;
+import module iskibal.runtime;
+
+import work.spell.iskibal.runtime.RuleListener;
 
 /// Fluent builder for end-to-end rule tests.
 ///
@@ -21,6 +24,7 @@ public class RuleTestBuilder {
     private final List<Object> globals = new ArrayList<>();
     private String packageName = "";
     private String className = "GeneratedRules";
+    private RuleListener listener = null;
 
     private RuleTestBuilder(String source) {
         this.source = source;
@@ -99,6 +103,20 @@ public class RuleTestBuilder {
         return this;
     }
 
+    /// Sets a [RuleListener] to observe which rules fire during evaluation.
+    ///
+    /// Enabling a listener also enables diagnostics mode, which injects listener
+    /// call sites into the generated code. The listener is passed as the last
+    /// constructor argument to the generated class.
+    ///
+    /// @param listener
+    ///            the listener to call when a rule fires
+    /// @return this builder
+    public RuleTestBuilder withListener(RuleListener listener) {
+        this.listener = listener;
+        return this;
+    }
+
     /// Compiles the rules without instantiation, returning a reusable template.
     ///
     /// This allows tests to compile once and instantiate multiple times with
@@ -134,8 +152,8 @@ public class RuleTestBuilder {
 
         // Stage 3: Generate Java code
         JavaCompiler javaCompiler = new JavaCompilerImpl();
-        JavaCompilerOptions options = JavaCompilerOptions.withTypeInference(packageName, className,
-                Thread.currentThread().getContextClassLoader());
+        JavaCompilerOptions options = new JavaCompilerOptions(packageName, className, true,
+                Thread.currentThread().getContextClassLoader(), listener != null);
         CompilationResult codegenResult = javaCompiler.compile(module, options);
 
         if (!codegenResult.isSuccess()) {
@@ -192,8 +210,8 @@ public class RuleTestBuilder {
 
         // Stage 3: Generate Java code
         JavaCompiler javaCompiler = new JavaCompilerImpl();
-        JavaCompilerOptions options = JavaCompilerOptions.withTypeInference(packageName, className,
-                Thread.currentThread().getContextClassLoader());
+        JavaCompilerOptions options = new JavaCompilerOptions(packageName, className, true,
+                Thread.currentThread().getContextClassLoader(), listener != null);
         CompilationResult codegenResult = javaCompiler.compile(module, options);
 
         if (!codegenResult.isSuccess()) {
@@ -228,6 +246,9 @@ public class RuleTestBuilder {
         List<Object> args = new ArrayList<>();
         args.addAll(facts);
         args.addAll(globals);
+        if (listener != null) {
+            args.add(listener);
+        }
         return args.toArray();
     }
 }

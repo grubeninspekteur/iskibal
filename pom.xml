@@ -19,6 +19,7 @@
     <subproject>iskibal-parser</subproject>
     <subproject>iskibal-asciidoc</subproject>
     <subproject>iskibal-compiler-common</subproject>
+    <subproject>iskibal-runtime</subproject>
     <subproject>iskibal-compiler-java</subproject>
     <subproject>iskibal-integration-tests</subproject>
     <subproject>iskibal-maven-plugin</subproject>
@@ -40,6 +41,11 @@
       <dependency>
         <groupId>work.spell.iskibal</groupId>
         <artifactId>iskibal-compiler-common</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>work.spell.iskibal</groupId>
+        <artifactId>iskibal-runtime</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
