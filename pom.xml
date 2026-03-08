@@ -24,6 +24,7 @@
     <subproject>iskibal-integration-tests</subproject>
     <subproject>iskibal-maven-plugin</subproject>
     <subproject>iskibal-maven-plugin-tests</subproject>
+    <subproject>iskibal-lsp</subproject>
   </subprojects>
 
   <dependencyManagement>

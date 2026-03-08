@@ -1,0 +1,59 @@
+<idea-plugin>
+    <id>work.spell.iskibal.intellij</id>
+    <name>Iskara Language Support</name>
+    <vendor>spell.work</vendor>
+
+    <description><![CDATA[
+        Language support for the Iskara business rule language (.iskara files).
+        <ul>
+            <li>Syntax highlighting</li>
+            <li>Parser diagnostics</li>
+            <li>Code completion</li>
+            <li>Brace matching</li>
+            <li>Code folding</li>
+            <li>Line and block commenting</li>
+            <li>Configurable color scheme</li>
+        </ul>
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <fileType name="Iskara"
+                  implementationClass="work.spell.iskibal.intellij.IskaraFileType"
+                  fieldName="INSTANCE"
+                  language="Iskara"
+                  extensions="iskara"/>
+
+        <lang.parserDefinition
+                language="Iskara"
+                implementationClass="work.spell.iskibal.intellij.IskaraParserDefinition"/>
+
+        <lang.syntaxHighlighterFactory
+                language="Iskara"
+                implementationClass="work.spell.iskibal.intellij.highlighting.IskaraSyntaxHighlighterFactory"/>
+
+        <colorSettingsPage
+                implementation="work.spell.iskibal.intellij.highlighting.IskaraColorSettingsPage"/>
+
+        <lang.commenter
+                language="Iskara"
+                implementationClass="work.spell.iskibal.intellij.IskaraCommenter"/>
+
+        <lang.braceMatcher
+                language="Iskara"
+                implementationClass="work.spell.iskibal.intellij.IskaraBraceMatcher"/>
+
+        <lang.foldingBuilder
+                language="Iskara"
+                implementationClass="work.spell.iskibal.intellij.IskaraFoldingBuilder"/>
+
+        <externalAnnotator
+                language="Iskara"
+                implementationClass="work.spell.iskibal.intellij.annotator.IskaraExternalAnnotator"/>
+
+        <completion.contributor
+                language="Iskara"
+                implementationClass="work.spell.iskibal.intellij.completion.IskaraCompletionContributor"/>
+    </extensions>
+</idea-plugin>
