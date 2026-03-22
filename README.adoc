@@ -31,6 +31,33 @@ Iskibal operates as a three-step pipeline:
 
 All three parts are loaded via the Java `ServiceLoader` mechanism and can be replaced with custom implementations.
 
+== Drools target
+
+Iskibal can also compile rule models to Drools Rule Language (DRL) instead of Java.
+This is useful when you want to keep your rules in AsciiDoc for readability and version control, but need to run them inside an existing Drools runtime.
+
+=== DRL-native decision tables
+
+If your team already knows DRL/Java syntax, you can write decision table cell expressions as native DRL rather than learning Iskara.
+Add `language=drools` to the table attribute and write raw DRL/Java in the WHEN and THEN columns:
+
+[source,asciidoc]
+....
+[.decision-table#TIER,language=drools]
+.Loyalty tier discounts
+|===
+| ID | WHEN | THEN
+
+| h| $customer.getLoyaltyPoints() >= 0 h| __outputs.setDiscount(null)
+| BRONZE | $customer.getLoyaltyPoints() >= 50   | __outputs.setDiscount(new java.math.BigDecimal(5))
+| SILVER | $customer.getLoyaltyPoints() >= 200  | __outputs.setDiscount(new java.math.BigDecimal(15))
+| GOLD   | $customer.getLoyaltyPoints() >= 1000 | __outputs.setDiscount(new java.math.BigDecimal(25))
+|===
+....
+
+Cell expressions are passed through verbatim to the generated DRL, so any valid DRL condition or action can be used.
+This makes Iskibal decision tables a drop-in replacement for Drools Excel decision tables -- you keep the readable AsciiDoc table format and plain-text version control without needing to learn Iskara.
+
 == Quick start
 
 === 1. Add the Maven plugin
@@ -249,6 +276,9 @@ The goal binds to `generate-sources` by default.
 
 | `iskibal-compiler-java`
 | Compiles a rule model to Java source code.
+
+| `iskibal-compiler-drools`
+| Compiles a rule model to Drools Rule Language (DRL) source code and a companion outputs POJO.
 
 | `iskibal-maven-plugin`
 | Maven plugin that drives the full parse-analyze-compile pipeline during a build.
