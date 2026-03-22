@@ -1,0 +1,124 @@
+= Discount Rules
+:description: Discount calculation rulebase used for Drools E2E testing.
+
+== Metadata
+
+.Imports
+[.imports]
+--
+* `work.spell.iskibal.e2e.CustomerProfile`
+* `work.spell.iskibal.e2e.OrderContext`
+--
+
+.Facts
+[.facts]
+|===
+| Name | Type
+
+| order
+| `work.spell.iskibal.e2e.OrderContext`
+
+| customer
+| `work.spell.iskibal.e2e.CustomerProfile`
+|===
+
+.Globals
+[.globals]
+|===
+| Name | Type
+
+| taxRate
+| `java.math.BigDecimal`
+|===
+
+.Outputs
+[.outputs]
+|===
+| Name | Type | Default
+
+| eligible
+| `String`
+| `"no"`
+
+| discountPercent
+| `java.math.BigDecimal`
+| `0`
+|===
+
+== Eligibility
+
+.ELIG_001: Age check
+[source,iskara,.rule]
+----
+when
+    customer.age >= 18
+then
+    eligible := "yes"
+else
+    eligible := "no"
+end
+----
+
+== Loyalty Discounts
+
+.DISC_001: Loyalty discount for regular customers
+[source,iskara,.rule]
+----
+when
+    customer.loyaltyPoints >= 100
+then
+    discountPercent := 10
+end
+----
+
+.DISC_002: Enhanced loyalty discount
+[source,iskara,.rule]
+----
+when
+    customer.loyaltyPoints >= 500
+then
+    discountPercent := 20
+end
+----
+
+== Loyalty Tier Decision Table
+
+// Decision table mapping loyalty tiers to discount percentages
+[.decision-table#TIER_DISC]
+.Loyalty tier discounts
+|===
+| ID | WHEN | THEN
+
+| h| customer.loyaltyPoints h| #applyTierDiscount
+| BRONZE | >= 50  | 5
+| SILVER | >= 200 | 15
+| GOLD   | >= 1000 | 25
+|===
+
+[.aliases,for="TIER_DISC"]
+applyTierDiscount::
++
+[source,iskara]
+----
+[:discount | discountPercent := discount]
+----
+
+== Coupon Codes
+
+// Template rule using an inline data table
+[source,iskara,.rule]
+----
+template rule COUPON "Coupon code discount"
+data table {
+    | code      | amount |
+    | --------- | ------ |
+    | "PROMO10" | 10     |
+    | "PROMO25" | 25     |
+    | "PROMO50" | 50     |
+}
+when
+    order.couponCode = code
+then
+    discountPercent := amount
+end
+----

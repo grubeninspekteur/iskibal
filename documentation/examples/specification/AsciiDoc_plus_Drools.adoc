@@ -1,0 +1,296 @@
+= AsciiDoc plus Drools
+:description: How to compile AsciiDoc rule documents to Drools Rule Language (DRL).
+
+This document describes how to compile AsciiDoc documents containing Iskara rule sources to https://docs.drools.org[Drools Rule Language (DRL)].
+The same AsciiDoc format used for the Java target (see <<AsciiDoc_plus_Iskara.adoc#,AsciiDoc plus Iskara>>) is fully reused; only the compilation target changes.
+
+== Overview
+
+The Iskibal Drools compiler (`iskibal-compiler-drools`) transforms a parsed [RuleModule] into:
+
+1. A `.drl` file containing all rules in Drools syntax.
+2. A companion `<Name>Outputs.java` POJO that collects rule outputs.
+   Inject an instance of this class as the `__outputs` global before firing the Drools session.
+
+=== Rule mapping
+
+[cols="1,2"]
+|===
+| Iskara construct | DRL equivalent
+
+| `facts:`
+| Fact patterns bound as `$varName : FactType()`
+
+| `globals:`
+| `global TypeName varName;`
+
+| `outputs:`
+| `global <Name>Outputs __outputs;` + generated POJO
+
+| Simple rule (when/then)
+| DRL `rule` block
+
+| Simple rule (when/then/else)
+| Two DRL `rule` blocks: one for the positive condition, one with a negated `eval(...)`
+
+| Template rule
+| One DRL `rule` block per data table row
+
+| Decision table rule
+| One DRL `rule` block per decision table row
+|===
+
+=== Known limitations
+
+The Drools compiler covers the core rule constructs.
+The following Iskara features are not yet translated (emitted as `/* TODO: ... */` comments):
+
+* Salience and agenda groups (not in the rule model — add as TODOs when needed)
+* Block / lambda expressions in then sections
+* Template string interpolation (`$"..."`)
+* Collection aggregation messages (`sum`, `each`, `all`, `where`) — use Drools `accumulate` instead
+* `modify`, `retract`, and `insert` working-memory operations
+
+== Example AsciiDoc document
+
+The following example illustrates a complete rule document targeting Drools.
+The document structure is identical to Iskara documents; only the Maven plugin configuration differs.
+
+=== Metadata
+
+Facts, globals, outputs, and imports are declared the same way as for the Java target:
+
+[.imports]
+====
+Customer:: com.example.Customer
+Order:: com.example.Order
+====
+
+.Facts
+[.facts]
+|===
+| Name | Type | Description
+
+| order
+| `com.example.Order`
+| The order being evaluated.
+
+| customer
+| `com.example.Customer`
+| The customer who placed the order.
+|===
+
+.Globals
+[.globals]
+|===
+| Name | Type | Description
+
+| taxRate
+| `java.math.BigDecimal`
+| Applicable tax rate (e.g. 1.19 for 19%).
+|===
+
+.Outputs
+[.outputs]
+|===
+| Name | Type | Default | Description
+
+| eligible
+| `String`
+| `"no"`
+| Whether the order is eligible for processing.
+
+| discountPercent
+| `java.math.BigDecimal`
+| `0`
+| Discount to apply as a percentage.
+|===
+
+=== Simple rules
+
+Simple rules translate one-to-one to DRL rule blocks.
+
+.ELIG_001: Eligibility check
+[source,iskara,.rule]
+----
+when
+    customer.age >= 18
+then
+    eligible := "yes"
+else
+    eligible := "no"
+end
+----
+
+The generated DRL:
+
+[source,drl]
+----
+rule "ELIG_001"
+    @Description("Eligibility check")
+    when
+        $order : Order()
+        $customer : Customer()
+        eval($customer.getAge() >= 18)
+    then
+        __outputs.setEligible("yes");
+end
+
+rule "ELIG_001-else"
+    @Description("Eligibility check (else)")
+    when
+        $order : Order()
+        $customer : Customer()
+        eval(!($customer.getAge() >= 18))
+    then
+        __outputs.setEligible("no");
+end
+----
+
+=== Decision tables
+
+Decision tables expand to one DRL rule per row.
+
+[.decision-table#DISC_TIERS]
+.Discount tiers by loyalty points
+|===
+| ID     | WHEN                    | THEN
+
+| h| customer.loyaltyPoints h| #applyDiscount
+| BRONZE | >= 50   | 5
+| SILVER | >= 200  | 15
+| GOLD   | >= 1000 | 25
+|===
+
+[.aliases,for="DISC_TIERS"]
+applyDiscount::
++
+[source,iskara]
+----
+[:pct | discountPercent := pct]
+----
+
+=== Template rules
+
+Template rules iterate over a data table and generate one rule per row.
+
+[source,iskara,.rule]
+----
+template rule COUPON "Coupon code discount"
+data table {
+    | code      | amount |
+    | --------- | ------ |
+    | "SAVE10"  | 10     |
+    | "SAVE20"  | 20     |
+    | "VIP50"   | 50     |
+}
+when
+    order.couponCode = code
+then
+    discountPercent := amount
+end
+----
+
+== Generated outputs POJO
+
+For each compiled document that declares outputs, a companion Java class is generated.
+This class must be on the compile class path of the project that runs the Drools session.
+
+[source,java]
+----
+/// Output values produced by rule evaluation.
+///
+/// Inject an instance of this class as the `__outputs` global before executing
+/// the Drools session; field values will be populated by rule actions.
+public class PricingRulesOutputs {
+
+    private String eligible = "no";
+    private java.math.BigDecimal discountPercent = new java.math.BigDecimal(0);
+
+    public String getEligible() { return eligible; }
+    public void setEligible(String eligible) { this.eligible = eligible; }
+
+    public java.math.BigDecimal getDiscountPercent() { return discountPercent; }
+    public void setDiscountPercent(java.math.BigDecimal discountPercent) {
+        this.discountPercent = discountPercent;
+    }
+}
+----
+
+== Maven plugin configuration
+
+Set `<language>drools</language>` to switch the target:
+
+[source,xml]
+----
+<plugin>
+  <groupId>work.spell.iskibal</groupId>
+  <artifactId>iskibal-maven-plugin</artifactId>
+  <executions>
+    <execution>
+      <id>generate-drools</id>
+      <goals><goal>generate</goal></goals>
+      <configuration>
+        <language>drools</language>
+        <sourceDirectory>${project.basedir}/src/main/iskibal</sourceDirectory>
+        <outputDirectory>${project.build.directory}/generated-sources/drools</outputDirectory>
+        <packageName>com.example.rules</packageName>
+      </configuration>
+    </execution>
+  </executions>
+</plugin>
+----
+
+The output directory will contain the `.drl` file(s) and the `*Outputs.java` companion POJO(s).
+Wire the DRL files into the Drools `KieFileSystem` and compile the POJO Java sources separately.
+
+NOTE: `<generateNullChecks>` and `<diagnostics>` parameters apply only to the Java target and are ignored for Drools.
+
+=== Mixing Java and Drools targets
+
+If you need both Java and Drools output from the same rule sources, configure two executions with different source and output directories:
+
+[source,xml]
+----
+<executions>
+  <execution>
+    <id>generate-java</id>
+    <goals><goal>generate</goal></goals>
+    <configuration>
+      <language>java</language>
+      <sourceDirectory>${project.basedir}/src/main/iskibal</sourceDirectory>
+      <outputDirectory>${project.build.directory}/generated-sources/iskibal</outputDirectory>
+    </configuration>
+  </execution>
+  <execution>
+    <id>generate-drools</id>
+    <goals><goal>generate</goal></goals>
+    <configuration>
+      <language>drools</language>
+      <sourceDirectory>${project.basedir}/src/main/iskibal</sourceDirectory>
+      <outputDirectory>${project.build.directory}/generated-sources/drools</outputDirectory>
+    </configuration>
+  </execution>
+</executions>
+----
+
+== Using the API directly
+
+[source,java]
+----
+import work.spell.iskibal.compiler.drools.api.DroolsCompiler;
+import work.spell.iskibal.compiler.drools.api.DroolsCompilerOptions;
+import work.spell.iskibal.compiler.drools.api.DroolsCompilationResult;
+
+DroolsCompiler compiler = DroolsCompiler.load();
+DroolsCompilerOptions options = DroolsCompilerOptions.of("com.example.rules", "pricing_rules");
+
+DroolsCompilationResult result = compiler.compile(ruleModule, options);
+
+if (result.isSuccess()) {
+    Map<String, String> files = result.getSourceFiles().orElseThrow();
+    String drl = result.getDrlSource();
+    // files: { "com/example/rules/pricing_rules.drl" -> drl,
+    //          "com/example/rules/PricingRulesOutputs.java" -> pojoSource }
+}
+----
