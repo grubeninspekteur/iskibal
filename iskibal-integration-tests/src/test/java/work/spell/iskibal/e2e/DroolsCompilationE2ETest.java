@@ -98,7 +98,7 @@ class DroolsCompilationE2ETest {
                     outputs {
                         result: String := "none"
                     }
-                    rule "set-label"
+                    rule `set-label`
                     when
                         label = "hello"
                     then
@@ -127,7 +127,7 @@ class DroolsCompilationE2ETest {
                     outputs {
                         result: String := "no"
                     }
-                    rule "check-status"
+                    rule `check-status`
                     when
                         status = "active"
                     then
@@ -162,7 +162,7 @@ class DroolsCompilationE2ETest {
                     outputs {
                         y: String := ""
                     }
-                    rule "my-rule" "This is a description"
+                    rule `my-rule` "This is a description"
                     when
                         x = "a"
                     then
@@ -193,7 +193,7 @@ class DroolsCompilationE2ETest {
                     outputs {
                         status: String := ""
                     }
-                    rule "check"
+                    rule check
                     when
                         customer.age >= 18
                     then
@@ -220,7 +220,7 @@ class DroolsCompilationE2ETest {
                     outputs {
                         result: String := ""
                     }
-                    rule "age-check"
+                    rule `age-check`
                     when
                         customer.age >= 18
                     then
@@ -232,7 +232,7 @@ class DroolsCompilationE2ETest {
 
             assertThat(result.isSuccess()).isTrue();
             String drl = result.getDrlSource();
-            assertThat(drl).contains("$customer.getAge() >= 18");
+            assertThat(drl).contains("$customer.getAge() >= new java.math.BigDecimal(18)");
         }
     }
 
@@ -254,7 +254,7 @@ class DroolsCompilationE2ETest {
                     outputs {
                         y: String := ""
                     }
-                    rule "use-global"
+                    rule `use-global`
                     when
                         x = "a"
                     then
@@ -287,7 +287,7 @@ class DroolsCompilationE2ETest {
                         result: String := "none"
                         score: java.math.BigDecimal := 0
                     }
-                    rule "set-output"
+                    rule `set-output`
                     when
                         x = "go"
                     then
@@ -315,7 +315,7 @@ class DroolsCompilationE2ETest {
                     outputs {
                         result: String := "no"
                     }
-                    rule "set-result"
+                    rule `set-result`
                     when
                         x = "trigger"
                     then
@@ -341,7 +341,7 @@ class DroolsCompilationE2ETest {
                         eligible: String := "no"
                         discount: java.math.BigDecimal := 0
                     }
-                    rule "r"
+                    rule r
                     when
                         x = "a"
                     then
@@ -379,7 +379,7 @@ class DroolsCompilationE2ETest {
                         status: String := "pending"
                         amount: java.math.BigDecimal := 100
                     }
-                    rule "r"
+                    rule r
                     when
                         x = "a"
                     then
@@ -488,7 +488,7 @@ class DroolsCompilationE2ETest {
                     outputs {
                         y: String := ""
                     }
-                    rule "r"
+                    rule r
                     when
                         x = "a"
                     then
@@ -513,7 +513,7 @@ class DroolsCompilationE2ETest {
                     outputs {
                         y: String := ""
                     }
-                    rule "r"
+                    rule r
                     when
                         x = "a"
                     then
@@ -546,7 +546,7 @@ class DroolsCompilationE2ETest {
                     outputs {
                         result: String := ""
                     }
-                    rule "r"
+                    rule r
                     when
                         order = order
                     then
@@ -577,13 +577,13 @@ class DroolsCompilationE2ETest {
                     outputs {
                         category: String := "low"
                     }
-                    rule "high-value"
+                    rule `high-value`
                     when
                         amount > 1000
                     then
                         category := "high"
                     end
-                    rule "medium-value"
+                    rule `medium-value`
                     when
                         amount >= 100
                     then
@@ -616,7 +616,7 @@ class DroolsCompilationE2ETest {
                     outputs {
                         result: String := "no"
                     }
-                    rule "has-items"
+                    rule `has-items`
                     when
                         items notEmpty
                     then

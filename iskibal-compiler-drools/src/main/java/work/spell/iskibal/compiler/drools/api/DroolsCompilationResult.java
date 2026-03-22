@@ -61,4 +61,12 @@ public sealed interface DroolsCompilationResult
 
     /// Returns error messages if failed, empty list otherwise.
     List<String> getErrors();
+
+    /// Returns the primary DRL source file content, or empty string if not successful.
+    default String getDrlSource() {
+        return getSourceFiles().flatMap(
+                files -> files.entrySet().stream().filter(e -> e.getKey().endsWith(".drl"))
+                        .map(Map.Entry::getValue).findFirst())
+                .orElse("");
+    }
 }

@@ -40,7 +40,7 @@ public interface DroolsCompiler {
     /// @throws IllegalStateException
     ///             if no compiler implementation is found
     static DroolsCompiler load() {
-        return ServiceLoader.load(DroolsCompiler.class).findFirst()
+        return ServiceLoader.load(DroolsCompiler.class, Thread.currentThread().getContextClassLoader()).findFirst()
                 .orElseThrow(() -> new IllegalStateException(
                         "No DroolsCompiler implementation found. Ensure iskibal-compiler-drools is on the module path."));
     }
