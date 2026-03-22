@@ -96,7 +96,21 @@ applyTierDiscount::
 [:discount | discountPercent := discount]
 ----
 
-== Coupon Codes
+== Loyalty Tier Decision Table (DRL-native)
+
+// DRL-native decision table: cell expressions are raw DRL/Java, passed verbatim.
+[.decision-table#TIER_DISC_DRL,language=drools]
+.Loyalty tier discounts (DRL-native)
+|===
+| ID | WHEN | THEN
+
+| h| $customer.getLoyaltyPoints() >= 0 h| __outputs.setDiscountPercent(null)
+| BRONZE | $customer.getLoyaltyPoints() >= 50   | __outputs.setDiscountPercent(new java.math.BigDecimal(5))
+| SILVER | $customer.getLoyaltyPoints() >= 200  | __outputs.setDiscountPercent(new java.math.BigDecimal(15))
+| GOLD   | $customer.getLoyaltyPoints() >= 1000 | __outputs.setDiscountPercent(new java.math.BigDecimal(25))
+|===
+
+
 
 // Template rule using an inline data table
 [source,iskara,.rule]
