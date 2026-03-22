@@ -34,7 +34,39 @@ All three parts are loaded via the Java `ServiceLoader` mechanism and can be rep
 == Drools target
 
 Iskibal can also compile rule models to Drools Rule Language (DRL) instead of Java.
-This is useful when you want to keep your rules in AsciiDoc for readability and version control, but need to run them inside an existing Drools runtime.
+Set `<language>drools</language>` in the Maven plugin configuration:
+
+[source,xml]
+----
+<configuration>
+  <language>drools</language>
+  <packageName>com.example.rules</packageName>
+</configuration>
+----
+
+The compiler produces:
+
+- A `.drl` file containing all rules in Drools syntax.
+- A `<Name>Outputs.java` POJO that collects output values (injected as a global named `__outputs`).
+
+=== Using the outputs holder
+
+[source,java]
+----
+KieSession session = kieContainer.newKieSession();
+
+PricingRulesOutputs outputs = new PricingRulesOutputs();
+session.setGlobal("__outputs", outputs);
+session.setGlobal("taxRate", new BigDecimal("1.19"));
+
+session.insert(order);
+session.insert(customer);
+session.fireAllRules();
+session.dispose();
+
+System.out.println(outputs.getEligible());        // "yes"
+System.out.println(outputs.getDiscountPercent()); // 10
+----
 
 === DRL-native decision tables
 
@@ -57,6 +89,17 @@ Add `language=drools` to the table attribute and write raw DRL/Java in the WHEN 
 
 Cell expressions are passed through verbatim to the generated DRL, so any valid DRL condition or action can be used.
 This makes Iskibal decision tables a drop-in replacement for Drools Excel decision tables -- you keep the readable AsciiDoc table format and plain-text version control without needing to learn Iskara.
+
+=== Drools limitations
+
+The following Iskara features are not yet supported for the Drools target:
+
+- Salience / priority (not in the rule model)
+- Agenda groups (not in the rule model)
+- Block / lambda expressions in then sections
+- Template string interpolation (`$"..."`)
+- Collection aggregation (`sum`, `each`, `all`, `where`) — use Drools `accumulate`
+- `modify`, `retract`, `insert` working-memory operations
 
 == Quick start
 
