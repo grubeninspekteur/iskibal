@@ -112,7 +112,7 @@ templateRule
     ;
 
 decisionTableRule
-    : DECISION TABLE identifier (STRING)? nl LBRACE nl tableContent nl RBRACE whereClause?
+    : DECISION TABLE (LBRACK IDENTIFIER RBRACK)? identifier (STRING)? nl LBRACE nl tableContent nl RBRACE whereClause?
     ;
 
 localDataTable

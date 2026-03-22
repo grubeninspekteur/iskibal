@@ -107,9 +107,22 @@ QUOTED_ID
     : '`' ~[`]+ '`'
     ;
 
-// Regular identifier - must not start with underscore (per spec)
+// Dollar sign — used as a standalone token (e.g. in DRL-native cell expressions:
+// $factVar). In DRL-native tables the cell content is treated as raw text so
+// individual tokens only need to lex without errors.
+DOLLAR
+    : '$'
+    ;
+
+// Regular identifier — leading underscores are allowed to support DRL-native
+// cell expressions that reference Drools-generated helper variables such as
+// __outputs.
 IDENTIFIER
-    : LETTER LETTER_OR_DIGIT*
+    : LETTER_OR_UNDERSCORE LETTER_OR_DIGIT*
+    ;
+
+fragment LETTER_OR_UNDERSCORE
+    : [a-zA-Z_]
     ;
 
 fragment LETTER

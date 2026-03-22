@@ -13,6 +13,7 @@ import work.spell.iskibal.model.Expression.MessageSend.DefaultMessage;
 import work.spell.iskibal.model.Expression.MessageSend.KeywordMessage;
 import work.spell.iskibal.model.Expression.MessageSend.UnaryMessage;
 import work.spell.iskibal.model.Expression.Navigation;
+import work.spell.iskibal.model.Expression.Raw;
 
 /// Translates Iskara [Expression]s to Java/DRL source code fragments used inside
 /// DRL rule bodies.
@@ -45,6 +46,7 @@ final class DrlExpressionGenerator {
             case Assignment assign -> generateAssignment(assign);
             case Navigation nav -> generateNavigation(nav);
             case Block block -> "/* TODO: block expressions are not supported in DRL */";
+            case Raw raw -> raw.text();
         };
     }
 

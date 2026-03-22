@@ -14,6 +14,7 @@ import work.spell.iskibal.model.Expression.MessageSend.DefaultMessage;
 import work.spell.iskibal.model.Expression.MessageSend.KeywordMessage;
 import work.spell.iskibal.model.Expression.MessageSend.UnaryMessage;
 import work.spell.iskibal.model.Expression.Navigation;
+import work.spell.iskibal.model.Expression.Raw;
 
 /// Validates assignment expressions - ensures facts are not assigned to and
 /// outputs are only assigned in then/else sections.
@@ -144,6 +145,9 @@ public final class AssignmentValidator {
             case Literal lit -> validateLiteral(lit, factNames, outputNames, inActionSection);
             case Identifier _ -> {
                 // No validation needed for reading identifiers
+            }
+            case Raw _ -> {
+                // Raw expressions are target-language text; no assignment validation
             }
         }
     }

@@ -740,4 +740,71 @@ class DroolsCompilationE2ETest {
             assertThat(drl).contains("$customer : CustomerProfile()");
         }
     }
+
+    @Nested
+    @DisplayName("DRL-native decision tables")
+    class DrlNativeDecisionTables {
+
+        @Test
+        @DisplayName("decision table [drools] passes WHEN/THEN cells verbatim")
+        void drlNativeDecisionTablePassesCellsVerbatim() {
+            String source = """
+                    facts {
+                        customer: work.spell.iskibal.e2e.CustomerProfile
+                    }
+                    outputs {
+                        discount: java.math.BigDecimal := 0
+                    }
+                    decision table [drools] TIER "Loyalty tier discounts" {
+                    | ID     | WHEN                              | THEN                          |
+                    |        | $customer.getLoyaltyPoints() >= 0 | __outputs.setDiscount(null)   |
+                    | ------ | --------------------------------- | ----------------------------- |
+                    | BRONZE | $customer.getLoyaltyPoints() >= 50   | __outputs.setDiscount(new java.math.BigDecimal(5)) |
+                    | SILVER | $customer.getLoyaltyPoints() >= 200  | __outputs.setDiscount(new java.math.BigDecimal(15)) |
+                    | GOLD   | $customer.getLoyaltyPoints() >= 1000 | __outputs.setDiscount(new java.math.BigDecimal(25)) |
+                    }
+                    """;
+
+            DroolsCompilationResult result = compileDrl(source);
+
+            assertThat(result.isSuccess())
+                    .as("compilation should succeed; errors: %s", result.getErrors())
+                    .isTrue();
+            String drl = result.getDrlSource();
+
+            assertThat(drl).contains("rule \"TIER-BRONZE\"");
+            assertThat(drl).contains("rule \"TIER-SILVER\"");
+            assertThat(drl).contains("rule \"TIER-GOLD\"");
+
+            // WHEN cells are passed verbatim (wrapped in eval)
+            assertThat(drl).contains("$customer.getLoyaltyPoints() >= 50");
+            assertThat(drl).contains("$customer.getLoyaltyPoints() >= 200");
+            assertThat(drl).contains("$customer.getLoyaltyPoints() >= 1000");
+
+            // THEN cells are passed verbatim
+            assertThat(drl).contains("__outputs.setDiscount(new java.math.BigDecimal(5))");
+            assertThat(drl).contains("__outputs.setDiscount(new java.math.BigDecimal(15))");
+            assertThat(drl).contains("__outputs.setDiscount(new java.math.BigDecimal(25))");
+        }
+
+        @Test
+        @DisplayName("AsciiDoc decision table with language=drools passes cells verbatim")
+        void asciiDocDrlNativeDecisionTable() {
+            DroolsCompilationResult result = compileAdocFile("drl_native_decision_table.adoc",
+                    DroolsCompilerOptions.of("work.spell.iskibal.e2e", "drl_native"));
+
+            assertThat(result.isSuccess())
+                    .as("DRL compilation should succeed; errors: %s", result.getErrors())
+                    .isTrue();
+            String drl = result.getDrlSource();
+
+            assertThat(drl).contains("rule \"SCORE-LOW\"");
+            assertThat(drl).contains("rule \"SCORE-MID\"");
+            assertThat(drl).contains("rule \"SCORE-HIGH\"");
+
+            // Cells should be raw DRL/Java passed through verbatim
+            assertThat(drl).contains("$customer.getAge() < 30");
+            assertThat(drl).contains("$customer.getAge() >= 30");
+        }
+    }
 }
