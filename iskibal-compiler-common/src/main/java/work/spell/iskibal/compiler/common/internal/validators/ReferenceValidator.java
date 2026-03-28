@@ -16,6 +16,7 @@ import work.spell.iskibal.model.Expression.MessageSend.DefaultMessage;
 import work.spell.iskibal.model.Expression.MessageSend.KeywordMessage;
 import work.spell.iskibal.model.Expression.MessageSend.UnaryMessage;
 import work.spell.iskibal.model.Expression.Navigation;
+import work.spell.iskibal.model.Expression.Raw;
 
 /// Validates identifier references within a rule module.
 public final class ReferenceValidator {
@@ -218,6 +219,9 @@ public final class ReferenceValidator {
                 for (Statement stmt : block.statements()) {
                     validateStatement(stmt, blockScope, block.hasImplicitParameter());
                 }
+            }
+            case Raw _ -> {
+                // Raw expressions are target-language text; no Iskara reference validation
             }
         }
     }

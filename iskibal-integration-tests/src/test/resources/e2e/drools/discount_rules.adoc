@@ -1,0 +1,131 @@
+= Discount Rules
+:description: Discount calculation rulebase used for Drools E2E testing.
+
+== Imports
+
+[.imports]
+====
+CustomerProfile:: work.spell.iskibal.e2e.CustomerProfile
+OrderContext:: work.spell.iskibal.e2e.OrderContext
+====
+
+== Facts
+
+[.facts,cols="1,1,3"]
+|===
+| Fact name | Type | Description
+
+| customer | CustomerProfile | The customer placing the order.
+| order | OrderContext | The order context.
+|===
+
+== Globals
+
+[.globals,cols="1,1,3"]
+|===
+| Global name | Type | Description
+
+| taxRate | java.math.BigDecimal | The applicable tax rate.
+|===
+
+== Outputs
+
+[.outputs,cols="1,1,1,3"]
+|===
+| Output name | Type | Initial value | Description
+
+| eligible | String | "no" | Whether the customer is eligible.
+| discountPercent | java.math.BigDecimal | 0 | Discount percentage to apply.
+|===
+
+== Eligibility
+
+.ELIG_001: Age check
+[source,iskara,.rule]
+----
+when
+    customer.age >= 18
+then
+    eligible := "yes"
+else
+    eligible := "no"
+end
+----
+
+== Loyalty Discounts
+
+.DISC_001: Loyalty discount for regular customers
+[source,iskara,.rule]
+----
+when
+    customer.loyaltyPoints >= 100
+then
+    discountPercent := 10
+end
+----
+
+.DISC_002: Enhanced loyalty discount
+[source,iskara,.rule]
+----
+when
+    customer.loyaltyPoints >= 500
+then
+    discountPercent := 20
+end
+----
+
+== Loyalty Tier Decision Table
+
+// Decision table mapping loyalty tiers to discount percentages
+[.decision-table#TIER_DISC]
+.Loyalty tier discounts
+|===
+| ID | WHEN | THEN
+
+| h| customer.loyaltyPoints h| #applyTierDiscount
+| BRONZE | >= 50   | 5
+| SILVER | >= 200  | 15
+| GOLD   | >= 1000 | 25
+|===
+
+[.aliases,for="TIER_DISC"]
+applyTierDiscount::
++
+[source,iskara]
+----
+[:discount | discountPercent := discount]
+----
+
+== Loyalty Tier Decision Table (DRL-native)
+
+// DRL-native decision table: cell expressions are raw DRL/Java, passed verbatim.
+[.decision-table#TIER_DISC_DRL,language=drools]
+.Loyalty tier discounts (DRL-native)
+|===
+| ID | WHEN | THEN
+
+| h| $customer.getLoyaltyPoints() >= 0 h| __outputs.setDiscountPercent(null)
+| BRONZE | $customer.getLoyaltyPoints() >= 50   | __outputs.setDiscountPercent(new java.math.BigDecimal(5))
+| SILVER | $customer.getLoyaltyPoints() >= 200  | __outputs.setDiscountPercent(new java.math.BigDecimal(15))
+| GOLD   | $customer.getLoyaltyPoints() >= 1000 | __outputs.setDiscountPercent(new java.math.BigDecimal(25))
+|===
+
+
+
+// Template rule using an inline data table
+[source,iskara,.rule]
+----
+template rule COUPON "Coupon code discount"
+data table {
+    | code      | amount |
+    | --------- | ------ |
+    | "PROMO10" | 10     |
+    | "PROMO25" | 25     |
+    | "PROMO50" | 50     |
+}
+when
+    order.couponCode = code
+then
+    discountPercent := amount
+end
+----

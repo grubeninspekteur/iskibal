@@ -297,7 +297,15 @@ public class IskaraSourceTranslator {
         String caption = table.getCaption();
         String description = title != null ? title : caption;
 
-        sb.append("\ndecision table ").append(quoteIdIfNeeded(id));
+        // Check for language attribute (e.g. [.decision-table#ID,language=drools])
+        Object languageAttr = table.getAttribute("language");
+        boolean drlNative = languageAttr != null && "drools".equalsIgnoreCase(languageAttr.toString());
+
+        sb.append("\ndecision table ");
+        if (drlNative) {
+            sb.append("[drools] ");
+        }
+        sb.append(quoteIdIfNeeded(id));
         if (description != null && !description.isBlank()) {
             sb.append(" \"").append(escapeString(description)).append("\"");
         }

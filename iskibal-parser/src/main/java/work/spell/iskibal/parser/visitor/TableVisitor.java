@@ -2,6 +2,7 @@ package work.spell.iskibal.parser.visitor;
 
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.misc.Interval;
 import module iskibal.rule.model;
 import work.spell.iskibal.parser.IskaraLexer;
 import work.spell.iskibal.parser.IskaraParser;
@@ -60,11 +61,20 @@ public class TableVisitor {
         for (var rowCtx : ctx.tableRow()) {
             List<String> cells = new ArrayList<>();
             for (var cellCtx : rowCtx.tableCell()) {
-                StringBuilder sb = new StringBuilder();
-                for (var content : cellCtx.tableCellContent()) {
-                    sb.append(content.getText());
+                String cellText;
+                List<IskaraParser.TableCellContentContext> contents = cellCtx.tableCellContent();
+                if (!contents.isEmpty()) {
+                    // Use the original source interval to preserve whitespace between tokens.
+                    // tableCellContent tokens are on the default channel; the Interval approach
+                    // captures the raw input characters (including spaces skipped by the lexer).
+                    int start = contents.getFirst().start.getStartIndex();
+                    int end = contents.getLast().stop.getStopIndex();
+                    cellText = contents.getFirst().start.getInputStream()
+                            .getText(new Interval(start, end));
+                } else {
+                    cellText = "";
                 }
-                cells.add(sb.toString().trim());
+                cells.add(cellText.trim());
             }
             // Remove trailing empty cells
             while (!cells.isEmpty() && cells.getLast().isEmpty()) {

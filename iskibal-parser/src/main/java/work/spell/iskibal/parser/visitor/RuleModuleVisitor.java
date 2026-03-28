@@ -183,6 +183,9 @@ public class RuleModuleVisitor extends IskaraParserBaseVisitor<RuleModule> {
         String id = expressionVisitor.extractIdentifier(ctx.identifier());
         String description = ctx.STRING() != null ? unquoteString(ctx.STRING().getText()) : null;
 
+        // Check for optional language attribute: decision table [drools] ...
+        boolean rawMode = ctx.IDENTIFIER() != null && "drools".equalsIgnoreCase(ctx.IDENTIFIER().getText());
+
         // Parse decision table structure
         TableVisitor.DecisionTableStructure structure = tableVisitor.parseDecisionTableStructure(ctx.tableContent());
 
@@ -202,9 +205,9 @@ public class RuleModuleVisitor extends IskaraParserBaseVisitor<RuleModule> {
         List<Rule.DecisionTableRule.Row> rows = new ArrayList<>();
         for (var structRow : structure.rows()) {
             List<Statement> whenStmts = buildDecisionStatements(structure.whenColumns(), structRow.whenCells(),
-                    aliases);
+                    aliases, rawMode);
             List<Statement> thenStmts = buildDecisionStatements(structure.thenColumns(), structRow.thenCells(),
-                    aliases);
+                    aliases, rawMode);
             rows.add(new Rule.DecisionTableRule.Row(structRow.id(), whenStmts, thenStmts));
         }
 
@@ -212,7 +215,7 @@ public class RuleModuleVisitor extends IskaraParserBaseVisitor<RuleModule> {
     }
 
     private List<Statement> buildDecisionStatements(List<TableVisitor.ColumnDef> columns, List<String> cells,
-            Map<String, Block> aliases) {
+            Map<String, Block> aliases, boolean rawMode) {
         List<Statement> statements = new ArrayList<>();
 
         for (int i = 0; i < columns.size() && i < cells.size(); i++) {
@@ -240,7 +243,9 @@ public class RuleModuleVisitor extends IskaraParserBaseVisitor<RuleModule> {
                     // Check if block has explicit parameters (new style [:paramName | ...])
                     if (!parameters.isEmpty()) {
                         // Substitute the cell value for the first parameter
-                        Expression cellExpr = parseCellAsExpression(cellValue);
+                        Expression cellExpr = rawMode
+                                ? new Expression.Raw(cellValue)
+                                : parseCellAsExpression(cellValue);
                         statements.add(new Statement.LetStatement(parameters.getFirst(), cellExpr));
                         // Add all the block statements
                         statements.addAll(aliasStatements);
@@ -258,7 +263,9 @@ public class RuleModuleVisitor extends IskaraParserBaseVisitor<RuleModule> {
                 }
                 // Combine column expression with cell value
                 String fullExpr = columnExpr + " " + cellValue;
-                Expression expr = parseCellAsExpression(fullExpr.trim());
+                Expression expr = rawMode
+                        ? new Expression.Raw(fullExpr.trim())
+                        : parseCellAsExpression(fullExpr.trim());
                 statements.add(new Statement.ExpressionStatement(expr));
             }
         }

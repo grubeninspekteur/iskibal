@@ -3,6 +3,7 @@ module iskibal.integration.tests {
     requires iskibal.parser;
     requires iskibal.compiler.common;
     requires iskibal.compiler.java;
+    requires iskibal.compiler.drools;
     requires iskibal.runtime;
     requires iskibal.asciidoc;
     requires java.compiler;
@@ -12,4 +13,5 @@ module iskibal.integration.tests {
     uses work.spell.iskibal.parser.api.Parser;
     uses work.spell.iskibal.compiler.common.api.SemanticAnalyzer;
     uses work.spell.iskibal.compiler.java.api.JavaCompiler;
+    uses work.spell.iskibal.compiler.drools.api.DroolsCompiler;
 }

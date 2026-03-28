@@ -39,6 +39,10 @@
       <groupId>work.spell.iskibal</groupId>
       <artifactId>iskibal-compiler-java</artifactId>
     </dependency>
+    <dependency>
+      <groupId>work.spell.iskibal</groupId>
+      <artifactId>iskibal-compiler-drools</artifactId>
+    </dependency>
 
     <!-- Maven plugin API (provided by Maven at runtime) -->
     <dependency>

@@ -17,6 +17,7 @@ import work.spell.iskibal.model.Expression.MessageSend.DefaultMessage;
 import work.spell.iskibal.model.Expression.MessageSend.KeywordMessage;
 import work.spell.iskibal.model.Expression.MessageSend.UnaryMessage;
 import work.spell.iskibal.model.Expression.Navigation;
+import work.spell.iskibal.model.Expression.Raw;
 
 /// Generates Java code for Iskara expressions.
 public final class ExpressionGenerator {
@@ -82,6 +83,7 @@ public final class ExpressionGenerator {
             case Assignment assign -> generateAssignment(assign);
             case Navigation nav -> generateNavigation(nav);
             case Block block -> generateBlock(block);
+            case Raw _ -> "/* ERROR: Raw expressions cannot be compiled to Java — use a Drools target instead */";
         };
     }
 

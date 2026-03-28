@@ -20,6 +20,9 @@ import org.apache.maven.project.MavenProject;
 import work.spell.iskibal.asciidoc.AsciiDocParser;
 import work.spell.iskibal.compiler.common.api.AnalysisResult;
 import work.spell.iskibal.compiler.common.api.SemanticAnalyzer;
+import work.spell.iskibal.compiler.drools.api.DroolsCompilationResult;
+import work.spell.iskibal.compiler.drools.api.DroolsCompiler;
+import work.spell.iskibal.compiler.drools.api.DroolsCompilerOptions;
 import work.spell.iskibal.compiler.java.api.CompilationResult;
 import work.spell.iskibal.compiler.java.api.JavaCompiler;
 import work.spell.iskibal.compiler.java.api.JavaCompilerOptions;
@@ -28,15 +31,21 @@ import work.spell.iskibal.parser.api.ParseOptions;
 import work.spell.iskibal.parser.api.ParseResult;
 import work.spell.iskibal.parser.api.Parser;
 
-/// Maven plugin goal that compiles Iskara rule sources to Java source files.
+/// Maven plugin goal that compiles rule sources to Java or Drools DRL output.
 ///
 /// Rule sources are `.iskara` files (pure Iskara) or `.adoc` files (AsciiDoc
-/// with embedded Iskara). The generated Java source is written to the output
-/// directory and registered as a compile source root so Maven picks it up
-/// automatically.
+/// with embedded Iskara). The target language is chosen with the `language`
+/// parameter:
 ///
-/// Each source file produces one Java class whose name is derived from the
-/// filename in PascalCase (e.g. `discount_rules.iskara` → `DiscountRules`).
+/// - `java` (default): generates Java source, registered as a compile source
+///   root.
+/// - `drools`: generates Drools Rule Language (`.drl`) files written to the
+///   output directory. A companion `<Name>Outputs.java` POJO is also written.
+///   The output directory is **not** added as a compile source root; wire it
+///   into the Drools runtime separately.
+///
+/// Languages cannot be mixed in a single plugin execution — configure separate
+/// executions with different `sourceDirectory` and `language` values if needed.
 @Mojo(name = "generate", defaultPhase = LifecyclePhase.GENERATE_SOURCES, requiresProject = true, threadSafe = false)
 public class GenerateRulesMojo extends AbstractMojo {
 
@@ -44,22 +53,34 @@ public class GenerateRulesMojo extends AbstractMojo {
     @Parameter(defaultValue = "${project.basedir}/src/main/iskibal", property = "iskibal.sourceDirectory")
     private File sourceDirectory;
 
-    /// Directory where generated Java source files are written.
+    /// Directory where generated source files are written.
     @Parameter(defaultValue = "${project.build.directory}/generated-sources/iskibal",
             property = "iskibal.outputDirectory")
     private File outputDirectory;
 
-    /// Java package name for generated classes. Defaults to the unnamed package.
+    /// Target language for code generation. Accepted values (case-insensitive):
+    /// - `java` (default) – generates Java source code
+    /// - `drools` – generates Drools Rule Language (DRL) files
+    ///
+    /// Languages cannot be mixed in a single execution. Configure separate
+    /// `<execution>` blocks with different source directories when both targets
+    /// are needed.
+    @Parameter(defaultValue = "java", property = "iskibal.language")
+    private String language;
+
+    /// Java package name for generated classes (Java target) or DRL package
+    /// declaration (Drools target). Defaults to the unnamed package.
     @Parameter(defaultValue = "", property = "iskibal.packageName")
     private String packageName;
 
     /// Whether to generate null safety checks for navigation expressions.
+    /// Only applies to the Java target.
     @Parameter(defaultValue = "true", property = "iskibal.generateNullChecks")
     private boolean generateNullChecks;
 
-    /// Whether to generate a `RuleListener` field and inject listener call sites so
-    /// rule firing can be observed at runtime. When enabled, the generated class
-    /// constructor gains a `RuleListener` parameter as its last argument.
+    /// Whether to generate a `RuleListener` field and inject listener call sites
+    /// so rule firing can be observed at runtime.
+    /// Only applies to the Java target.
     @Parameter(defaultValue = "false", property = "iskibal.diagnostics")
     private boolean diagnostics;
 
@@ -77,6 +98,9 @@ public class GenerateRulesMojo extends AbstractMojo {
             return;
         }
 
+        TargetLanguage target = resolveLanguage();
+        getLog().info("Iskibal target language: " + target.name().toLowerCase());
+
         if (!sourceDirectory.exists()) {
             getLog().debug("Iskibal source directory does not exist, skipping: " + sourceDirectory);
             return;
@@ -93,16 +117,26 @@ public class GenerateRulesMojo extends AbstractMojo {
 
         Parser parser = Parser.load();
         SemanticAnalyzer analyzer = SemanticAnalyzer.load();
-        JavaCompiler compiler = JavaCompiler.load();
 
         try (AsciiDocParser adocParser = new AsciiDocParser()) {
             for (Path sourceFile : sourceFiles) {
-                processFile(sourceFile, parser, analyzer, compiler, adocParser);
+                processFile(sourceFile, parser, analyzer, adocParser, target);
             }
         }
 
-        project.addCompileSourceRoot(outputDirectory.getAbsolutePath());
-        getLog().info("Added compile source root: " + outputDirectory);
+        if (target == TargetLanguage.JAVA) {
+            project.addCompileSourceRoot(outputDirectory.getAbsolutePath());
+            getLog().info("Added compile source root: " + outputDirectory);
+        }
+    }
+
+    private TargetLanguage resolveLanguage() throws MojoExecutionException {
+        return switch (language.trim().toLowerCase()) {
+            case "java" -> TargetLanguage.JAVA;
+            case "drools" -> TargetLanguage.DROOLS;
+            default -> throw new MojoExecutionException(
+                    "Unknown language '" + language + "'. Supported values: java, drools");
+        };
     }
 
     private List<Path> collectSourceFiles() throws MojoExecutionException {
@@ -116,8 +150,8 @@ public class GenerateRulesMojo extends AbstractMojo {
         }
     }
 
-    private void processFile(Path sourceFile, Parser parser, SemanticAnalyzer analyzer, JavaCompiler compiler,
-            AsciiDocParser adocParser) throws MojoExecutionException, MojoFailureException {
+    private void processFile(Path sourceFile, Parser parser, SemanticAnalyzer analyzer, AsciiDocParser adocParser,
+            TargetLanguage target) throws MojoExecutionException, MojoFailureException {
         String fileName = sourceFile.getFileName().toString();
         boolean isAsciiDoc = fileName.endsWith(".adoc");
         getLog().info("Compiling rule source: " + sourceFile);
@@ -154,18 +188,13 @@ public class GenerateRulesMojo extends AbstractMojo {
         }
 
         // Code generation
-        String className = deriveClassName(fileName);
-        JavaCompilerOptions options = new JavaCompilerOptions(packageName, className, generateNullChecks, null,
-                diagnostics);
-        CompilationResult codegenResult = compiler.compile(module, options);
-
-        if (!codegenResult.isSuccess()) {
-            String errors = String.join("\n  ", codegenResult.getErrors());
-            throw new MojoFailureException("Code generation errors for " + fileName + ":\n  " + errors);
-        }
+        String baseName = deriveClassName(fileName);
+        Map<String, String> generatedFiles = switch (target) {
+            case JAVA -> generateJava(module, baseName);
+            case DROOLS -> generateDrools(module, baseName, fileName);
+        };
 
         // Write generated files
-        Map<String, String> generatedFiles = codegenResult.getSourceFiles().orElseThrow();
         for (Map.Entry<String, String> entry : generatedFiles.entrySet()) {
             File outputFile = new File(outputDirectory, entry.getKey());
             outputFile.getParentFile().mkdirs();
@@ -178,8 +207,55 @@ public class GenerateRulesMojo extends AbstractMojo {
         }
     }
 
+    private Map<String, String> generateJava(RuleModule module, String className) throws MojoFailureException {
+        JavaCompiler compiler = JavaCompiler.load();
+        JavaCompilerOptions options = new JavaCompilerOptions(packageName, className, generateNullChecks, null,
+                diagnostics);
+        CompilationResult result = compiler.compile(module, options);
+
+        if (!result.isSuccess()) {
+            String errors = String.join("\n  ", result.getErrors());
+            throw new MojoFailureException("Code generation errors for Java target:\n  " + errors);
+        }
+
+        return result.getSourceFiles().orElseThrow();
+    }
+
+    private Map<String, String> generateDrools(RuleModule module, String ruleName, String fileName)
+            throws MojoFailureException {
+        DroolsCompiler compiler = DroolsCompiler.load();
+        // Convert PascalCase class name back to snake_case for DRL rule name convention
+        String drlRuleName = toSnakeCase(ruleName);
+        DroolsCompilerOptions options = DroolsCompilerOptions.of(packageName, drlRuleName);
+        DroolsCompilationResult result = compiler.compile(module, options);
+
+        if (!result.isSuccess()) {
+            String errors = String.join("\n  ", result.getErrors());
+            throw new MojoFailureException("Code generation errors for Drools target from " + fileName + ":\n  "
+                    + errors);
+        }
+
+        return result.getSourceFiles().orElseThrow();
+    }
+
     private static String formatErrors(List<?> diagnostics) {
         return diagnostics.stream().map(Object::toString).collect(Collectors.joining("\n  "));
+    }
+
+    /// Converts a PascalCase name to snake_case for use as a DRL rule file name.
+    static String toSnakeCase(String name) {
+        if (name == null || name.isEmpty()) {
+            return name;
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < name.length(); i++) {
+            char c = name.charAt(i);
+            if (Character.isUpperCase(c) && i > 0) {
+                sb.append('_');
+            }
+            sb.append(Character.toLowerCase(c));
+        }
+        return sb.toString();
     }
 
     /// Derives a PascalCase Java class name from a source filename.
@@ -202,5 +278,9 @@ public class GenerateRulesMojo extends AbstractMojo {
             }
         }
         return sb.isEmpty() ? "GeneratedRules" : sb.toString();
+    }
+
+    enum TargetLanguage {
+        JAVA, DROOLS
     }
 }

@@ -12,6 +12,7 @@ import work.spell.iskibal.model.Expression.Identifier;
 import work.spell.iskibal.model.Expression.Literal;
 import work.spell.iskibal.model.Expression.MessageSend;
 import work.spell.iskibal.model.Expression.Navigation;
+import work.spell.iskibal.model.Expression.Raw;
 
 /// Walks the AST and infers Java types for expressions.
 ///
@@ -51,6 +52,7 @@ public final class JavaTypeInferenceVisitor {
             case Assignment assign -> inferAssignment(assign);
             case Navigation nav -> inferNavigation(nav);
             case Block block -> inferBlock(block);
+            case Raw _ -> new JavaTypedExpression(expr, JavaType.UnknownType.INSTANCE);
         };
 
         typeCache.put(expr, result);

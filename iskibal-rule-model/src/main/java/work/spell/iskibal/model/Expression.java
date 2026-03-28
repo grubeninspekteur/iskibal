@@ -4,7 +4,7 @@ import module java.base;
 
 /// Expressions form the actual executable parts of rules and statements.
 public sealed interface Expression permits Expression.Identifier, Expression.Literal, Expression.MessageSend,
-        Expression.Binary, Expression.Assignment, Expression.Navigation, Expression.Block {
+        Expression.Binary, Expression.Assignment, Expression.Navigation, Expression.Block, Expression.Raw {
 
     /// Reference to a named value.
     record Identifier(String name) implements Expression {
@@ -77,6 +77,15 @@ public sealed interface Expression permits Expression.Identifier, Expression.Lit
     /// Navigates through named members of a receiver. The names are applied in
     /// order.
     record Navigation(Expression receiver, List<String> names) implements Expression {
+    }
+
+    /// A raw, verbatim target-language expression that bypasses Iskara
+    /// parsing and translation. Used for DRL-native decision tables where
+    /// cell expressions are written in native DRL/Java syntax.
+    ///
+    /// @param text
+    ///            the raw expression text to pass through verbatim
+    record Raw(String text) implements Expression {
     }
 
     /// Block of statements evaluated in order.
