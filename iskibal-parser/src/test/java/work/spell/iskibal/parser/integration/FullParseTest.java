@@ -563,7 +563,7 @@ class FullParseTest {
             String input = """
                     rule INVALID
                     when
-                        $$$invalid syntax$$$
+                        @@@invalid syntax@@@
                     then
                         x := 1
                     end
