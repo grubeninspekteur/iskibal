@@ -353,9 +353,10 @@ class DroolsCompilationE2ETest {
             assertThat(result.isSuccess()).isTrue();
             Map<Path, String> files = result.getSourceFiles().orElseThrow();
 
-            // Should have both DRL and Java POJO files
+            // Should have DRL, Java POJO, and adapter files
             assertThat(files).containsKey(Path.of("com/example/pojo_test.drl"));
             assertThat(files).containsKey(Path.of("com/example/PojoTestOutputs.java"));
+            assertThat(files).containsKey(Path.of("com/example/PojoTestRuleAdapter.java"));
 
             String pojo = files.get(Path.of("com/example/PojoTestOutputs.java"));
             assertThat(pojo).contains("public class PojoTestOutputs");
@@ -737,6 +738,73 @@ class DroolsCompilationE2ETest {
 
             assertThat(drl).contains("$order : OrderContext()");
             assertThat(drl).contains("$customer : CustomerProfile()");
+        }
+    }
+
+    @Nested
+    @DisplayName("Rule adapter generation")
+    class RuleAdapterGeneration {
+
+        @Test
+        @DisplayName("adapter class is generated with fact setters and evaluate method")
+        void adapterClassGenerated() {
+            String source = """
+                    facts {
+                        customer: work.spell.iskibal.e2e.CustomerProfile
+                        order: work.spell.iskibal.e2e.OrderContext
+                    }
+                    globals {
+                        taxRate: java.math.BigDecimal
+                    }
+                    outputs {
+                        eligible: String := "no"
+                    }
+                    rule r
+                    when
+                        customer.age >= 18
+                    then
+                        eligible := "yes"
+                    end
+                    """;
+
+            DroolsCompilationResult result = compileDrl(source,
+                    new DroolsCompilerOptions("com.example", "my_rules"));
+
+            assertThat(result.isSuccess()).isTrue();
+            Map<Path, String> files = result.getSourceFiles().orElseThrow();
+            assertThat(files).containsKey(Path.of("com/example/MyRulesRuleAdapter.java"));
+
+            String adapter = files.get(Path.of("com/example/MyRulesRuleAdapter.java"));
+            assertThat(adapter).contains("public class MyRulesRuleAdapter");
+            assertThat(adapter).contains("import org.kie.api.KieBase;");
+            assertThat(adapter).contains("public MyRulesRuleAdapter(KieBase kieBase)");
+            // Fact setters
+            assertThat(adapter).contains("public MyRulesRuleAdapter setCustomer(");
+            assertThat(adapter).contains("public MyRulesRuleAdapter setOrder(");
+            // Global setters
+            assertThat(adapter).contains("public MyRulesRuleAdapter setTaxRate(");
+            // Evaluate method returns outputs
+            assertThat(adapter).contains("public MyRulesOutputs evaluate()");
+            assertThat(adapter).contains("session.insert(");
+            assertThat(adapter).contains("session.setGlobal(");
+            assertThat(adapter).contains("session.fireAllRules()");
+            assertThat(adapter).contains("session.dispose()");
+        }
+
+        @Test
+        @DisplayName("AsciiDoc adapter class is generated for discount_rules")
+        void asciiDocAdapterGenerated() {
+            DroolsCompilationResult result = compileAdocFile("discount_rules.adoc",
+                    new DroolsCompilerOptions("work.spell.iskibal.e2e", "discount_rules"));
+
+            assertThat(result.isSuccess()).isTrue();
+            Map<Path, String> files = result.getSourceFiles().orElseThrow();
+
+            assertThat(files).containsKey(Path.of("work/spell/iskibal/e2e/DiscountRulesRuleAdapter.java"));
+
+            String adapter = files.get(Path.of("work/spell/iskibal/e2e/DiscountRulesRuleAdapter.java"));
+            assertThat(adapter).contains("public class DiscountRulesRuleAdapter");
+            assertThat(adapter).contains("public DiscountRulesOutputs evaluate()");
         }
     }
 

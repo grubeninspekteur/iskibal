@@ -124,10 +124,11 @@ public class GenerateRulesMojo extends AbstractMojo {
             }
         }
 
-        if (target == TargetLanguage.JAVA) {
-            project.addCompileSourceRoot(outputDirectory.getAbsolutePath());
-            getLog().info("Added compile source root: " + outputDirectory);
-        }
+        // Both targets generate Java source files that need compilation:
+        // - Java target: the rule classes themselves
+        // - Drools target: the outputs POJO and rule adapter
+        project.addCompileSourceRoot(outputDirectory.getAbsolutePath());
+        getLog().info("Added compile source root: " + outputDirectory);
     }
 
     private TargetLanguage resolveLanguage() throws MojoExecutionException {

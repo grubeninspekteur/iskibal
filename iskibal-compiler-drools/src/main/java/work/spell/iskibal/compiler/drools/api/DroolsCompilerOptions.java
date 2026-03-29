@@ -52,4 +52,37 @@ public record DroolsCompilerOptions(String packageName, String ruleName) {
         }
         return packageName.replace('.', '/') + "/" + fileName;
     }
+
+    /// Returns the simple class name for the generated rule adapter.
+    public String adapterClassName() {
+        // Convert snake_case/kebab-case to PascalCase and append "RuleAdapter"
+        String[] parts = ruleName.split("[_\\-\\.]+");
+        StringBuilder sb = new StringBuilder();
+        for (String part : parts) {
+            if (!part.isEmpty()) {
+                sb.append(Character.toUpperCase(part.charAt(0)));
+                if (part.length() > 1) {
+                    sb.append(part.substring(1));
+                }
+            }
+        }
+        return sb.append("RuleAdapter").toString();
+    }
+
+    /// Returns the fully qualified adapter class name.
+    public String fullyQualifiedAdapterClassName() {
+        if (packageName == null || packageName.isEmpty()) {
+            return adapterClassName();
+        }
+        return packageName + "." + adapterClassName();
+    }
+
+    /// Returns the file path for the generated adapter Java file (relative).
+    public String adapterFilePath() {
+        String fileName = adapterClassName() + ".java";
+        if (packageName == null || packageName.isEmpty()) {
+            return fileName;
+        }
+        return packageName.replace('.', '/') + "/" + fileName;
+    }
 }

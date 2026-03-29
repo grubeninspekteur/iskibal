@@ -135,7 +135,7 @@ public final class ExpressionGenerator {
         List<Expression> regularElements = new ArrayList<>();
         for (Expression elem : lit.elements()) {
             if (elem instanceof KeywordMessage km && km.parts().size() == 1
-                    && "to".equals(km.parts().getFirst().keyword())) {
+                    && MessageSelectors.TO.equals(km.parts().getFirst().keyword())) {
                 ranges.add(elem);
             } else {
                 regularElements.add(elem);
@@ -210,20 +210,20 @@ public final class ExpressionGenerator {
 
         // Handle special collection unary messages
         return switch (selector) {
-            case "exists", "notEmpty" -> {
+            case MessageSelectors.EXISTS, MessageSelectors.NOT_EMPTY -> {
                 if (hasTypeInfo() && !isCollection) {
                     // Not a collection - treat as regular method call
                     yield receiver + "." + selector + "()";
                 }
                 yield "!" + receiver + ".isEmpty()";
             }
-            case "doesNotExist", "empty" -> {
+            case MessageSelectors.DOES_NOT_EXIST, MessageSelectors.EMPTY -> {
                 if (hasTypeInfo() && !isCollection) {
                     yield receiver + "." + selector + "()";
                 }
                 yield receiver + ".isEmpty()";
             }
-            case "sum" -> {
+            case MessageSelectors.SUM -> {
                 if (hasTypeInfo() && !isCollection) {
                     yield receiver + ".sum()";
                 }
@@ -246,26 +246,26 @@ public final class ExpressionGenerator {
 
             // Handle special keyword messages based on type
             return switch (keyword) {
-                case "all" -> {
+                case MessageSelectors.ALL -> {
                     if (hasTypeInfo() && !isCollection) {
                         // Not a collection - treat as regular method call
                         yield receiver + ".all(" + arg + ")";
                     }
                     yield receiver + ".stream().allMatch(" + arg + ")";
                 }
-                case "each" -> {
+                case MessageSelectors.EACH -> {
                     if (hasTypeInfo() && !isCollection) {
                         yield receiver + ".each(" + arg + ")";
                     }
                     yield receiver + ".forEach(" + arg + ")";
                 }
-                case "where" -> {
+                case MessageSelectors.WHERE -> {
                     if (hasTypeInfo() && !isCollection) {
                         yield receiver + ".where(" + arg + ")";
                     }
                     yield receiver + ".stream().filter(" + arg + ").toList()";
                 }
-                case "at" -> {
+                case MessageSelectors.AT -> {
                     if (hasTypeInfo()) {
                         if (isCollection) {
                             yield receiver + ".get(" + arg + ".intValue())";
@@ -276,7 +276,7 @@ public final class ExpressionGenerator {
                     }
                     yield generateAtAccess(receiver, arg);
                 }
-                case "contains" -> {
+                case MessageSelectors.CONTAINS -> {
                     if (hasTypeInfo()) {
                         JavaType rcvType = getType(receiverExpr);
                         if (rcvType != null && rcvType.isMap()) {
@@ -285,17 +285,17 @@ public final class ExpressionGenerator {
                     }
                     yield receiver + ".contains(" + arg + ")";
                 }
-                case "and" -> receiver + " && " + arg;
-                case "or" -> receiver + " || " + arg;
-                case "to" -> "range(" + receiver + ", " + arg + ")";
-                case "ifTrue" -> {
+                case MessageSelectors.AND -> receiver + " && " + arg;
+                case MessageSelectors.OR -> receiver + " || " + arg;
+                case MessageSelectors.TO -> "range(" + receiver + ", " + arg + ")";
+                case MessageSelectors.IF_TRUE -> {
                     // ifTrue: block -> if (condition) { block body }
                     if (part.argument() instanceof Block block) {
                         yield "{ if (" + receiver + ") { " + generateBlockBody(block) + " } }";
                     }
                     yield "{ if (" + receiver + ") ((Runnable)" + arg + ").run(); }";
                 }
-                case "ifFalse" -> {
+                case MessageSelectors.IF_FALSE -> {
                     // ifFalse: block -> if (!condition) { block body }
                     if (part.argument() instanceof Block block) {
                         yield "{ if (!(" + receiver + ")) { " + generateBlockBody(block) + " } }";

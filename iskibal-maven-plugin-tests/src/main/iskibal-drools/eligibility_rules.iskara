@@ -1,0 +1,18 @@
+facts {
+    customer: work.spell.iskibal.mavenplugin.tests.Customer
+}
+outputs {
+    eligible: String := "no"
+    reason: String := ""
+}
+
+rule ELIGIBLE "Customer with enough loyalty points is eligible"
+when
+    customer.loyaltyPoints >= 100
+then
+    eligible := "yes"
+    reason := "sufficient points"
+else
+    eligible := "no"
+    reason := "insufficient points"
+end

@@ -25,6 +25,18 @@
       <artifactId>iskibal-runtime</artifactId>
     </dependency>
 
+    <!-- Drools runtime for executing generated DRL rules -->
+    <dependency>
+      <groupId>org.drools</groupId>
+      <artifactId>drools-engine</artifactId>
+      <version>10.0.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.drools</groupId>
+      <artifactId>drools-mvel</artifactId>
+      <version>10.0.0</version>
+    </dependency>
+
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
@@ -54,6 +66,18 @@
             </goals>
             <configuration>
               <packageName>work.spell.iskibal.mavenplugin.tests.generated</packageName>
+            </configuration>
+          </execution>
+          <execution>
+            <id>generate-drools-rules</id>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+            <configuration>
+              <language>drools</language>
+              <sourceDirectory>${project.basedir}/src/main/iskibal-drools</sourceDirectory>
+              <outputDirectory>${project.build.directory}/generated-sources/drools</outputDirectory>
+              <packageName>work.spell.iskibal.mavenplugin.tests.drools</packageName>
             </configuration>
           </execution>
           <execution>

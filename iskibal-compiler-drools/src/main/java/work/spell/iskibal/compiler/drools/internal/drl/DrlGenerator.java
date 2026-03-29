@@ -46,6 +46,8 @@ public final class DrlGenerator {
             result.put(Path.of(options.outputsFilePath()), generateOutputsPojo(module));
         }
 
+        result.put(Path.of(options.adapterFilePath()), generateAdapter(module));
+
         return result;
     }
 
@@ -139,6 +141,170 @@ public final class DrlGenerator {
             w.line("}");
             w.blankLine();
         }
+
+        w.dedent();
+        w.line("}");
+        return w.toString();
+    }
+
+    private String generateAdapter(RuleModule module) {
+        IndentedWriter w = new IndentedWriter();
+
+        if (options.packageName() != null && !options.packageName().isEmpty()) {
+            w.line("package " + options.packageName() + ";");
+            w.blankLine();
+        }
+
+        w.line("import org.kie.api.KieBase;");
+        w.line("import org.kie.api.runtime.KieSession;");
+        w.blankLine();
+
+        String adapterName = options.adapterClassName();
+        String outputsName = options.outputsClassName();
+        boolean hasOutputs = !module.outputs().isEmpty();
+
+        w.line("/// Adapter that sets up a Drools session with the declared facts,");
+        w.line("/// globals, and outputs, then fires all rules.");
+        w.line("///");
+        w.line("/// Usage:");
+        w.line("///");
+        w.line("/// ```java");
+        w.line("/// var adapter = new " + adapterName + "(kieBase);");
+        for (Fact fact : module.facts()) {
+            String name = DrlExpressionGenerator.sanitize(fact.name());
+            w.line("/// adapter.set" + DrlExpressionGenerator.capitalize(name) + "(" + name + ");");
+        }
+        w.line("/// adapter.evaluate();");
+        if (hasOutputs) {
+            w.line("/// " + outputsName + " outputs = adapter.getOutputs();");
+        }
+        w.line("/// ```");
+        w.line("public class " + adapterName + " {");
+        w.blankLine();
+        w.indent();
+
+        w.line("private final KieBase kieBase;");
+
+        // Fact fields
+        for (Fact fact : module.facts()) {
+            String name = DrlExpressionGenerator.sanitize(fact.name());
+            String type = fact.type();
+            w.line("private " + type + " " + name + ";");
+        }
+
+        // Global fields
+        for (Global global : module.globals()) {
+            String name = DrlExpressionGenerator.sanitize(global.name());
+            String type = global.type();
+            w.line("private " + type + " " + name + ";");
+        }
+
+        // Outputs field
+        if (hasOutputs) {
+            w.line("private " + outputsName + " outputs;");
+        }
+
+        w.blankLine();
+
+        // Constructor
+        w.line("public " + adapterName + "(KieBase kieBase) {");
+        w.indent();
+        w.line("this.kieBase = kieBase;");
+        w.dedent();
+        w.line("}");
+        w.blankLine();
+
+        // Fact setters
+        for (Fact fact : module.facts()) {
+            String name = DrlExpressionGenerator.sanitize(fact.name());
+            String capitalName = DrlExpressionGenerator.capitalize(name);
+            String type = fact.type();
+
+            w.line("public " + adapterName + " set" + capitalName + "(" + type + " " + name + ") {");
+            w.indent();
+            w.line("this." + name + " = " + name + ";");
+            w.line("return this;");
+            w.dedent();
+            w.line("}");
+            w.blankLine();
+        }
+
+        // Global setters
+        for (Global global : module.globals()) {
+            String name = DrlExpressionGenerator.sanitize(global.name());
+            String capitalName = DrlExpressionGenerator.capitalize(name);
+            String type = global.type();
+
+            w.line("public " + adapterName + " set" + capitalName + "(" + type + " " + name + ") {");
+            w.indent();
+            w.line("this." + name + " = " + name + ";");
+            w.line("return this;");
+            w.dedent();
+            w.line("}");
+            w.blankLine();
+        }
+
+        // Outputs getter
+        if (hasOutputs) {
+            w.line("/// Returns the outputs after rule evaluation.");
+            w.line("public " + outputsName + " getOutputs() {");
+            w.indent();
+            w.line("return outputs;");
+            w.dedent();
+            w.line("}");
+            w.blankLine();
+        }
+
+        // evaluate() method
+        w.line("/// Creates a new Drools session, inserts all facts and globals,");
+        w.line("/// fires all rules, and disposes of the session.");
+        if (hasOutputs) {
+            w.line("///");
+            w.line("/// @return the outputs populated by rule actions");
+            w.line("public " + outputsName + " evaluate() {");
+        } else {
+            w.line("public void evaluate() {");
+        }
+        w.indent();
+        w.line("KieSession session = kieBase.newKieSession();");
+        w.line("try {");
+        w.indent();
+
+        // Insert facts
+        for (Fact fact : module.facts()) {
+            String name = DrlExpressionGenerator.sanitize(fact.name());
+            w.line("if (" + name + " != null) {");
+            w.indent().line("session.insert(" + name + ");").dedent();
+            w.line("}");
+        }
+
+        // Set globals
+        for (Global global : module.globals()) {
+            String name = DrlExpressionGenerator.sanitize(global.name());
+            w.line("if (" + name + " != null) {");
+            w.indent().line("session.setGlobal(\"" + name + "\", " + name + ");").dedent();
+            w.line("}");
+        }
+
+        // Set outputs global
+        if (hasOutputs) {
+            w.line("this.outputs = new " + outputsName + "();");
+            w.line("session.setGlobal(\"" + OUTPUTS_VAR + "\", outputs);");
+        }
+
+        w.line("session.fireAllRules();");
+
+        w.dedent();
+        w.line("} finally {");
+        w.indent().line("session.dispose();").dedent();
+        w.line("}");
+
+        if (hasOutputs) {
+            w.line("return outputs;");
+        }
+
+        w.dedent();
+        w.line("}");
 
         w.dedent();
         w.line("}");
