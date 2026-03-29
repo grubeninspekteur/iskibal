@@ -51,10 +51,8 @@ class DroolsCompilationE2ETest {
         }
     }
 
-    // ---- helpers ----
-
     private static DroolsCompilationResult compileDrl(String iskaraSource) {
-        return compileDrl(iskaraSource, DroolsCompilerOptions.defaults());
+        return compileDrl(iskaraSource, new DroolsCompilerOptions("", "generated_rules"));
     }
 
     private static DroolsCompilationResult compileDrl(String iskaraSource, DroolsCompilerOptions options) {
@@ -69,7 +67,7 @@ class DroolsCompilationE2ETest {
     }
 
     private static DroolsCompilationResult compileAdocFile(String fileName) {
-        return compileAdocFile(fileName, DroolsCompilerOptions.defaults());
+        return compileAdocFile(fileName, new DroolsCompilerOptions("", "generated_rules"));
     }
 
     private static DroolsCompilationResult compileAdocFile(String fileName, DroolsCompilerOptions options) {
@@ -81,8 +79,6 @@ class DroolsCompilationE2ETest {
         DroolsCompiler compiler = DroolsCompiler.load();
         return compiler.compile(module, options);
     }
-
-    // ---- tests ----
 
     @Nested
     @DisplayName("Simple rules")
@@ -113,7 +109,10 @@ class DroolsCompilationE2ETest {
 
             assertThat(drl).contains("rule \"set-label\"");
             assertThat(drl).contains("when");
+            assertThat(drl).contains("$label : String()");
+            assertThat(drl).contains("eval($label == \"hello\")");
             assertThat(drl).contains("then");
+            assertThat(drl).contains("__outputs.setResult(\"world\");");
             assertThat(drl).contains("end");
         }
 
@@ -296,7 +295,7 @@ class DroolsCompilationE2ETest {
                     """;
 
             DroolsCompilationResult result = compileDrl(source,
-                    DroolsCompilerOptions.of("work.spell.test", "outputs_test"));
+                    new DroolsCompilerOptions("work.spell.test", "outputs_test"));
 
             assertThat(result.isSuccess()).isTrue();
             String drl = result.getDrlSource();
@@ -349,16 +348,16 @@ class DroolsCompilationE2ETest {
                     end
                     """;
 
-            DroolsCompilationResult result = compileDrl(source, DroolsCompilerOptions.of("com.example", "pojo_test"));
+            DroolsCompilationResult result = compileDrl(source, new DroolsCompilerOptions("com.example", "pojo_test"));
 
             assertThat(result.isSuccess()).isTrue();
-            Map<String, String> files = result.getSourceFiles().orElseThrow();
+            Map<Path, String> files = result.getSourceFiles().orElseThrow();
 
             // Should have both DRL and Java POJO files
-            assertThat(files).containsKey("com/example/pojo_test.drl");
-            assertThat(files).containsKey("com/example/PojoTestOutputs.java");
+            assertThat(files).containsKey(Path.of("com/example/pojo_test.drl"));
+            assertThat(files).containsKey(Path.of("com/example/PojoTestOutputs.java"));
 
-            String pojo = files.get("com/example/PojoTestOutputs.java");
+            String pojo = files.get(Path.of("com/example/PojoTestOutputs.java"));
             assertThat(pojo).contains("public class PojoTestOutputs");
             assertThat(pojo).contains("private String eligible");
             assertThat(pojo).contains("private java.math.BigDecimal discount");
@@ -387,11 +386,11 @@ class DroolsCompilationE2ETest {
                     end
                     """;
 
-            DroolsCompilationResult result = compileDrl(source, DroolsCompilerOptions.of("", "init_test"));
+            DroolsCompilationResult result = compileDrl(source, new DroolsCompilerOptions("", "init_test"));
 
             assertThat(result.isSuccess()).isTrue();
-            Map<String, String> files = result.getSourceFiles().orElseThrow();
-            String pojo = files.get("InitTestOutputs.java");
+            Map<Path, String> files = result.getSourceFiles().orElseThrow();
+            String pojo = files.get(Path.of("InitTestOutputs.java"));
             assertThat(pojo).contains("= \"pending\"");
             assertThat(pojo).contains("= new java.math.BigDecimal(100)");
         }
@@ -497,7 +496,7 @@ class DroolsCompilationE2ETest {
                     """;
 
             DroolsCompilationResult result = compileDrl(source,
-                    DroolsCompilerOptions.of("com.example.rules", "pkg_test"));
+                    new DroolsCompilerOptions("com.example.rules", "pkg_test"));
 
             assertThat(result.isSuccess()).isTrue();
             assertThat(result.getDrlSource()).startsWith("package com.example.rules;");
@@ -521,7 +520,7 @@ class DroolsCompilationE2ETest {
                     end
                     """;
 
-            DroolsCompilationResult result = compileDrl(source, DroolsCompilerOptions.of("", "no_pkg_test"));
+            DroolsCompilationResult result = compileDrl(source, new DroolsCompilerOptions("", "no_pkg_test"));
 
             assertThat(result.isSuccess()).isTrue();
             assertThat(result.getDrlSource()).doesNotContain("package ");
@@ -640,7 +639,7 @@ class DroolsCompilationE2ETest {
         @Test
         @DisplayName("DRL file path uses rule name and package")
         void drlFilePathCorrect() {
-            DroolsCompilerOptions options = DroolsCompilerOptions.of("com.example", "pricing_rules");
+            DroolsCompilerOptions options = new DroolsCompilerOptions("com.example", "pricing_rules");
             assertThat(options.drlFilePath()).isEqualTo("com/example/pricing_rules.drl");
             assertThat(options.outputsFilePath()).isEqualTo("com/example/PricingRulesOutputs.java");
             assertThat(options.outputsClassName()).isEqualTo("PricingRulesOutputs");
@@ -649,7 +648,7 @@ class DroolsCompilationE2ETest {
         @Test
         @DisplayName("DRL file path without package")
         void drlFilePathNoPackage() {
-            DroolsCompilerOptions options = DroolsCompilerOptions.of("", "my_rules");
+            DroolsCompilerOptions options = new DroolsCompilerOptions("", "my_rules");
             assertThat(options.drlFilePath()).isEqualTo("my_rules.drl");
         }
     }
@@ -662,7 +661,7 @@ class DroolsCompilationE2ETest {
         @DisplayName("AsciiDoc document compiles to valid DRL")
         void asciiDocCompilesSuccessfully() {
             DroolsCompilationResult result = compileAdocFile("discount_rules.adoc",
-                    DroolsCompilerOptions.of("work.spell.iskibal.e2e", "discount_rules"));
+                    new DroolsCompilerOptions("work.spell.iskibal.e2e", "discount_rules"));
 
             assertThat(result.isSuccess())
                     .as("DRL compilation should succeed; errors: %s", result.getErrors())
@@ -673,7 +672,7 @@ class DroolsCompilationE2ETest {
         @DisplayName("AsciiDoc DRL contains all expected rule identifiers")
         void asciiDocDrlContainsRules() {
             DroolsCompilationResult result = compileAdocFile("discount_rules.adoc",
-                    DroolsCompilerOptions.of("work.spell.iskibal.e2e", "discount_rules"));
+                    new DroolsCompilerOptions("work.spell.iskibal.e2e", "discount_rules"));
 
             assertThat(result.isSuccess()).isTrue();
             String drl = result.getDrlSource();
@@ -699,7 +698,7 @@ class DroolsCompilationE2ETest {
         @DisplayName("AsciiDoc DRL includes correct imports and globals")
         void asciiDocDrlHasImportsAndGlobals() {
             DroolsCompilationResult result = compileAdocFile("discount_rules.adoc",
-                    DroolsCompilerOptions.of("work.spell.iskibal.e2e", "discount_rules"));
+                    new DroolsCompilerOptions("work.spell.iskibal.e2e", "discount_rules"));
 
             assertThat(result.isSuccess()).isTrue();
             String drl = result.getDrlSource();
@@ -713,14 +712,14 @@ class DroolsCompilationE2ETest {
         @DisplayName("AsciiDoc outputs POJO is generated with correct fields")
         void asciiDocOutputsPojoGenerated() {
             DroolsCompilationResult result = compileAdocFile("discount_rules.adoc",
-                    DroolsCompilerOptions.of("work.spell.iskibal.e2e", "discount_rules"));
+                    new DroolsCompilerOptions("work.spell.iskibal.e2e", "discount_rules"));
 
             assertThat(result.isSuccess()).isTrue();
-            Map<String, String> files = result.getSourceFiles().orElseThrow();
+            Map<Path, String> files = result.getSourceFiles().orElseThrow();
 
-            assertThat(files).containsKey("work/spell/iskibal/e2e/DiscountRulesOutputs.java");
+            assertThat(files).containsKey(Path.of("work/spell/iskibal/e2e/DiscountRulesOutputs.java"));
 
-            String pojo = files.get("work/spell/iskibal/e2e/DiscountRulesOutputs.java");
+            String pojo = files.get(Path.of("work/spell/iskibal/e2e/DiscountRulesOutputs.java"));
             assertThat(pojo).contains("public class DiscountRulesOutputs");
             assertThat(pojo).contains("private String eligible");
             assertThat(pojo).contains("private java.math.BigDecimal discountPercent");
@@ -731,7 +730,7 @@ class DroolsCompilationE2ETest {
         @DisplayName("fact patterns are bound as DRL variables")
         void asciiDocFactPatternsBound() {
             DroolsCompilationResult result = compileAdocFile("discount_rules.adoc",
-                    DroolsCompilerOptions.of("work.spell.iskibal.e2e", "discount_rules"));
+                    new DroolsCompilerOptions("work.spell.iskibal.e2e", "discount_rules"));
 
             assertThat(result.isSuccess()).isTrue();
             String drl = result.getDrlSource();
@@ -742,12 +741,12 @@ class DroolsCompilationE2ETest {
     }
 
     @Nested
-    @DisplayName("DRL-native decision tables")
-    class DrlNativeDecisionTables {
+    @DisplayName("Raw passthrough decision tables")
+    class RawPassthroughDecisionTables {
 
         @Test
-        @DisplayName("decision table [drools] passes WHEN/THEN cells verbatim")
-        void drlNativeDecisionTablePassesCellsVerbatim() {
+        @DisplayName("decision table [raw] passes WHEN/THEN cells verbatim")
+        void rawDecisionTablePassesCellsVerbatim() {
             String source = """
                     facts {
                         customer: work.spell.iskibal.e2e.CustomerProfile
@@ -755,7 +754,7 @@ class DroolsCompilationE2ETest {
                     outputs {
                         discount: java.math.BigDecimal := 0
                     }
-                    decision table [drools] TIER "Loyalty tier discounts" {
+                    decision table [raw] TIER "Loyalty tier discounts" {
                     | ID     | WHEN                              | THEN                          |
                     |        | $customer.getLoyaltyPoints() >= 0 | __outputs.setDiscount(null)   |
                     | ------ | --------------------------------- | ----------------------------- |
@@ -789,9 +788,9 @@ class DroolsCompilationE2ETest {
 
         @Test
         @DisplayName("AsciiDoc decision table with language=drools passes cells verbatim")
-        void asciiDocDrlNativeDecisionTable() {
+        void asciiDocRawDecisionTable() {
             DroolsCompilationResult result = compileAdocFile("discount_rules.adoc",
-                    DroolsCompilerOptions.of("work.spell.iskibal.e2e", "discount_rules"));
+                    new DroolsCompilerOptions("work.spell.iskibal.e2e", "discount_rules"));
 
             assertThat(result.isSuccess())
                     .as("DRL compilation should succeed; errors: %s", result.getErrors())

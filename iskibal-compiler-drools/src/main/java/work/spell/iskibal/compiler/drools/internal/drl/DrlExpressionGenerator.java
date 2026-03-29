@@ -15,12 +15,13 @@ import work.spell.iskibal.model.Expression.MessageSend.UnaryMessage;
 import work.spell.iskibal.model.Expression.Navigation;
 import work.spell.iskibal.model.Expression.Raw;
 
-/// Translates Iskara [Expression]s to Java/DRL source code fragments used inside
-/// DRL rule bodies.
+/// Transpiles rule model [Expression]s to DRL source code fragments used
+/// inside DRL rule bodies.
 ///
-/// The generator supports the common subset of Iskara expressions that map
-/// naturally to DRL. Unsupported constructs are emitted as `/* TODO: ... */`
-/// comments so that generated DRL files are always syntactically intact.
+/// The generator supports the common subset of rule model expressions that map
+/// naturally to DRL. Unsupported constructs throw
+/// [UnsupportedOperationException] so that problems surface immediately rather
+/// than producing silently wrong business decisions at runtime.
 final class DrlExpressionGenerator {
 
     private final Set<String> factNames;
@@ -36,7 +37,7 @@ final class DrlExpressionGenerator {
         this.outputsVar = outputsVar;
     }
 
-    /// Generates a Java expression string from an Iskara expression.
+    /// Generates a DRL expression string from a rule model expression.
     String generate(Expression expr) {
         return switch (expr) {
             case Identifier id -> generateIdentifier(id);
@@ -45,7 +46,8 @@ final class DrlExpressionGenerator {
             case Binary bin -> generateBinary(bin);
             case Assignment assign -> generateAssignment(assign);
             case Navigation nav -> generateNavigation(nav);
-            case Block block -> "/* TODO: block expressions are not supported in DRL */";
+            case Block _ -> throw new UnsupportedOperationException(
+                    "Block expressions are not supported in DRL target");
             case Raw raw -> raw.text();
         };
     }
@@ -84,13 +86,32 @@ final class DrlExpressionGenerator {
                 yield "new java.math.BigDecimal(" + plain + ")";
             }
             case Literal.BooleanLiteral b -> String.valueOf(b.value());
-            case Literal.NullLiteral n -> "null";
-            case Literal.ListLiteral l ->
-                "/* TODO: list literals are not supported in DRL */ null";
-            case Literal.SetLiteral s ->
-                "/* TODO: set literals are not supported in DRL */ null";
-            case Literal.MapLiteral m ->
-                "/* TODO: map literals are not supported in DRL */ null";
+            case Literal.NullLiteral _ -> "null";
+            case Literal.ListLiteral l -> {
+                if (l.elements().isEmpty()) {
+                    yield "java.util.List.of()";
+                }
+                String elements = l.elements().stream().map(this::generate)
+                        .collect(java.util.stream.Collectors.joining(", "));
+                yield "java.util.List.of(" + elements + ")";
+            }
+            case Literal.SetLiteral s -> {
+                if (s.elements().isEmpty()) {
+                    yield "java.util.Set.of()";
+                }
+                String elements = s.elements().stream().map(this::generate)
+                        .collect(java.util.stream.Collectors.joining(", "));
+                yield "java.util.Set.of(" + elements + ")";
+            }
+            case Literal.MapLiteral m -> {
+                if (m.entries().isEmpty()) {
+                    yield "java.util.Map.of()";
+                }
+                String entries = m.entries().entrySet().stream()
+                        .map(e -> generate(e.getKey()) + ", " + generate(e.getValue()))
+                        .collect(java.util.stream.Collectors.joining(", "));
+                yield "java.util.Map.of(" + entries + ")";
+            }
         };
     }
 
@@ -98,22 +119,21 @@ final class DrlExpressionGenerator {
         return switch (ms) {
             case UnaryMessage u -> generateUnaryMessage(u);
             case KeywordMessage k -> generateKeywordMessage(k);
-            case DefaultMessage d ->
-                "/* TODO: default message is not supported in DRL */ " + generate(d.receiver());
+            case DefaultMessage _ -> throw new UnsupportedOperationException(
+                    "Default message (!) is not supported in DRL target");
         };
     }
 
     private String generateUnaryMessage(UnaryMessage u) {
         String recv = generate(u.receiver());
         return switch (u.selector()) {
-            case "notEmpty" -> "(" + recv + " != null && !" + recv + ".isEmpty())";
-            case "empty" -> "(" + recv + " == null || " + recv + ".isEmpty())";
-            case "exists" -> "(" + recv + " != null)";
-            case "size" -> recv + ".size()";
-            case "sum" ->
-                "/* TODO: sum aggregation is not supported in DRL — use accumulate */ 0";
-            default ->
-                recv + "." + u.selector() + "()";
+            case MessageSelectors.NOT_EMPTY -> "(" + recv + " != null && !" + recv + ".isEmpty())";
+            case MessageSelectors.EMPTY -> "(" + recv + " == null || " + recv + ".isEmpty())";
+            case MessageSelectors.EXISTS -> "(" + recv + " != null)";
+            case MessageSelectors.SIZE -> recv + ".size()";
+            case MessageSelectors.SUM -> throw new UnsupportedOperationException(
+                    "sum aggregation is not supported in DRL target — use Drools accumulate instead");
+            default -> recv + "." + u.selector() + "()";
         };
     }
 
@@ -124,19 +144,15 @@ final class DrlExpressionGenerator {
         List<String> args = k.parts().stream().map(p -> generate(p.argument())).toList();
 
         return switch (selector) {
-            case "contains" -> recv + ".contains(" + args.getFirst() + ")";
-            case "add" -> recv + ".add(" + args.getFirst() + ")";
-            case "at" -> recv + ".get(" + args.getFirst() + ")";
-            case "ifTrue" ->
-                "/* TODO: ifTrue: is not supported in DRL */";
-            case "ifFalse" ->
-                "/* TODO: ifFalse: is not supported in DRL */";
-            case "and" ->
-                "(" + recv + " && " + args.getFirst() + ")";
-            case "or" ->
-                "(" + recv + " || " + args.getFirst() + ")";
-            default ->
-                "/* TODO: keyword message '" + selector + "' is not supported in DRL */";
+            case MessageSelectors.CONTAINS -> recv + ".contains(" + args.getFirst() + ")";
+            case MessageSelectors.ADD -> recv + ".add(" + args.getFirst() + ")";
+            case MessageSelectors.AT -> recv + ".get(" + args.getFirst() + ")";
+            case MessageSelectors.IF_TRUE -> "(" + recv + ")";
+            case MessageSelectors.IF_FALSE -> "(!(" + recv + "))";
+            case MessageSelectors.AND -> "(" + recv + " && " + args.getFirst() + ")";
+            case MessageSelectors.OR -> "(" + recv + " || " + args.getFirst() + ")";
+            default -> throw new UnsupportedOperationException(
+                    "Keyword message '" + selector + "' is not supported in DRL target");
         };
     }
 

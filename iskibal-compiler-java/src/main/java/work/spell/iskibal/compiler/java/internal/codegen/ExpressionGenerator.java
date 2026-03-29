@@ -83,7 +83,7 @@ public final class ExpressionGenerator {
             case Assignment assign -> generateAssignment(assign);
             case Navigation nav -> generateNavigation(nav);
             case Block block -> generateBlock(block);
-            case Raw _ -> "/* ERROR: Raw expressions cannot be compiled to Java — use a Drools target instead */";
+            case Raw raw -> raw.text();
         };
     }
 

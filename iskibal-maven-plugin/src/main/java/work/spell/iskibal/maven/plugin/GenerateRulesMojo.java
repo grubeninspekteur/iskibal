@@ -189,14 +189,14 @@ public class GenerateRulesMojo extends AbstractMojo {
 
         // Code generation
         String baseName = deriveClassName(fileName);
-        Map<String, String> generatedFiles = switch (target) {
+        Map<Path, String> generatedFiles = switch (target) {
             case JAVA -> generateJava(module, baseName);
             case DROOLS -> generateDrools(module, baseName, fileName);
         };
 
         // Write generated files
-        for (Map.Entry<String, String> entry : generatedFiles.entrySet()) {
-            File outputFile = new File(outputDirectory, entry.getKey());
+        for (Map.Entry<Path, String> entry : generatedFiles.entrySet()) {
+            File outputFile = outputDirectory.toPath().resolve(entry.getKey()).toFile();
             outputFile.getParentFile().mkdirs();
             try {
                 Files.writeString(outputFile.toPath(), entry.getValue());
@@ -207,7 +207,7 @@ public class GenerateRulesMojo extends AbstractMojo {
         }
     }
 
-    private Map<String, String> generateJava(RuleModule module, String className) throws MojoFailureException {
+    private Map<Path, String> generateJava(RuleModule module, String className) throws MojoFailureException {
         JavaCompiler compiler = JavaCompiler.load();
         JavaCompilerOptions options = new JavaCompilerOptions(packageName, className, generateNullChecks, null,
                 diagnostics);
@@ -218,15 +218,20 @@ public class GenerateRulesMojo extends AbstractMojo {
             throw new MojoFailureException("Code generation errors for Java target:\n  " + errors);
         }
 
-        return result.getSourceFiles().orElseThrow();
+        // Convert String keys to Path keys
+        Map<Path, String> pathFiles = new java.util.LinkedHashMap<>();
+        for (Map.Entry<String, String> entry : result.getSourceFiles().orElseThrow().entrySet()) {
+            pathFiles.put(Path.of(entry.getKey()), entry.getValue());
+        }
+        return pathFiles;
     }
 
-    private Map<String, String> generateDrools(RuleModule module, String ruleName, String fileName)
+    private Map<Path, String> generateDrools(RuleModule module, String ruleName, String fileName)
             throws MojoFailureException {
         DroolsCompiler compiler = DroolsCompiler.load();
         // Convert PascalCase class name back to snake_case for DRL rule name convention
         String drlRuleName = toSnakeCase(ruleName);
-        DroolsCompilerOptions options = DroolsCompilerOptions.of(packageName, drlRuleName);
+        DroolsCompilerOptions options = new DroolsCompilerOptions(packageName, drlRuleName);
         DroolsCompilationResult result = compiler.compile(module, options);
 
         if (!result.isSuccess()) {

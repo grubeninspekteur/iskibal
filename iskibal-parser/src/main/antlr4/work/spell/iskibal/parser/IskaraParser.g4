@@ -112,7 +112,7 @@ templateRule
     ;
 
 decisionTableRule
-    : DECISION TABLE (LBRACK IDENTIFIER RBRACK)? identifier (STRING)? nl LBRACE nl tableContent nl RBRACE whereClause?
+    : DECISION TABLE (LBRACK RAW RBRACK)? identifier (STRING)? nl LBRACE nl tableContent nl RBRACE whereClause?
     ;
 
 localDataTable
@@ -214,6 +214,7 @@ messageSelector
     | END      // might be used as selector
     | DATA     // might be used as selector
     | TABLE    // might be used as selector
+    | RAW      // might be used as selector
     ;
 
 // Navigation with dot
@@ -234,6 +235,7 @@ primaryExpr
 identifier
     : IDENTIFIER
     | QUOTED_ID
+    | RAW
     ;
 
 // Global variable reference

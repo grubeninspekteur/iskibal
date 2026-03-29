@@ -80,8 +80,8 @@ public sealed interface Expression permits Expression.Identifier, Expression.Lit
     }
 
     /// A raw, verbatim target-language expression that bypasses Iskara
-    /// parsing and translation. Used for DRL-native decision tables where
-    /// cell expressions are written in native DRL/Java syntax.
+    /// parsing and translation. Used for passthrough decision tables where
+    /// cell expressions are written directly in the target language syntax.
     ///
     /// @param text
     ///            the raw expression text to pass through verbatim

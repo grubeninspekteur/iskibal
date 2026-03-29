@@ -31,7 +31,7 @@ public interface DroolsCompiler {
     ///            the rule module to compile
     /// @return the compilation result
     default DroolsCompilationResult compile(RuleModule module) {
-        return compile(module, DroolsCompilerOptions.defaults());
+        return compile(module, new DroolsCompilerOptions("", "generated_rules"));
     }
 
     /// Loads a Drools compiler using the ServiceLoader mechanism.

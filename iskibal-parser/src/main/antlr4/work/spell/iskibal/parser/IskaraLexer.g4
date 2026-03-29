@@ -23,6 +23,7 @@ ELSE        : 'else' ;
 END         : 'end' ;
 WHERE       : 'where' ;
 LET         : 'let' ;
+RAW         : 'raw' ;
 
 // Boolean literals
 TRUE        : 'true' ;
@@ -107,30 +108,23 @@ QUOTED_ID
     : '`' ~[`]+ '`'
     ;
 
-// Dollar sign — used as a standalone token (e.g. in DRL-native cell expressions:
-// $factVar). In DRL-native tables the cell content is treated as raw text so
-// individual tokens only need to lex without errors.
-DOLLAR
-    : '$'
-    ;
-
-// Regular identifier — leading underscores are allowed to support DRL-native
-// cell expressions that reference Drools-generated helper variables such as
-// __outputs.
+// Regular identifier — dollar signs and leading underscores are allowed so that
+// raw (passthrough) cell expressions can reference target-language variables
+// such as $factVar or __outputs.
 IDENTIFIER
-    : LETTER_OR_UNDERSCORE LETTER_OR_DIGIT*
+    : LETTER_OR_UNDERSCORE_OR_DOLLAR LETTER_OR_DIGIT_OR_DOLLAR*
     ;
 
-fragment LETTER_OR_UNDERSCORE
-    : [a-zA-Z_]
+fragment LETTER_OR_UNDERSCORE_OR_DOLLAR
+    : [a-zA-Z_$]
     ;
 
 fragment LETTER
     : [a-zA-Z]
     ;
 
-fragment LETTER_OR_DIGIT
-    : [a-zA-Z0-9_]
+fragment LETTER_OR_DIGIT_OR_DOLLAR
+    : [a-zA-Z0-9_$]
     ;
 
 // Comments

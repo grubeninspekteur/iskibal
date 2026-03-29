@@ -361,6 +361,8 @@ public class ExpressionVisitor extends IskaraParserBaseVisitor<Expression> {
             String text = ctx.QUOTED_ID().getText();
             // Remove backticks
             return text.substring(1, text.length() - 1);
+        } else if (ctx.RAW() != null) {
+            return ctx.RAW().getText();
         }
         return "";
     }

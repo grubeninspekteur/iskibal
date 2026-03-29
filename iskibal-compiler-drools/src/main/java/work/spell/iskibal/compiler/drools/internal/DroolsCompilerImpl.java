@@ -38,8 +38,8 @@ public final class DroolsCompilerImpl implements DroolsCompiler {
 
         // DRL generation
         DrlGenerator generator = new DrlGenerator(options);
-        Map<String, String> sourceFiles = generator.generate(module);
+        Map<Path, String> sourceFiles = generator.generate(module);
 
-        return new DroolsCompilationResult.Success(sourceFiles);
+        return new DroolsCompilationResult.Success(new LinkedHashMap<>(sourceFiles));
     }
 }

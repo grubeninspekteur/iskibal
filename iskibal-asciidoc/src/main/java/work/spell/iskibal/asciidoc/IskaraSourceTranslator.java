@@ -297,13 +297,13 @@ public class IskaraSourceTranslator {
         String caption = table.getCaption();
         String description = title != null ? title : caption;
 
-        // Check for language attribute (e.g. [.decision-table#ID,language=drools])
-        Object languageAttr = table.getAttribute("language");
-        boolean drlNative = languageAttr != null && "drools".equalsIgnoreCase(languageAttr.toString());
+        // Detect and validate language attribute
+        String language = detectLanguage(table);
+        boolean rawPassthrough = "drools".equals(language);
 
         sb.append("\ndecision table ");
-        if (drlNative) {
-            sb.append("[drools] ");
+        if (rawPassthrough) {
+            sb.append("[raw] ");
         }
         sb.append(quoteIdIfNeeded(id));
         if (description != null && !description.isBlank()) {
@@ -460,6 +460,33 @@ public class IskaraSourceTranslator {
             return null;
         }
         return knownRolesFound.isEmpty() ? null : knownRolesFound.getFirst();
+    }
+
+    /// Detects and validates the language attribute on a table.
+    ///
+    /// Supported values are `"iskara"` (default when unset), `"drools"` (raw
+    /// passthrough). Any other value is reported as an error and treated as
+    /// Iskara.
+    ///
+    /// @return the normalised language string, or `null` when unset (defaults to
+    ///         iskara)
+    private String detectLanguage(Table table) {
+        Object languageAttr = table.getAttribute("language");
+        if (languageAttr == null) {
+            return null;
+        }
+        String lang = languageAttr.toString().strip().toLowerCase(Locale.ROOT);
+        return switch (lang) {
+            case "iskara", "drools" -> lang;
+            default -> {
+                diagnostics.add(Diagnostic.error(
+                        "Unsupported language '%s' — expected 'iskara' or 'drools'".formatted(lang),
+                        SourceLocation.at("<asciidoc>",
+                                table.getSourceLocation() != null ? table.getSourceLocation().getLineNumber() : 0,
+                                0)));
+                yield null;
+            }
+        };
     }
 
     /// Checks if a block is an Iskara source block.

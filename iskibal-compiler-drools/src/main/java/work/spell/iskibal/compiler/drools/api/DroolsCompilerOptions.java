@@ -10,16 +10,6 @@ package work.spell.iskibal.compiler.drools.api;
 ///            `PricingRulesOutputs.java`)
 public record DroolsCompilerOptions(String packageName, String ruleName) {
 
-    /// Creates default options with no package and `"generated_rules"` base name.
-    public static DroolsCompilerOptions defaults() {
-        return new DroolsCompilerOptions("", "generated_rules");
-    }
-
-    /// Creates options with the specified package and rule name.
-    public static DroolsCompilerOptions of(String packageName, String ruleName) {
-        return new DroolsCompilerOptions(packageName, ruleName);
-    }
-
     /// Returns the file path for the generated DRL file (relative, using `/`
     /// separators).
     public String drlFilePath() {

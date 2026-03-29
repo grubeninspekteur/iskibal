@@ -98,7 +98,18 @@ applyTierDiscount::
 
 == Loyalty Tier Decision Table (DRL-native)
 
-// DRL-native decision table: cell expressions are raw DRL/Java, passed verbatim.
+// DRL-native decision table: cell expressions are raw target-language syntax,
+// passed verbatim to the generated DRL. The `language=drools` attribute tells
+// the AsciiDoc translator to emit a `[raw]` passthrough marker.
+//
+// In WHEN cells, column headers are concatenated with cell values (e.g.
+// header `$customer.getLoyaltyPoints() >= 0` + cell `>= 50` produces
+// `$customer.getLoyaltyPoints() >= 50`).
+//
+// Fact variables use the `$name` convention matching the DRL-bound pattern
+// variables generated from the facts section (e.g. `$customer` corresponds
+// to the `customer` fact). The `__outputs` global is the generated outputs
+// POJO instance.
 [.decision-table#TIER_DISC_DRL,language=drools]
 .Loyalty tier discounts (DRL-native)
 |===

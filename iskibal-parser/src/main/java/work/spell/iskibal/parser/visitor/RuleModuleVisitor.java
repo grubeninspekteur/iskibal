@@ -183,8 +183,8 @@ public class RuleModuleVisitor extends IskaraParserBaseVisitor<RuleModule> {
         String id = expressionVisitor.extractIdentifier(ctx.identifier());
         String description = ctx.STRING() != null ? unquoteString(ctx.STRING().getText()) : null;
 
-        // Check for optional language attribute: decision table [drools] ...
-        boolean rawMode = ctx.IDENTIFIER() != null && "drools".equalsIgnoreCase(ctx.IDENTIFIER().getText());
+        // Check for optional [raw] marker: decision table [raw] ...
+        boolean rawMode = ctx.RAW() != null;
 
         // Parse decision table structure
         TableVisitor.DecisionTableStructure structure = tableVisitor.parseDecisionTableStructure(ctx.tableContent());
